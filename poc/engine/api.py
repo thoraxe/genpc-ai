@@ -31,7 +31,7 @@ presets = load_events(POC / "data" / "events.json")
 store = Store(os.getenv("POC_DB", VAR / "poc.db"), world, start_day=START_DAY)
 lock = threading.Lock()  # one sqlite connection shared across request threads
 _llm = None
-tts = tts_mod.from_env(cache_dir=VAR / "audio")
+tts = tts_mod.from_env()
 
 
 def dialog() -> DialogEngine:

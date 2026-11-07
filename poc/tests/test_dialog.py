@@ -27,7 +27,15 @@ class FakeLLM:
         return LLMResult(text=r if isinstance(r, str) else json.dumps(r), ms=5.0)
 
 
-GOOD = {"npc_line": "Heard the mine's clear. Was that you?", "choices": ["Yes.", "No.", "Goodbye."], "remember": []}
+GOOD = {"npc_line": "Heard the bandits at Embershard Mine are dead. Was that you?",
+        "choices": ["Yes.", "No.", "Goodbye."], "remember": []}
+SMALLTALK = {"npc_line": "Halt. State your business.", "choices": ["Passing through.", "Trade.", "Goodbye."]}
+
+
+def test_news_not_marked_if_npc_did_not_mention_it(store):
+    DialogEngine(store, FakeLLM([SMALLTALK])).open("eirik")
+    (m,) = [m for m in store.memories("eirik") if m.event_id]
+    assert not m.mentioned and m.recalls == 1
 
 
 @pytest.fixture

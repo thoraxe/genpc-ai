@@ -173,10 +173,11 @@ class DialogEngine:
             if mem:
                 store.add_memory(mem)
 
-        if not fallback:  # a delivered turn counts as recall; news shown counts as mentioned
+        if not fallback:  # a delivered turn counts as recall; news counts as told only if the line says it
             news_ids = {v.memory.id for v in views
                         if v.memory.event_id and not v.memory.mentioned
-                        and store.day - v.memory.created_day < rules.news_window_days}
+                        and store.day - v.memory.created_day < rules.news_window_days
+                        and any(knowledge.grounded(f.text, resp.npc_line) for f in v.kept_facts)}
             store.mark_used([v.memory for v in views], news_ids)
 
         body = {"session_id": session_id, "player": player_text, "npc_line": resp.npc_line, "choices": resp.choices}
