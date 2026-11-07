@@ -1,0 +1,24 @@
+{
+  "settlements": [
+    {"id": "riverwood", "name": "Riverwood", "adjacent": ["whiterun"]},
+    {"id": "whiterun", "name": "Whiterun", "adjacent": ["riverwood"]},
+    {"id": "solitude", "name": "Solitude", "adjacent": []}
+  ],
+  "locations": [
+    {"id": "embershard_mine", "name": "Embershard Mine", "near_settlement": "riverwood"}
+  ],
+  "npcs": [
+    {"id": "hrolf", "name": "Hrolf", "role": "miner", "settlement": "riverwood",
+     "voice_id": "N2lVS1w4EtoT3dr4eOWO",
+     "bio": "A wiry, sardonic miner who lost his job when bandits took over Embershard Mine. Talks fast, laughs at his own bad luck, and resents the bandits."},
+    {"id": "torvald", "name": "Torvald", "role": "innkeeper", "settlement": "riverwood",
+     "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+     "bio": "Runs the Sleeping Giant Inn. Warm, a little nosy, collects gossip from every traveler and loves to pass it on over a mug of mead."},
+    {"id": "eirik", "name": "Eirik", "role": "town guard", "settlement": "whiterun",
+     "voice_id": "SOYHLrjzK2X1ezoPC6cr",
+     "bio": "A gruff Whiterun gate guard. Bored, blunt, suspicious of strangers, but respects anyone who handles bandits."},
+    {"id": "sabine", "name": "Sabine", "role": "cloth merchant", "settlement": "solitude",
+     "voice_id": "EXAVITQu4vr4xnSDxMaL",
+     "bio": "A refined Solitude merchant who cares about trade routes, fashion and court politics. Looks down on backwater villages."}
+  ]
+}

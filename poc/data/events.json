@@ -1,0 +1,25 @@
+{
+  "embershard_cleared": {
+    "label": "Clear the bandits at Embershard Mine",
+    "type": "location_cleared",
+    "location": "embershard_mine",
+    "default_witnesses": ["hrolf"],
+    "facts": [
+      {"text": "The bandits at Embershard Mine are dead", "importance": 5},
+      {"text": "A stranger in steel armor killed them", "importance": 4},
+      {"text": "The stranger carried off the bandits' loot", "importance": 3},
+      {"text": "The bandit leader fell to a war axe", "importance": 2},
+      {"text": "It happened at dusk", "importance": 1}
+    ]
+  },
+  "riverwood_wolf": {
+    "label": "Kill a wolf at the Riverwood gate",
+    "type": "creature_killed",
+    "location": "riverwood",
+    "default_witnesses": ["torvald"],
+    "facts": [
+      {"text": "A wolf attacked at the Riverwood gate and was killed", "importance": 3},
+      {"text": "The stranger killed it with a single arrow", "importance": 2}
+    ]
+  }
+}
