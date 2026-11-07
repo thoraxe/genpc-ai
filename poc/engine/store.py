@@ -119,6 +119,17 @@ class Store:
         self.db.commit()
         return cur.lastrowid
 
+    def turn(self, turn_id: int) -> dict | None:
+        r = self.db.execute("SELECT id, npc_id, day, body FROM turns WHERE id=?", (turn_id,)).fetchone()
+        return {"id": r["id"], "npc_id": r["npc_id"], "day": r["day"], **json.loads(r["body"])} if r else None
+
+    def reset(self, start_day: float) -> None:
+        """Wipe world state (keeps save slots, like deleting progress but not the save folder)."""
+        for t in STATE_TABLES:
+            self.db.execute(f"DELETE FROM {t}")
+        self._set_meta("day", start_day)
+        self.db.commit()
+
     def turns(self, npc_id: str, limit: int = 20) -> list[dict]:
         rows = self.db.execute("SELECT id, day, body FROM turns WHERE npc_id=? ORDER BY id DESC LIMIT ?",
                                (npc_id, limit)).fetchall()
