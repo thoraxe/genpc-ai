@@ -1,6 +1,6 @@
 # PoC Plan: NPC Knowledge Engine, Python + simple web UI (no game)
 
-Status: **IN PROGRESS: M0 done** (see Progress log) · 2026-11-07 · Parent plan: `npc-engine-plan.md`. This is a slice of Phase 1 and Phase 2, with the UI standing in for the game.
+Status: **COMPLETE: M0–M5 done** (see Progress log) · 2026-11-07 · Parent plan: `npc-engine-plan.md`. This is a slice of Phase 1 and Phase 2, with the UI standing in for the game.
 
 ## Goal
 Show the novel part, the deterministic knowledge model, working end to end in a browser:
@@ -241,7 +241,44 @@ This makes "deterministic, lossy gossip" visible instead of something you have t
   - **Latency** (LLM only): 1.9–3.1 s, median about 2.1 s. Follow-up turns with history run slightly slower. With TTS's 0.15 s first byte this is about at the 3 s target. **The two-call split is not needed yet.** Revisit if the median creeps past 2.8 s.
   - **Minor embellishment seen:** "Half of Riverwood's still talking about it". It isn't an invented event, so it's acceptable for the PoC. The M5 eval keyword checks will watch for this.
 
-**Next: M3** (ElevenLabs streaming TTS, audio cache, voice toggle).
+**2026-11-07, M3–M5 done. The PoC is complete.** `uv run pytest -q` → **19 passed**. Git branch `poc-python-ui`.
+- **M3, `providers/tts.py`:**
+  - A `TTSProvider` Protocol and `ElevenLabsTTS` streaming `eleven_flash_v2_5`.
+  - `TTS_ENABLED` toggle, plus a Voice checkbox in the UI.
+  - **The audio cache was removed at the user's request:** generated lines are effectively never replayed.
+  - Through the server, the first audio byte arrives in about 0.3 s.
+- **M4, `engine/api.py`:**
+  - Routes, as planned, under `/api/*`:
+    - `session/start`, `world`, `clock/advance`, `events` (preset or full form);
+    - `dialog/open|choose`, `audio/{turn_id}`;
+    - `npc/{id}/knowledge` (includes `lost_in_retelling` facts), `npc/{id}/prompt`;
+    - `saves`, `saves/{id}/load`, `reset`.
+  - One SQLite connection guarded by a lock.
+  - **`ui/index.html`:** a bare test page (per the user, **no styling investment**). Three columns: world, talk, inspector.
+  - Checked in Chrome: the reset → event → +½ day → Torvald flow works, voice plays, the inspector shows facts lost in retelling, and there are no console errors.
+  - **Bug fixed:** a `[hidden]` attribute was overridden by `.row{display:flex}`.
+- **Behaviour fix found during M4:**
+  - Previously, news was marked "told" on any delivered turn, so a small-talk greeting suppressed it.
+  - Now it's marked only when the NPC's line actually mentions it (grounding check on `npc_line`). New test added.
+- **M5:**
+  - `scripts/eval.py`: 10 runs per check, 4 parallel workers, results saved to `poc/var/eval-*.json`.
+  - `poc/README.md`: setup, run commands and an 8-step demo script.
+- **Eval result (2026-11-07, glm-5.3-flash): OVERALL PASS.**
+
+  | Check | Result | Notes |
+  |---|---|---|
+  | `innkeeper_knows` | **10/10** (bar 8/10) | |
+  | `guard_vague` | **10/10** with no dropped details | Typical line: "How they did it or what they took, I couldn't tell you." |
+  | `solitude_ignorant` | **10/10**, no leaks | |
+  | Fallbacks | 0 | A few first attempts returned `choices: []` and recovered on the retry |
+  | LLM latency over 60 calls | p50 2.4 s · p95 4.1 s · max 4.3 s | Measured with 4 concurrent requests |
+
+  **Single-user latency is lower** (about 2.1 s median in M2). Against the parent plan's targets (3 s typical, 4.5 s worst case), the median passes and p95 is near the limit. The two-call streaming split is the lever if needed.
+- **Known gaps / next candidates:**
+  - The LLM sometimes returns empty choices, costing an extra call. Consider a prompt tweak, or generating the choices separately.
+  - Embellishment ("the whole village buzzing") is tolerated.
+  - The eval's keyword checks are crude; an LLM judge is the parent plan's tier.
+  - The Coding Plan key is for local testing only.
 
 ## Afterwards (not in this plan)
 Two-call streaming pipeline if needed · second LLM provider (AC-G) · Skyrim text+voice client against the same API (engine-played audio, no lip-sync) · co-save snapshot.
