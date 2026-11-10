@@ -57,6 +57,7 @@ class NPC(BaseModel):
 
 
 class WorldConfig(BaseModel):
+    setting: str = ""  # world flavour and speech style for every NPC prompt
     rules: Rules = Rules()
     settlements: list[Settlement]
     locations: list[Location] = []

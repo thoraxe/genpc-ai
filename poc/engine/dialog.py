@@ -85,10 +85,12 @@ def _knowledge_block(views: list[MemoryView], now: float, rules) -> str:
     return "\n".join(lines)
 
 
-def build_system_prompt(npc: NPC, settlement_name: str, views: list[MemoryView], day: float, rules) -> str:
+def build_system_prompt(
+    npc: NPC, settlement_name: str, views: list[MemoryView], day: float, rules, setting: str = ""
+) -> str:
     return f"""You are {npc.name}, a {npc.role} in {settlement_name}. {npc.bio}
 
-It is in-game day {day:g}. Stay in character and speak like a person from a medieval fantasy village.
+It is in-game day {day:g}. Stay in character.{" " + setting if setting else ""}
 
 WHAT YOU KNOW (this is your ENTIRE knowledge of recent events and of the player):
 {_knowledge_block(views, day, rules)}
@@ -130,7 +132,8 @@ class DialogEngine:
     def preview_prompt(self, npc_id: str) -> str:
         npc = self.npc(npc_id)
         views = knowledge.retrieve(self.store.memories(npc_id), self.store.day, self.store.world.rules)
-        return build_system_prompt(npc, self._settlement(npc), views, self.store.day, self.store.world.rules)
+        world = self.store.world
+        return build_system_prompt(npc, self._settlement(npc), views, self.store.day, world.rules, world.setting)
 
     def _settlement(self, npc: NPC) -> str:
         return next((s.name for s in self.store.world.settlements if s.id == npc.settlement), npc.settlement)
@@ -145,7 +148,7 @@ class DialogEngine:
         store, rules = self.store, self.store.world.rules
         npc = self.npc(npc_id)
         views = knowledge.retrieve(store.memories(npc_id), store.day, rules)
-        system = build_system_prompt(npc, self._settlement(npc), views, store.day, rules)
+        system = build_system_prompt(npc, self._settlement(npc), views, store.day, rules, store.world.setting)
         session = [t for t in store.turns(npc_id) if session_id is not None and t.get("session_id") == session_id]
         messages = _history_messages(session)
         messages.append({"role": "user", "content": player_text or GREETING})

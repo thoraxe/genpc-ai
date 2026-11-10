@@ -113,3 +113,13 @@ def test_news_marked_after_delivery_and_session_history(store):
     assert [f.text for f in t2.remembered] == ["The player is named Erik and comes from Falkreath"]
     assert t2.rejected == ["The player is a famous dragon slayer"]
     assert any(m.source == "conversation" for m in store.memories("eirik"))
+
+
+def test_setting_text_comes_from_the_world_file(store):
+    d = DialogEngine(store, FakeLLM([]))
+    assert "medieval fantasy village" in d.preview_prompt("torvald")  # Skyrim world.json
+    store.world.setting = "Talk like a Night City local."
+    p = d.preview_prompt("torvald")
+    assert "Talk like a Night City local." in p and "medieval" not in p
+    store.world.setting = ""
+    assert "Stay in character.\n" in d.preview_prompt("torvald")

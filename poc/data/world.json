@@ -1,4 +1,5 @@
 {
+  "setting": "Speak like a person from a medieval fantasy village.",
   "settlements": [
     {"id": "riverwood", "name": "Riverwood", "adjacent": ["whiterun"]},
     {"id": "whiterun", "name": "Whiterun", "adjacent": ["riverwood"]},
