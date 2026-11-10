@@ -104,3 +104,4 @@ The full decisions are in [`.ai/spec/decisions/`](.ai/spec/decisions).
 - **Mods are small HTTP clients** ([0002](.ai/spec/decisions/0002-mods-are-small-http-clients.md)). One engine works for many games.
 - **The owner approves behaviour, an AI review checks the code** ([0003](.ai/spec/decisions/0003-owner-reviews-behaviour-ai-reviews-code.md)).
 - **Behaviour specs use plain English and ASD-STE100** ([0004](.ai/spec/decisions/0004-plain-english-ste-for-specs.md)), so human reviewers can understand them.
+- **Each spec is a PR** ([0005](.ai/spec/decisions/0005-specs-are-prs.md)). The owner approves the exact rules before the code work starts.

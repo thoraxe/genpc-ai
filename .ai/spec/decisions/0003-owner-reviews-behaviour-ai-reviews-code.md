@@ -1,6 +1,6 @@
 # 0003: The owner approves behaviour, an AI review checks the code
 
-**Status:** accepted
+**Status:** accepted. Decision 0005 replaces the "issue comment" step.
 **Date:** 2026-11-10
 
 ## Context
