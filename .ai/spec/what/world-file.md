@@ -52,14 +52,14 @@ Examples:
 
 15. The setting `POC_WORLD` chooses the world. `POC_WORLD` is a name, for example `cyberpunk`. `[PLANNED: #7]`
 16. If `POC_WORLD` is empty, the engine uses `poc/data/world.json` and `poc/data/events.json`. This is the Skyrim world. `[PLANNED: #7]`
-16a. If `POC_WORLD` is `cyberpunk`, the engine uses `poc/data/world.cyberpunk.json` and `poc/data/events.cyberpunk.json`. `[PLANNED: #7]`
+16a. If `POC_WORLD` is a name `<name>`, the engine uses `poc/data/world.<name>.json` and `poc/data/events.<name>.json`. Example: `cyberpunk` uses `poc/data/world.cyberpunk.json` and `poc/data/events.cyberpunk.json`. `[PLANNED: #7]`
 16b. If the world file for that name does not exist, the engine does not start. It shows the missing file name. `[PLANNED: #7]`
-16c. Each world keeps its knowledge in its own database file. Example: `cyberpunk` uses `poc/var/poc.cyberpunk.db`. `[PLANNED: #7]`
+16c. Each world keeps its knowledge in its own database file: `poc.<name>.db` in the `POC_VAR_DIR` folder. Example: `cyberpunk` uses `poc/var/poc.cyberpunk.db`. If you set `POC_DB`, the engine uses that file instead. `[PLANNED: #7]`
 
 ### The Cyberpunk world
 
 17. The Cyberpunk world file has 7 towns. Each town is a district of Night City. `[PLANNED: #7]`
-18. Each town lists its next towns in this table. Each link is in both towns. `[PLANNED: #7]`
+18. Each town lists its next towns in this table. Each link is in both towns. `[PLANNED: #7]` (owner question 3)
 
 | Town (`id`) | Next towns |
 |---|---|
@@ -71,8 +71,8 @@ Examples:
 | Pacifica (`pacifica`) | Heywood, Santo Domingo |
 | Badlands (`badlands`) | Westbrook, Santo Domingo |
 
-19. The Cyberpunk world file has no Dogtown. An event in Dogtown goes only to its witnesses (`knowledge.md` rule 5a). `[PLANNED: #7]`
-20. Each part of a district is a place. It belongs to its district. `[PLANNED: #7]`
+19. The Cyberpunk world file has no Dogtown. An event in Dogtown goes only to its witnesses (`knowledge.md` rule 5a). `[PLANNED: #7]` (owner question 2)
+20. Each part of a district is a place. It belongs to its district. `[PLANNED: #7]` (owner question 6)
 
 | Place (`id`) | Town |
 |---|---|
@@ -85,27 +85,27 @@ Examples:
 
 Example: an event in Kabuki counts as an event in Watson. Gossip goes to City Center and Westbrook.
 
-21. The starter cast has these 9 NPCs. `[PLANNED: #7]`
+21. The starter cast has these 9 NPCs. `[PLANNED: #7]` (owner question 1)
 
 | NPC | Job (`role`) | Town | Description (`bio`) | Check |
 |---|---|---|---|---|
 | Regina Jones | fixer | Watson | A calm, careful fixer who gives gigs in Watson. She cares about the people of her district more than about money. | Exists. Confirm that the player can talk to her in person. |
 | Robert Wilson | gun shop owner | Watson (Little China) | An old soldier who runs a small gun shop and shooting range. He is friendly and gives honest advice about guns. | Exists. |
 | Cassius Ryder | ripperdoc (cyberware doctor) | Watson (Little China) | A tired street doctor who installs cyberware. He talks little and wants payment first. | To confirm: name and place. |
-| Wakako Okada | fixer | Westbrook (Japantown) | An old, sharp fixer with strong links to the Tyger Claws gang. She is polite, but she does not forgive a broken deal. | Exists. |
+| Wakako Okada | fixer | Westbrook (Japantown) | An old, sharp fixer with strong links to the Tyger Claws. She is polite, but she does not forgive a broken deal. | Exists. |
 | Dino Dinovic | fixer | City Center | A smooth fixer who works for clients in the corporate towers. He talks about business and money. | Exists. Confirm that the player can talk to him in person. |
-| Sebastian "Padre" Ibarra | fixer | Heywood | An older fixer with ties to the Valentinos gang. He speaks quietly and values loyalty and family. | Exists. Confirm the place. |
+| Sebastian "Padre" Ibarra | fixer | Heywood | An older fixer with ties to the Valentinos. He speaks quietly and values loyalty and family. | Exists. Confirm the place. |
 | Muamar "El Capitan" Reyes | fixer | Santo Domingo | A loud, cheerful fixer who also sells cars. He likes to tell jokes about his deals. | To confirm: town. |
 | Mr. Hands | fixer | Pacifica | A polite, mysterious fixer who dresses well. He speaks with old-fashioned manners. | Exists. Phantom Liberty uses him a lot. Confirm that he is OK. |
 | Dakota Smith | fixer | Badlands (Rocky Ridge) | A practical fixer who runs a garage in the desert. She speaks plainly and trusts actions more than words. | Exists. |
 
-22. Each Cyberpunk NPC `id` is the game's record ID for that NPC. The mod uses this ID to find the NPC. `[PLANNED: #7]`
+22. Each Cyberpunk NPC `id` will be the game's record ID: the fixed name of the character in the game data. The mod uses this ID to find the NPC. We must still confirm the IDs in the game. `[PLANNED: #7]`
 23. Each NPC in the starter cast has no `voice_id` now. The owner will choose the voices later (#1). `[PLANNED: #7]`
 24. The Cyberpunk setting text is this: `[PLANNED: #7]`
 
 > Speak like a person who lives in Night City in the year 2077. Night City is a hard, dangerous city. Corporations and gangs control it. Use some street words, but keep your meaning clear.
 
-25. In the Cyberpunk world file, next-town gossip arrives after 1 day (`hop2_delay_days` = `1.0`). Example: event on day 41, gossip on day 42. `[PLANNED: #7]`
+25. In the Cyberpunk world file, next-town gossip arrives after 1 day (`hop2_delay_days` = `1.0`). Example: event on day 41, gossip on day 42. `[PLANNED: #7]` (owner question 4)
 26. The Cyberpunk world file does not change the other knowledge settings. `[PLANNED: #7]`
 
 ### The Cyberpunk presets (`poc/data/events.cyberpunk.json`)
@@ -147,11 +147,16 @@ Examples for preset 1, with the event on day 41:
 - On day 41.4, Robert Wilson and Cassius Ryder know nothing.
 - On day 41.5, Robert Wilson and Cassius Ryder know 3 facts.
 - On day 42, Wakako Okada and Dino Dinovic know 2 facts: the hideout is gone, and a solo merc did it.
-- Padre (Heywood), Mr. Hands (Pacifica) and Dakota Smith (Badlands) never know.
+- Padre (Heywood), El Capitan (Santo Domingo), Mr. Hands (Pacifica) and Dakota Smith (Badlands) never know.
 
 Examples for preset 2, with the event on day 41:
 - On day 42, Dino, El Capitan and Mr. Hands know 2 facts: the fight, and the two dead officers.
 - Regina, Robert Wilson, Cassius, Wakako and Dakota never know.
+
+Examples for preset 3, with the event on day 41:
+- On day 41, Dakota Smith knows all 4 facts.
+- On day 42, Wakako Okada (Westbrook) and El Capitan (Santo Domingo) know 2 facts: the camp is empty, and a merc killed the raiders.
+- Regina, Robert Wilson, Cassius, Dino, Padre and Mr. Hands never know.
 
 ## Constraints
 

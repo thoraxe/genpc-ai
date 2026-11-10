@@ -50,7 +50,7 @@ You set these values in the `.env` file at the top of the repo. Secret keys go o
 | `POC_START_DAY` | The day on the clock at the start, and after a reset. | `41` |
 | `POC_VAR_DIR` | The folder for the database. | `poc/var` |
 | `POC_WORLD` | The name of the world. Empty means the Skyrim world. | (empty) `[PLANNED: #7]` |
-| `POC_DB` | The database file. | `poc/var/poc.db`, or `poc/var/poc.<world>.db` if `POC_WORLD` has a name. `[PLANNED: #7]` |
+| `POC_DB` | The database file. | `poc/var/poc.db`, or `poc.<world>.db` in `POC_VAR_DIR` if `POC_WORLD` has a name. `[PLANNED: #7]` |
 
 The world file can change the knowledge numbers (for example, how fast memories fade). See `world-file.md`.
 
