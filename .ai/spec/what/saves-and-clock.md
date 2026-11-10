@@ -61,4 +61,4 @@ Examples:
 |---|---|
 | #9 | A mod can set the clock to the game's own day. |
 | #11 | A save uses a name that the game gives. Then a game load can load the matching engine save. |
-| #14 | The Cyberpunk mod saves and loads engine knowledge with the game's own saves. |
+| #14 | A game mod saves and loads engine knowledge with the game's own saves. |

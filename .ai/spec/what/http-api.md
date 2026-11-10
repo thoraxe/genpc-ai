@@ -133,5 +133,5 @@ Examples:
 |---|---|
 | #8 | A route to add NPCs while the game runs. |
 | #9 | `POST /api/clock/set`: set the clock from the game's own day. |
-| #10 | The voice goes into a sound file that the Cyberpunk mod can play, not only as a stream. |
+| #10 | The voice goes into a sound file that a game mod can play, not only as a stream. |
 | #11 | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |

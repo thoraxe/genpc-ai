@@ -8,7 +8,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 |---|---|---|---|
 | **NPC** | A character in the game that the player can talk to. The player does not control it. | character, bot, agent | `NPC`, `npc_id` |
 | **player** | The person who plays the game. | user, hero | `player` |
-| **town** | A place where NPCs live. Gossip moves between towns. In Cyberpunk, a town is a district. | settlement, village, city | `Settlement` |
+| **town** | A place where NPCs live. Gossip moves between towns. A game can call a town something else, for example a district. | settlement, village, city | `Settlement` |
 | **next town** | A town that the world file lists as a neighbour of a different town. | adjacent town, nearby town | `adjacent` |
 | **place** | A location that is not a town, for example a mine. Each place belongs to one town. | site, area | `Location`, `near_settlement` |
 | **world** | All the towns, places and NPCs of one game. | setting (when you mean the world) | `WorldConfig` |

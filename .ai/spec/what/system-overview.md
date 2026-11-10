@@ -66,6 +66,6 @@ The world file can change the knowledge numbers (for example, how fast memories 
 | #7 | A world file for Cyberpunk 2077: districts as towns, with a starter cast. |
 | #8 | A mod can add new NPCs while the game runs. |
 | #9 | A mod can set the clock from the game's own day. |
-| #10 | The engine writes each line's voice into a sound file that the Cyberpunk mod can play. |
+| #10 | The engine writes each line's voice into a sound file that a game mod can play. |
 | #11 | Saves use a name that the game gives, so a game save and an engine save match. |
 | #20 | The live eval must not count "I don't know about that" as a leak. |
