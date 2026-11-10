@@ -1,6 +1,6 @@
 # Cyberpunk 2077 mod: plan
 
-**Status:** pending approval · written 2026-11-10 · branch to use: `cyberpunk-mod` (off `poc-python-ui`)
+**Status:** approved; tracked in [milestone v0.2.0](https://github.com/thoraxe/genpc-ai/milestone/1) (issues #1–#15) · written 2026-11-10
 
 ## Goal
 The player looks at an NPC in Cyberpunk 2077 (PC, patch 2.5), presses a key, and talks to them through our engine:
