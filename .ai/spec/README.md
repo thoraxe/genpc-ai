@@ -17,7 +17,8 @@ Also read `glossary.md` (the words we use, each with one meaning) and `constrain
 In scope: the Python engine in `poc/` (knowledge rules, conversations, saves, HTTP API, voice) and its data files.
 
 Out of scope:
-- The game mods. The Cyberpunk 2077 mod does not exist yet (see `.omc/plans/cyberpunk-mod-plan.md`). When it exists, it gets its own `what/` file.
+- The game mods. Each mod has its own folder and its own specs: `mods/<game>/.ai/spec/`. The first is `mods/cyberpunk/.ai/spec/`.
+- Game content: towns, NPCs and events of a game. They belong to the mod, never to these specs. Examples in these specs use the test world or made-up names.
 - The test web page in `poc/ui/`. It is only a client of the HTTP API.
 - The external AI model and the voice service (ElevenLabs). The specs tell only how the engine uses them.
 
@@ -105,5 +106,6 @@ We do not have the official ASD-STE100 dictionary in the repo. Use the rules abo
 - **Planned changes:** in the spec stage, mark each new rule with `[PLANNED: #N]`, where N is the GitHub issue. In the code stage, remove the mark. Thus the rules on `main` tell what the engine does now. A `[PLANNED: #N]` mark stays on `main` only if the owner chose to merge a spec before its code. In a Planned Changes table, strike through a done row (`~~#N~~`). Do not delete it.
 - **Specs and the owner's OK:** a change in behaviour is one PR in two stages (see `CLAUDE.md`). In the spec stage, the PR adds the new rules to the correct `what/` files. Its Summary gives the plain spec, 3 to 6 examples, what it will not do, and questions with recommended answers. When the owner writes "OK", the code stage starts in the same PR. If the rules change after the OK, show the owner the changed rules and get a new OK. The rules and the code go into `main` together.
 - **Constraints:** a rule for one part goes in the Constraints section of that part's `what/` file. A rule for the full project goes in `constraints.md`. Build, test and code-style rules go in `CLAUDE.md`.
+- **Engine and mod specs:** these specs are authoritative for the engine and the HTTP API. A mod's specs are authoritative for the mod and its game content. A mod spec can refer to an engine rule. An engine spec never refers to a mod.
 - **Authority:** `what/` is authoritative for behaviour. `how/` is authoritative for code layout. If they do not agree, `what/` is correct and the code is wrong (or the spec needs an approved change).
 - **New file or old file:** if a new part has its own settings and you can understand it alone, give it a new file. If it adds a capability to a part, put it in that part's file.

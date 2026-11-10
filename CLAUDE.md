@@ -5,6 +5,7 @@ A game-agnostic engine for generative-AI NPCs. A deterministic knowledge model s
 ## Specs
 All specifications live in `.ai/spec/`. Start with `.ai/spec/README.md` for the overview, reading order and structure. `ARCHITECTURE.md` is the human-facing overview.
 - `what/` (behaviour), `glossary.md`, `constraints.md`, `decisions/` and the Summary of every spec PR **must** be written in extremely simple, plain English, following ASD-STE100 where possible. Follow "Writing rules for what/" in `.ai/spec/README.md`, and use the `glossary.md` word for each thing.
+- Mods live in `mods/<game>/`, each with its own `.ai/spec/` (same structure and writing rules). Engine specs and engine code never mention a mod's game content; their examples use the test world or made-up names. A mod talks to the engine only through the HTTP API.
 - `how/` (code map) uses the same simple sentences but the code's exact names. Follow "Writing rules for how/" in `.ai/spec/README.md`.
 - A PR that changes a `what/` rule lists each changed rule (file and number) in plain words in its Summary.
 - `main` always describes what the engine does now. New rules reach `main` in the same PR as the code that builds them. `[PLANNED: #N]` on `main` is rare: only for a spec the owner chose to merge ahead of its code. A PR that changes behaviour must update the matching `what/` and `how/` files.
