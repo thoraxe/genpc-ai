@@ -23,5 +23,5 @@ The first mod is for Cyberpunk 2077. Its content (districts, NPCs, events) start
 
 - Easier: one PR can change the API and the mod together. The owner follows one repo.
 - Easier: the rules above keep each mod separate. Thus we can move a mod to its own repo later.
-- Harder: different licences for the engine and a mod are less clean in one repo.
+- Harder: different licences for the engine and a mod are harder to keep apart in one repo.
 - We move a mod to its own repo when one of these is true: it needs a different licence, it has its own release dates, or other people build mods.

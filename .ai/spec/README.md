@@ -36,7 +36,8 @@ Out of scope:
 | Change what an NPC says, or the prompt | `what/conversation.md`, `how/dialog-pipeline.md` |
 | Change saves, loads or the game clock | `what/saves-and-clock.md`, `how/knowledge-engine.md` |
 | Add or change an HTTP route for a mod | `what/http-api.md`, `how/project-structure.md` |
-| Add a game world, town or NPC | `what/world-file.md` |
+| Change the world file format | `what/world-file.md` |
+| Add or change a game's world | `mods/<game>/.ai/spec/` |
 | Run or write tests and the live eval | `how/testing-and-eval.md` |
 | Write a spec for the owner | "Writing rules for what/" below |
 

@@ -16,7 +16,7 @@ Use the words in the engine glossary (`.ai/spec/glossary.md`).
 ## Scope
 
 In scope:
-- The Cyberpunk world that the mod sends to the engine: districts, NPCs, setting text and knowledge settings.
+- The Cyberpunk world that the mod sends to the engine: districts (towns), NPCs, setting text and knowledge settings.
 - What the mod does in the game: talk key, subtitles, choices, voice, events, clock and saves.
 - The install package for the tester.
 

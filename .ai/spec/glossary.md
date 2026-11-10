@@ -18,7 +18,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **added NPC** | An NPC that the mod adds while the game runs. The world file does not have it. A named NPC or a crowd NPC. | registered NPC, dynamic NPC | `kind` = `named` or `crowd` |
 | **named NPC** | An added NPC with a record ID. It remembers the player, like a world-file NPC. | unique NPC | `kind` = `named` |
 | **crowd NPC** | An added NPC with only an entity ID. It keeps no facts from the player after a conversation. | generic NPC, random NPC | `kind` = `crowd` |
-| **record ID** | The fixed name of a character in the game data, for example `Character.wilson`. It does not change between games or loads. | TweakDB ID (in what/ files) | `record_id` |
+| **record ID** | The fixed name of a character in the game data, for example `npc.harbor_vendor`. It does not change between games or loads. | game-specific ID names | `record_id` |
 | **entity ID** | A number that the game gives to a crowd NPC. It is good only until the next load. | hash, entity hash | `entity_id` |
 | **faction** | A group that an NPC belongs to, for example a gang or a company. | gang, affiliation | `faction` |
 | **general description** | The description that each added NPC gets. It comes from the world file. | generic bio, default bio | `generic_bio` |

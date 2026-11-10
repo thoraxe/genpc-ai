@@ -22,7 +22,7 @@ Example: Hrolf sees the bandits die on day 41. On day 41 he knows all 5 facts: t
 5a. If the place or town of the event is not in the world file, no gossip goes out. Only the witnesses know the event.
 5b. An added NPC gets gossip like a world-file NPC. Its town is the town that the mod sent. `[PLANNED: #8]` (owner question 1)
 5c. When the engine adds an NPC, the NPC also gets the gossip of earlier events that is already due. `[PLANNED: #8]`
-   Example: an event in Watson on day 41. The mod adds Ichiro in Watson on day 42. His memory has day 41.5.
+   Example: an event in Riverwood on day 41. The mod adds Bram in Riverwood on day 42. His memory has day 41.5.
 5d. If the town of an added NPC is not in the world file, the NPC gets no gossip. `[PLANNED: #8]`
 5e. If the mod sends a new town for a named NPC, the NPC keeps all its memories. `[PLANNED: #8]` (owner question 3)
 5f. After the move, gossip goes to the named NPC by its new town. This includes gossip of earlier events. `[PLANNED: #8]` (owner question 3)

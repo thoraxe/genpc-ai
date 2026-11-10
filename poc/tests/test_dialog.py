@@ -118,8 +118,8 @@ def test_news_marked_after_delivery_and_session_history(store):
 def test_setting_text_comes_from_the_world_file(store):
     d = DialogEngine(store, FakeLLM([]))
     assert "medieval fantasy village" in d.preview_prompt("torvald")  # Skyrim world.json
-    store.world.setting = "Talk like a Night City local."
+    store.world.setting = "Talk like a sailor from a harbor town."
     p = d.preview_prompt("torvald")
-    assert "Talk like a Night City local." in p and "medieval" not in p
+    assert "Talk like a sailor from a harbor town." in p and "medieval" not in p
     store.world.setting = ""
     assert "Stay in character.\n" in d.preview_prompt("torvald")

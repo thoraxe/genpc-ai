@@ -27,7 +27,7 @@ uv run python poc/scripts/eval.py 10
 ```
 
 ## Conventions
-- **The engine core has no game-specific logic.** Settings, places and casts live in `poc/data/*.json`, and game behaviour lives in the mods.
+- **The engine core has no game-specific logic.** The test world lives in `poc/data/*.json`. A game's world, places and cast live in its mod (`mods/<game>/`), and game behaviour lives in the mods.
 - **The prompt contains only facts retrieved for that NPC.** Never put world state or other NPCs' memories in it.
 - **The knowledge rules are deterministic and tunable through `Rules`.** No LLM calls inside `knowledge.py`.
 - **Secrets live only in `.env`.** Never print, log or commit key values.
