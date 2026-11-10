@@ -50,6 +50,14 @@ This file covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-
 - `mark_used` adds 1 to `recalls` for each retrieved memory.
 - `mark_used` sets `mentioned = True` for each id in `news_ids`. `news_ids` holds the news memories with a kept fact that is `grounded` in the NPC line.
 
+**One world at a time** (`what/world-file.md` rules 15–16s)
+1. At import, `api.py` loads the test world (`poc/data/world.json`, `id` = `test`) into `store`, using `POC_DB`.
+2. `POST /api/world` (`api.set_world`) validates the body with `WorldConfig` and `world_problems`. Every failure is `400`, never `422`.
+3. Same `id` as the world in use: only `store.world` is replaced. The memories stay, and the new `rules` and `adjacent` lists apply from now on.
+4. Different `id`: the old connection is closed, and a new `Store` opens `_db_path(id)`. A new file starts at `_start_day(world)`.
+5. `_db_path` hashes the `id` into the file name, so a mod's `id` never becomes a path. Each world thus has its own clock, events, memories, turns and saves.
+6. `presets` is `{}` in a mod world. The preset form then answers `404`.
+
 **Save, load and reset** (`what/saves-and-clock.md` rules 10–17)
 - `Store.save` writes every row of `STATE_TABLES` (`meta`, `events`, `memories`, `turns`) as JSON into `saves.blob`.
 - `Store.load` deletes the rows of those tables. Then it inserts the saved rows again, with their old ids.
@@ -79,4 +87,5 @@ This file covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-
 - `report_event` uses the event id to ignore a second report. The API makes a new id from the event count each time. Thus two API posts make two events.
 - If you add stored state, add its table to `STATE_TABLES`. If you do not, a load does not remove that data. Data from after the save then stays in the game (`REVIEW.md` §3).
 - The `turns` table keeps `session_id` in the JSON body. The row id of the first turn becomes the `session_id`. `_turn` writes it back with an `UPDATE`.
+- `set_world` replaces the module globals `world`, `store` and `presets` under `api.lock`. Code that holds an old `Store` object (scripts, tests) keeps the old world.
 - The store has one connection with `check_same_thread=False`. Only `api.lock` makes it thread-safe. Scripts and tests that use `Store` directly do not take the lock.
