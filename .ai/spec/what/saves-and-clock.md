@@ -8,7 +8,7 @@ The engine sends the result of each change to the mod. For the exact fields, see
 
 ### Clock
 
-1. The clock starts at the start day (`POC_START_DAY`, default `41`).
+1. The clock starts at the start day of the world in use. The world file can give it (`start_day`). Else it is `POC_START_DAY` (default `41`).
 2. The clock only moves forward. To go to an earlier day, load a save.
 3. One clock move is more than 0 days and a maximum of 365 days.
 4. When the clock moves, gossip that is due arrives (see `knowledge.md` rule 16). The engine sends the new memories to the mod.
