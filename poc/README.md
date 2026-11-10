@@ -5,7 +5,7 @@ A Python engine plus a bare test page. NPCs know what they saw or heard, gossip 
 ## Setup
 - **`.env` at the repo root** needs:
   - `ZAI_API_KEY`: a z.ai Coding Plan key.
-  - `ELEVENLABS_API_KEY`: needs the `voices_read` and text-to-speech permissions.
+  - `ELEVENLABS_API_KEY` (optional; without it there is no voice): needs the `voices_read` and text-to-speech permissions.
 - **Optional settings:**
   - `LLM_BASE_URL`, `LLM_MODEL` (default `glm-5.3-flash`) and `LLM_API_KEY_ENV`, to point at any OpenAI-compatible provider.
   - `TTS_ENABLED=0`, to turn voice off.
