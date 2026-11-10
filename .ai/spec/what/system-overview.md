@@ -49,7 +49,6 @@ You set these values in the `.env` file at the top of the repo. Secret keys go o
 | `TTS_ENABLED` | Set to `0`, `false` or `no` to stop the voice. | `1` |
 | `AUDIO_SLOT_DIR` | The slot folder: the folder with the slot files for the game. If it is empty, the engine writes no slot files. `[PLANNED: #10]` | empty |
 | `AUDIO_SLOT_COUNT` | The number of slot files. It must be from 1 to 16. It must agree with the list of slot files in the mod. `[PLANNED: #10]` (owner question 1) | `4` |
-| `AUDIO_SLOT_COUNT` | The number of slot files. It must be from 1 to 16. It must agree with the mod's list for `Audioware`. `[PLANNED: #10]` | `4` |
 | `POC_START_DAY` | The start day of the test world, and of a mod world that gives no `start_day`. | `41` |
 | `POC_VAR_DIR` | The folder for the databases. Each mod world has its own database file there. | `poc/var` |
 | `POC_DB` | The database file of the test world. | `poc/var/poc.db` |
