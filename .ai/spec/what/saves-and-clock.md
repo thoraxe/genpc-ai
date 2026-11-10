@@ -13,8 +13,9 @@ The engine sends the result of each change to the mod. For the exact fields, see
 3. One clock move is more than 0 days and a maximum of 365 days.
 4. When the clock moves, gossip that is due arrives (see `knowledge.md` rule 16). The engine sends the new memories to the mod.
 5. Memories fade by the clock, not by the real clock of the computer.
-5a. A mod can set the clock from the game's hours. `hours` is the number of hours since the game started. `[PLANNED: #9]` (owner question 1)
-5b. The engine divides `hours` by 24 to get the day. Example: `hours` = `996` is day 41.5. `[PLANNED: #9]` (owner question 1)
+5a. A mod can set the clock from the game's hours. `hours` is the number of hours since the game started. `[PLANNED: #9]`
+5b. The engine divides `hours` by the length of a day (`world-file.md` rule 1a) to get the day. `[PLANNED: #9]`
+5ba. Example: with 24-hour days, `hours` = `996` is day 41.5. With 30-hour days, `hours` = `900` is day 30. `[PLANNED: #9]`
 5c. If the day is later than the clock, the clock moves to that day. Rules 3 and 4 apply. `[PLANNED: #9]`
 5d. If the day is the same as the clock, nothing changes. The engine does not send an error. `[PLANNED: #9]`
 5e. If the day is earlier than the clock, the engine refuses. The clock does not change. `[PLANNED: #9]`
