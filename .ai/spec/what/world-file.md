@@ -1,12 +1,14 @@
 # World File
 
-The world file describes one game world: its towns, places and NPCs. Each game gets its own world file. The engine reads it when it starts. The preset events file has events for tests and demos.
+The world file describes one game world: its towns, places and NPCs. Each game gets its own world file. The engine has one test world. A mod sends its own world to the engine. The preset events file has events for the tests.
 
 ## Behavioral Rules
 
-### The world file (`poc/data/world.json`)
+### The parts of a world file
 
 1. The world file has these parts:
+   - `id`: the name of the world, for example `cyberpunk`. `[PLANNED: #7]`
+   - `start_day`: the day on the clock when the world starts. This part is optional. The default is `POC_START_DAY`. `[PLANNED: #7]`
    - `setting`: the setting text. Every NPC gets it in the prompt. It tells the NPC how to speak.
    - `settlements`: the towns.
    - `locations`: the places. This part is optional.
@@ -33,9 +35,9 @@ The world file describes one game world: its towns, places and NPCs. Each game g
 9. Each preset has a name, a `label` for the test page, a `type`, a `location`, `default_witnesses` and `facts`.
 10. Each fact has a `text` and an `importance` from 1 to 5.
 
-### The world now
+### The test world
 
-11. The world file now describes a small fantasy world with 3 towns:
+11. The test world (`poc/data/world.json`, `id` = `test`) is a small fantasy world with 3 towns: `[PLANNED: #7]`
    - Riverwood, next to Whiterun;
    - Whiterun, next to Riverwood;
    - Solitude, with no next towns.
@@ -50,17 +52,39 @@ Examples:
 
 ### Which world the engine uses
 
-15. When the engine starts, it uses the test world (`poc/data/world.json`). The test page and the tests use it. `[PLANNED: #7]`
-16. A mod sends its own world to the engine with `POST /api/world`. Send it before any event or conversation. `[PLANNED: #7]`
-16a. The engine uses one world at a time: the last world that a mod sent. `[PLANNED: #7]`
-16b. Each world has a name (`id`), for example `cyberpunk`. `[PLANNED: #7]`
-16c. Each world keeps its own knowledge. Events, memories, turns and saves of one world never appear in a different world. `[PLANNED: #7]`
-16d. A mod can send a world that the engine knew before. Then the engine uses the knowledge that it kept for that world. `[PLANNED: #7]`
-16e. If the world that the mod sends has changes, for example a new NPC, the engine uses the new world. The memories stay. `[PLANNED: #7]` (owner question 7)
-16f. If the world is not correct, the engine refuses it and keeps the old world. The answer tells why. `[PLANNED: #7]`
-16g. The engine does not keep the mod's world after it stops. The mod sends the world at each game start. `[PLANNED: #7]`
+15. When the engine starts, it uses the test world. The test page and the tests use it. `[PLANNED: #7]`
+16. A mod sends its own world to the engine with `POST /api/world`. `[PLANNED: #7]`
+16a. Send the world after `POST /api/session/start`, and before any event or conversation. `[PLANNED: #7]`
+16b. The engine uses one world at a time: the last world that a mod sent. `[PLANNED: #7]`
+16c. A mod cannot use the world name `test`. `[PLANNED: #7]`
+16d. Each world has its own clock, events, memories, turns, added NPCs and saves. `[PLANNED: #7]`
+16e. A switch to a different world switches all of these. A reset or a load changes only the world in use. `[PLANNED: #7]`
+16f. Nothing from one world goes into a different world. This is true for prompts, gossip, the inspector and saves. `[PLANNED: #7]`
+16g. A new world starts at its start day. Example: the Cyberpunk world starts at day 0. `[PLANNED: #7]`
+16h. A reset sets the clock of the world in use to its start day. `[PLANNED: #7]`
+16i. A mod can send a world `id` that the engine has knowledge for. Then the engine uses that knowledge again. `[PLANNED: #7]`
+16j. A world can change between two sends, for example after a mod update. The engine uses the new world. The memories stay. `[PLANNED: #7]` (owner question 7)
+16k. After such a change: `[PLANNED: #7]` (owner question 7)
+   - An NPC that is not in the new world is unknown. Its memories stay, but requests for it get `404`.
+   - New next towns apply to gossip that has not arrived yet.
+   - New knowledge settings apply to all memories from then on.
+16l. Do not use an NPC `id` again for a different character. The new character gets the memories of the old one. `[PLANNED: #7]`
+16m. If the world is not correct, the engine refuses it. It keeps the world in use, and the answer tells why. `[PLANNED: #7]`
+16n. A world is not correct if one of these is true: `[PLANNED: #7]`
+   - It has no `id`, no `settlements` or no `npcs`.
+   - Two towns, two places or two NPCs have the same `id`.
+   - An `adjacent` list, a place or an NPC names a town that is not in the world.
+16o. After a switch, a request for an NPC of a different world gets `404`. `[PLANNED: #7]`
+16p. Conversation, turn and save numbers belong to one world. Do not use them in a different world. `[PLANNED: #7]`
+16q. The engine does not keep the mod's world after it stops. After a restart, it uses the test world again. `[PLANNED: #7]`
+16r. `POST /api/session/start` and `GET /api/world` give the `id` of the world in use. If it is not the mod's world, send the world again. `[PLANNED: #7]`
+16s. Presets belong only to the test world. In a mod world, `GET /api/world` gives no presets. `[PLANNED: #7]`
 
-Example: the engine starts with the test world. The Cyberpunk mod sends `cyberpunk`. Then Night City is the world, and Torvald does not exist.
+Examples:
+- The engine starts with the test world. The Cyberpunk mod sends `cyberpunk`. Then Night City is the world at day 0. A request to talk to Torvald gets `404`.
+- The player plays Cyberpunk until day 12, then closes the game. The next day, the mod sends `cyberpunk` again. Then the clock is at day 12, and every NPC remembers what it knew.
+- The engine restarts while the game runs. `POST /api/session/start` gives `test`. The mod sends `cyberpunk` again and continues.
+- A mod update removes Dino from the world. A request to talk to Dino gets `404`. If a later update adds Dino again, he still has his memories.
 
 ### The Cyberpunk world
 
@@ -117,7 +141,7 @@ Example: an event in Kabuki counts as an event in Watson. Gossip goes to City Ce
 
 ### The Cyberpunk presets (`mods/cyberpunk/events.json`)
 
-27. The Cyberpunk preset file has 3 presets. Only the tests use it. `[PLANNED: #7]`
+27. The Cyberpunk preset file has 3 presets. Only the tests use it. The tests send each preset in the full form (`http-api.md` rule 13). `[PLANNED: #7]`
 
 **Preset 1:** "Clear a Maelstrom gig in Northside". Place: Northside (Watson). Witness: Regina Jones.
 

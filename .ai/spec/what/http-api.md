@@ -25,15 +25,18 @@ The engine runs at `http://localhost:8000` by default.
      - `audio`: the sound format of the voice. It is empty if there is no voice.
    - `llm`: the name of the AI model. Before the first conversation, it is the model name only. After it, it is the model name and the service address.
    - `tts`: the name of the voice service, or empty.
+   - `world`: the `id` of the world in use (`world-file.md` rule 16r). `[PLANNED: #7]`
 
 ### World
 
 6. `GET /api/world` gives the full world: the day, towns, places, NPCs, events, presets, saves and knowledge settings.
+6a. The answer also gives the `id` of the world in use (`world`). `[PLANNED: #7]`
 7. For each NPC, the answer gives the number of memories that the NPC did not forget (`known`).
 8. This answer does not give the NPC's description. The inspector route gives it (rule 20).
 8a. `POST /api/world` sends a world to the engine. The body is the world, in the same format as the world file. `[PLANNED: #7]`
-8b. The answer gives the world `id`, the number of towns and the number of NPCs. `[PLANNED: #7]`
-8c. If the world is not correct, the engine answers with `400`. The answer tells why. The old world stays. `[PLANNED: #7]`
+8b. The answer gives the world `id`, the number of towns and the number of NPCs. Example: `cyberpunk`, 7 towns, 9 NPCs. `[PLANNED: #7]`
+8c. If the world is not correct (`world-file.md` rule 16n), the engine answers with `400`. The answer tells why. `[PLANNED: #7]`
+8d. Rule 8c uses `400`, not `422`, also for a missing part. The world in use stays. `[PLANNED: #7]`
 
 ### Clock
 
@@ -44,6 +47,7 @@ The engine runs at `http://localhost:8000` by default.
 
 11. `POST /api/events` tells the engine about an event. Use one of two forms.
 12. **Preset form:** send `preset` (the name of an event in `poc/data/events.json`). You can also send `witnesses`. If you send no `witnesses`, the engine uses the preset's default witnesses.
+12a. In a mod world, the preset form answers with `404`. Presets belong only to the test world. `[PLANNED: #7]`
 13. **Full form:** send these fields:
    - `type`: a short tag, for example `location_cleared`;
    - `location`: a place or a town;
@@ -134,6 +138,7 @@ Examples:
 
 | Ticket | Summary |
 |---|---|
+| #7 | `POST /api/world`: a mod sends its world to the engine. |
 | #8 | A route to add NPCs while the game runs. |
 | #9 | `POST /api/clock/set`: set the clock from the game's own day. |
 | #10 | The voice goes into a sound file that a game mod can play, not only as a stream. |
