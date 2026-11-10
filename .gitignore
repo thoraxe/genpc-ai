@@ -7,3 +7,4 @@ __pycache__/
 .pytest_cache/
 poc/var/
 .omc/state/
+.omc/project-memory.json
