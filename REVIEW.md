@@ -35,6 +35,7 @@ A spec PR changes only `.ai/spec/`. Check:
 - Each rule is testable, has a real-value example where it has a number, and is marked `[PLANNED: #N]`.
 - The Summary has 3–6 examples, what it will not do, and questions with recommended answers.
 - New rules do not contradict or renumber existing rules, and do not clash with other open spec PRs.
+- The Summary and the commit message have no closing word ("closes", "fixes", "resolves") before an issue number.
 - Nothing in the spec would put another NPC's knowledge, world state, lost facts or faded facts into a prompt (§1).
 
 ## Not worth flagging

@@ -15,12 +15,13 @@ Decision 0003 put each plain-language spec in an issue comment. Then decision 00
 - The PR Summary is the plain-language spec. It gives what the change does, 3 to 6 examples, and what it will not do.
 - The Summary also gives questions for the owner. Each question has a recommended answer.
 - The owner writes "OK" on the PR. Then we merge it. We never merge a spec PR without the owner's OK.
+- If the rules change after the OK, we show the owner the changed rules. Then we wait for a new OK.
 - The code PR comes after it. It changes the rules to `[DONE: #N]`.
 - If the code PR must change an approved rule, the owner must approve that change first.
 
 This replaces the "issue comment" step of decision 0003. The rest of 0003 stays.
 
-The specs for #7 to #11 were first issue comments. They move into spec PRs. After that, the comments are only history.
+The specs for #7 to #11 are now issue comments. They move into spec PRs. After that, the comments are only history.
 
 ## Other options
 

@@ -37,7 +37,7 @@ uv run python poc/scripts/eval.py 10
   - Goals and early questions stay on the issue. The spec itself is a PR, not an issue comment.
   - Branch `spec/<issue>-<slug>`. The PR changes only `.ai/spec/` files: the new rules in `what/` marked `[PLANNED: #N]`, plus glossary words. Write "Spec for #N", not "Closes #N": the issue stays open until the code is done.
   - The PR description (Summary section) is the plain-language spec: what it does, 3–6 concrete examples ("if the player does X, then Y"), what it deliberately won't do, and questions for the owner, each with a recommended answer. No code, no jargon: follow "Writing rules for what/" in `.ai/spec/README.md`.
-  - Approval is the owner's "OK" comment on the PR. (PRs are opened from the owner's account, so GitHub's Approve button is not available to them.) Then merge the spec PR. Never merge a spec PR without the owner's OK. If the owner answers a question differently, update the rules and the Summary before merging.
+  - Approval is the owner's "OK" comment on the PR. (PRs are opened from the owner's account, so GitHub's Approve button is not available to them.) Then merge the spec PR. Never merge a spec PR without the owner's OK. If the owner answers a question differently, update the rules and the Summary, post the changed rules in a comment, and get the owner's OK again before merging.
   - The other template sections of a spec PR: **Testing** = the checks output (no code changed); **Local AI review** = one review against "Writing rules for what/", the existing rules, and `REVIEW.md` "Spec PRs"; **Risk** = low (specs only); **How to revert** = revert the squash commit.
   - The code PR follows, links the issue ("Closes #N"), and changes the rules to `[DONE: #N]`. The tests check the spec's examples. If the code PR must change an approved rule, get the owner's OK on that change first.
 - Make small PRs to `main` and squash-merge them. Branch names: `spec/`, `feat/`, `fix/`, `docs/`, `chore/`.
@@ -50,7 +50,7 @@ uv run python poc/scripts/eval.py 10
   - **low** (docs, plans): checks plus one review;
   - **medium** (engine or mod code): checks plus one review, with every finding fixed or answered;
   - **high** (`knowledge.py`, prompt building, save/load, `.github/`): add a **second, independent** review that gets only the diff and the approved spec (the merged spec PR: its rules and its Summary), never the first review's conclusions, plus the live eval if the prompt or knowledge rules changed.
-- Once CI is green and the reviews are clean, the PR is ready to merge. Tell the owner in a line or two of plain language what changed for the player or the mod. Never ask them to read a diff.
+- Once CI is green and the reviews are clean, the PR is ready to merge. A spec PR also needs the owner's OK (see above). Tell the owner in a line or two of plain language what changed for the player or the mod. Never ask them to read a code diff. For a spec PR, the owner reads the Summary and may comment on the plain-English rules.
 
 ## Non-goals (for now)
 Lip sync, speech input, local LLMs, paid Cyberpunk content, and publishing to Nexus without the owner's approval.
