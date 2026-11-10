@@ -12,7 +12,7 @@ The engine runs at `http://localhost:8000` by default.
 2. The routes and the fields in their answers are an agreement with the mods. You can add a new field.
 2a. Do not rename or remove a field without a note in the PR and a change in the mod.
 3. If a request names an unknown NPC, save, turn or preset, the engine answers with error `404` ("not found").
-4. If a value is outside its permitted range, the engine answers with error `400` ("bad request"). Rules 9, 10b, 14 and 19 give the ranges. `[PLANNED: #9]`
+4. If a value is outside its permitted range, the engine answers with error `400` ("bad request"). Rules 9, 10b `[PLANNED: #9]`, 14 and 19 give the ranges.
 4a. If a field is missing or has the wrong type, the engine answers with error `422`. Example: an `importance` of 9.
 
 ### Start
@@ -42,8 +42,8 @@ The engine runs at `http://localhost:8000` by default.
 
 9. `POST /api/clock/advance` with `days` moves the clock forward. `days` must be more than 0 and a maximum of 365.
 10. The answer gives the new day and the memories that arrived (`new_memories`).
-10a. `POST /api/clock/set` with `hours` sets the clock from the game's time (see `saves-and-clock.md` rules 5a–5f). `[PLANNED: #9]`
-10b. `hours` must be 0 or more. The new day must be a maximum of 365 days after the clock. `[PLANNED: #9]`
+10a. `POST /api/clock/set` with `hours` sets the clock from the game's hours (see `saves-and-clock.md` rules 5a–5g). `[PLANNED: #9]`
+10b. `hours` must be 0 or more. The new day must be a maximum of 365 days after the clock. `[PLANNED: #9]` (owner question 3)
 10c. If the new day is earlier than the clock, the engine answers with error `400`. `[PLANNED: #9]`
 10d. The answer gives the day of the clock and the memories that arrived (`new_memories`). `[PLANNED: #9]`
 10e. If nothing changes, `new_memories` is empty. If the engine refuses, the answer still gives the day of the clock. `[PLANNED: #9]`
