@@ -11,8 +11,10 @@ import threading
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Body, FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, ValidationError
 
 from . import knowledge
@@ -166,7 +168,7 @@ def set_world(body: object = Body(None)):
     except ValidationError as e:
         reasons = "; ".join(f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()[:5])
         raise HTTPException(400, f"world is not correct: {reasons}") from None
-    if w.id == TEST_WORLD_ID:
+    if w.id.casefold() == TEST_WORLD_ID:
         raise HTTPException(400, f"world is not correct: a mod cannot use the world name {TEST_WORLD_ID!r}")
     problems = world_problems(w)
     if problems:
@@ -174,11 +176,20 @@ def set_world(body: object = Body(None)):
     with lock:
         if store.world.id == w.id:
             store.world = w  # same world, maybe changed: memories stay (rules 16j-16k)
-        else:
-            store.db.close()
-            store = Store(_db_path(w.id), w, start_day=_start_day(w))
+        else:  # open the new world first: if that fails, the world in use stays (rule 16m)
+            new = Store(_db_path(w.id), w, start_day=_start_day(w))
+            old, store = store, new
+            old.db.close()
         world, presets = w, {}
     return {"world": w.id, "towns": len(w.settlements), "npcs": len(w.npcs)}
+
+
+@app.exception_handler(RequestValidationError)
+async def _bad_request_body(request: Request, exc: RequestValidationError):
+    """A body that is not JSON: `/api/world` answers 400, not 422 (http-api.md rule 8d)."""
+    if request.url.path == "/api/world":
+        return JSONResponse(status_code=400, content={"detail": "world is not correct: the body is not valid JSON"})
+    return await request_validation_exception_handler(request, exc)
 
 
 @app.post("/api/clock/advance")
@@ -219,17 +230,17 @@ def report_event(e: EventIn):
 
 @app.post("/api/dialog/open")
 def dialog_open(o: Open):
-    npc_or_404(o.npc_id)
     with lock:
+        npc_or_404(o.npc_id)
         return dialog().open(o.npc_id).model_dump()
 
 
 @app.post("/api/dialog/choose")
 def dialog_choose(c: Choose):
-    npc_or_404(c.npc_id)
     if not c.text.strip() or len(c.text) > 500:
         raise HTTPException(400, "text must be 1-500 characters")
     with lock:
+        npc_or_404(c.npc_id)
         return dialog().choose(c.session_id, c.npc_id, c.text.strip()).model_dump()
 
 
@@ -239,9 +250,9 @@ def audio(turn_id: int):
         raise HTTPException(404, "TTS disabled (set ELEVENLABS_API_KEY, TTS_ENABLED=1)")
     with lock:
         t = store.turn(turn_id)
-    if not t:
-        raise HTTPException(404, "unknown turn")
-    npc = npc_or_404(t["npc_id"])
+        if not t:
+            raise HTTPException(404, "unknown turn")
+        npc = npc_or_404(t["npc_id"])
     if not npc.voice_id:
         raise HTTPException(404, "npc has no voice")
     return StreamingResponse(tts.stream(t["npc_line"], npc.voice_id), media_type=tts.media_type)
@@ -249,8 +260,8 @@ def audio(turn_id: int):
 
 @app.get("/api/npc/{npc_id}/knowledge")
 def npc_knowledge(npc_id: str):
-    npc = npc_or_404(npc_id)
     with lock:
+        npc = npc_or_404(npc_id)
         events = {e.id: e for e in store.events()}
         out = []
         for m in store.memories(npc_id):
@@ -278,8 +289,8 @@ def npc_knowledge(npc_id: str):
 
 @app.get("/api/npc/{npc_id}/prompt")
 def npc_prompt(npc_id: str):
-    npc_or_404(npc_id)
     with lock:
+        npc_or_404(npc_id)
         return {"prompt": DialogEngine(store, None).preview_prompt(npc_id)}
 
 

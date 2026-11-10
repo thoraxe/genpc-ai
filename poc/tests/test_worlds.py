@@ -118,16 +118,26 @@ def test_switch_between_two_mod_worlds_keeps_each_clock(client):
         (lambda w: w["settlements"][0].update(adjacent=["nowhere"]), "unknown next town 'nowhere'"),
         (lambda w: w["npcs"].append(dict(w["npcs"][0])), "two npcs have the id 'dockworker_1'"),
         (lambda w: w.update(locations=[{"id": "pier", "name": "Pier", "near_settlement": "x"}]), "unknown town 'x'"),
-        (lambda w: w.pop("id"), "id"),
+        (lambda w: w.pop("id"), "id: Field required"),
+        (lambda w: w.update(id="  "), "no id"),
         (lambda w: w.pop("settlements"), "settlements"),
         (lambda w: w.update(npcs=[]), "no npcs"),
+        (lambda w: w.update(settlements=[]), "no settlements"),
+        (lambda w: w["settlements"].append(dict(w["settlements"][0])), "two settlements have the id 'docks'"),
+        (
+            lambda w: w.update(locations=[{"id": "p", "name": "P", "near_settlement": "docks"}] * 2),
+            "two locations have the id 'p'",
+        ),
+        (lambda w: w.update(start_day=float("nan")), "start_day"),
+        (lambda w: w.update(start_day=float("inf")), "start_day"),
+        (lambda w: w.update(id="Test"), "cannot use the world name"),
         (lambda w: w.update(id="test"), "cannot use the world name 'test'"),
     ],
 )
 def test_wrong_world_is_refused_with_400_and_a_reason(client, change, reason):
     bad = copy.deepcopy(HARBOR)
     change(bad)
-    r = send(client, bad)
+    r = client.post("/api/world", content=json.dumps(bad), headers={"content-type": "application/json"})
     assert r.status_code == 400  # not 422, also for a missing part
     assert reason in r.json()["detail"]
     assert client.get("/api/world").json()["world"] == "test"  # the world in use stays
@@ -135,6 +145,35 @@ def test_wrong_world_is_refused_with_400_and_a_reason(client, change, reason):
 
 def test_body_that_is_not_an_object_is_400(client):
     assert client.post("/api/world", json=[1, 2]).status_code == 400
+
+
+def test_body_that_is_not_json_is_400(client):
+    r = client.post("/api/world", content="{not json", headers={"content-type": "application/json"})
+    assert r.status_code == 400
+    assert "not valid JSON" in r.json()["detail"]
+    assert client.post("/api/clock/advance", json={}).status_code == 422  # other routes keep 422
+
+
+def test_world_without_start_day_starts_at_the_default_day(client):
+    w = copy.deepcopy(HARBOR)
+    w.pop("start_day")
+    send(client, w)
+    assert client.get("/api/world").json()["day"] == 41
+
+
+def test_failed_open_keeps_the_world_in_use(tmp_path, monkeypatch):
+    api, c = make_client(tmp_path, monkeypatch)
+    real_store = api.Store
+
+    def broken(*a, **k):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(api, "Store", broken)
+    with pytest.raises(OSError):
+        send(c, HARBOR)
+    monkeypatch.setattr(api, "Store", real_store)
+    w = c.get("/api/world").json()
+    assert w["world"] == "test" and w["day"] == 41  # the old store still works
 
 
 # ---------- Summary example 5 and rules 16j-16k: a changed world ----------
@@ -145,12 +184,21 @@ def test_changed_world_keeps_memories_and_removed_npc_is_unknown(client):
     without["npcs"] = [n for n in without["npcs"] if n["id"] != "dockworker_1"]
     send(client, without)
     assert client.post("/api/dialog/open", json={"npc_id": "dockworker_1"}).status_code == 404
+    assert client.get("/api/npc/dockworker_1/knowledge").status_code == 404
+    assert client.get("/api/npc/dockworker_1/prompt").status_code == 404
     send(client, HARBOR)  # a later update adds the NPC again
     mems = client.get("/api/npc/dockworker_1/knowledge").json()["memories"]
     assert len(mems) == 1
 
 
 def test_changed_next_towns_apply_to_gossip_that_has_not_arrived(client):
+    control = copy.deepcopy(HARBOR)
+    control["id"] = "harbor_control"
+    send(client, control)
+    storm(client, ["dockworker_1"])
+    client.post("/api/clock/advance", json={"days": 5})
+    assert len(client.get("/api/npc/bram/knowledge").json()["memories"]) == 1  # with next towns: gossip
+
     send(client, HARBOR)
     storm(client, ["dockworker_1"])
     lonely = copy.deepcopy(HARBOR)

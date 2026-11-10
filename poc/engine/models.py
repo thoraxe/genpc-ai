@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 Source = Literal["witnessed", "hop1", "hop2", "conversation"]
 Stage = Literal["detailed", "gist", "forgotten"]
@@ -57,13 +57,21 @@ class NPC(BaseModel):
 
 
 class WorldConfig(BaseModel):
-    id: str = Field(min_length=1)  # world name; each world keeps its own knowledge
-    start_day: float | None = None  # clock at the start of this world; None = POC_START_DAY
+    id: str  # world name; each world keeps its own knowledge
+    start_day: float | None = Field(None, allow_inf_nan=False)  # None = POC_START_DAY
     setting: str = ""  # world flavour and speech style for every NPC prompt
     rules: Rules = Rules()
     settlements: list[Settlement]
     locations: list[Location] = []
     npcs: list[NPC]
+
+    @field_validator("id")
+    @classmethod
+    def id_not_blank(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("the world has no id")
+        return v
 
 
 def world_problems(world: WorldConfig) -> list[str]:
