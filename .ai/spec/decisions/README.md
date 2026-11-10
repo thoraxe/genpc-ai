@@ -23,3 +23,4 @@ Each file records one important decision: what we chose, why, and what we did no
 | [0002](0002-mods-are-small-http-clients.md) | Game mods are small programs that talk to the engine over HTTP. |
 | [0003](0003-owner-reviews-behaviour-ai-reviews-code.md) | The owner approves plain-language specs. An AI review checks the code. |
 | [0004](0004-plain-english-ste-for-specs.md) | Behaviour specs use plain English and ASD-STE100. |
+| [0005](0005-specs-are-prs.md) | Each spec is a PR that changes the `what/` files. The owner approves the PR. |

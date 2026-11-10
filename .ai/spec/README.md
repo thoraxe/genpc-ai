@@ -53,7 +53,7 @@ Out of scope:
 
 ## Writing rules for what/
 
-The owner reviews behaviour, not code. Thus every `what/` file uses **extremely simple, plain English**. We follow **ASD-STE100 (Simplified Technical English)** where possible. These rules apply to every `what/` file, to `glossary.md`, to `constraints.md`, and to the plain-language spec that goes in an issue comment.
+The owner reviews behaviour, not code. Thus every `what/` file uses **extremely simple, plain English**. We follow **ASD-STE100 (Simplified Technical English)** where possible. These rules apply to every `what/` file, to `glossary.md`, to `constraints.md`, and to the Summary of every spec PR.
 
 **Sentences**
 1. Write a maximum of 20 words in a rule or an instruction. Write a maximum of 25 words in a description.
@@ -103,7 +103,7 @@ We do not have the official ASD-STE100 dictionary in the repo. Use the rules abo
 
 - **Rule numbering:** rules have numbers in each `what/` file. The numbers do not change. If you remove a rule, leave a gap. If you add a rule between two rules, use a sub-number (16a, 16b). Issues and PRs can then refer to "knowledge.md rule 7".
 - **Planned changes:** mark a rule that is not built yet with `[PLANNED: #N]`, where N is the GitHub issue. When the code is done, change the rule text to tell what the code does, and change the mark to `[DONE: #N]`. Later, remove `[DONE]` marks. In a Planned Changes table, strike through a done row (`~~#N~~`). Do not delete it.
-- **Specs and the owner's OK:** the owner approves a plain-language spec in an issue comment (see `CLAUDE.md`). Then copy the approved rules into the correct `what/` file with `[PLANNED: #N]` marks. The PR that builds the change makes them `[DONE: #N]`.
+- **Specs and the owner's OK:** a spec is a PR (see `CLAUDE.md`). It adds the new rules to the correct `what/` files with `[PLANNED: #N]` marks. Its Summary gives the plain spec, 3 to 6 examples, what it will not do, and questions with recommended answers. It does not close the issue. When the owner writes "OK", merge it. If the rules change after the OK, show the owner the changed rules and get a new OK. The code PR then makes the rules `[DONE: #N]`.
 - **Constraints:** a rule for one part goes in the Constraints section of that part's `what/` file. A rule for the full project goes in `constraints.md`. Build, test and code-style rules go in `CLAUDE.md`.
 - **Authority:** `what/` is authoritative for behaviour. `how/` is authoritative for code layout. If they do not agree, `what/` is correct and the code is wrong (or the spec needs an approved change).
 - **New file or old file:** if a new part has its own settings and you can understand it alone, give it a new file. If it adds a capability to a part, put it in that part's file.

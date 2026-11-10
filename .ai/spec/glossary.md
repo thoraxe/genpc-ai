@@ -68,6 +68,10 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **engine** | The Python program in `poc/engine/`. It keeps the knowledge and talks to the AI model. | backend, server | `engine` |
 | **mod** | A small program inside a game. It sends events to the engine and shows the NPC's line. | plugin, client (in what/ files) | — |
 | **owner** | The person who decides what the product does. The owner reads specs, not code. | user, boss | — |
+| **issue** | A page on GitHub for one goal or problem, with a number, for example #9. | ticket, task | — |
+| **spec** | The rules for one change in behaviour, in plain English, with examples. | requirements, design | — |
+| **spec PR** | A PR that adds planned rules to the `what/` files. The owner approves it before the code work starts. | spec comment | `spec/` branch |
+| **merge** | Put the changes of a PR into the project. | land, ship | — |
 | **live eval** | A test that uses the real AI model many times. It counts how often NPCs say wrong things. | benchmark | `poc/scripts/eval.py` |
 | **preset** | An event that is ready in a file, for tests and demos. | template, sample event | `poc/data/events.json` |
 | **test page** | A simple web page for tests. It uses the HTTP API like a mod. | UI, web UI | `poc/ui/index.html` |
