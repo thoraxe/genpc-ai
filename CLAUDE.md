@@ -51,7 +51,7 @@ uv run python poc/scripts/eval.py 10
   - **low** (docs, plans): checks plus one review;
   - **medium** (engine or mod code): checks plus one review, with every finding fixed or answered;
   - **high** (`knowledge.py`, prompt building, save/load, `.github/`): add a **second, independent** review that gets only the diff and the approved spec (the `what/` rules at the commit the owner said OK to, plus the plain-language part of the Summary), never the first review's conclusions, plus the live eval if the prompt or knowledge rules changed.
-- Once CI is green and the reviews are clean, the PR is ready to merge. A behaviour PR also needs the owner's OK and a finished code stage (see above). Tell the owner in a line or two of plain language what changed for the player or the mod. Never ask them to read a code diff. In a behaviour PR, the owner reads the Summary and may comment on the plain-English rules.
+- Once CI is green and the reviews are clean, the PR is ready to merge. A spec PR also needs the owner's OK and a finished code stage (see above). Tell the owner in a line or two of plain language what changed for the player or the mod. Never ask them to read a code diff. In a spec PR, the owner reads the Summary and may comment on the plain-English rules.
 
 ## Non-goals (for now)
 Lip sync, speech input, local LLMs, paid Cyberpunk content, and publishing to Nexus without the owner's approval.
