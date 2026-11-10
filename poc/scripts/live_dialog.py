@@ -3,6 +3,7 @@
 Run: uv run python poc/scripts/live_dialog.py
 Uses a throwaway DB in poc/var/.
 """
+
 import logging
 import sys
 from pathlib import Path
@@ -37,14 +38,24 @@ def talk(npc_id, follow_up=None):
         t2 = d.choose(t.session_id, npc_id, follow_up)
         print(f"    PLAYER: {follow_up}")
         print(f"    {npc_id}: {t2.npc_line}")
-        print(f"    choices={t2.choices}  llm={t2.llm_ms:.0f}ms remembered={[f.text for f in t2.remembered]} rejected={t2.rejected}")
+        print(
+            f"    choices={t2.choices}  llm={t2.llm_ms:.0f}ms remembered={[f.text for f in t2.remembered]} rejected={t2.rejected}"
+        )
     print()
     return t
 
 
 e = load_events(ROOT / "poc" / "data" / "events.json")["embershard_cleared"]
-store.report_event(WorldEvent(id="ev1", type=e["type"], location=e["location"], day=41.0,
-                              facts=[Fact(**f) for f in e["facts"]], witnesses=e["default_witnesses"]))
+store.report_event(
+    WorldEvent(
+        id="ev1",
+        type=e["type"],
+        location=e["location"],
+        day=41.0,
+        facts=[Fact(**f) for f in e["facts"]],
+        witnesses=e["default_witnesses"],
+    )
+)
 talk("hrolf")
 store.advance(0.5)
 talk("torvald", "Yes, that was me. I'm Aela, and I'm saving up to buy a horse.")

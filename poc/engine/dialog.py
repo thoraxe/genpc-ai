@@ -3,6 +3,7 @@
 The prompt contains ONLY the NPC's bio and the facts the engine retrieved for that NPC,
 so an NPC cannot mention an event the knowledge model didn't give it.
 """
+
 from __future__ import annotations
 
 import json
@@ -11,7 +12,7 @@ import logging
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from . import knowledge
-from .models import Fact, MemoryView, NPC
+from .models import NPC, Fact, MemoryView
 from .providers.llm import LLMProvider
 from .store import Store
 
@@ -74,8 +75,11 @@ def _knowledge_block(views: list[MemoryView], now: float, rules) -> str:
         ago = now - m.created_day
         when = "today" if ago < 1 else f"about {round(ago)} day{'s' if round(ago) != 1 else ''} ago"
         clarity = " You only vaguely remember the gist." if v.stage == "gist" else ""
-        news = (" [RECENT NEWS: bring this up naturally if you haven't told the player]"
-                if m.event_id and not m.mentioned and ago < rules.news_window_days else "")
+        news = (
+            " [RECENT NEWS: bring this up naturally if you haven't told the player]"
+            if m.event_id and not m.mentioned and ago < rules.news_window_days
+            else ""
+        )
         facts = "; ".join(f.text for f in v.kept_facts)
         lines.append(f"- ({SOURCE_FRAMING[m.source]}, {when}.{clarity}){news} {facts}")
     return "\n".join(lines)
@@ -158,7 +162,12 @@ class DialogEngine:
                 break
             except (json.JSONDecodeError, ValidationError) as e:
                 log.warning("invalid LLM JSON (attempt %d): %s", attempt + 1, str(e)[:200])
-                messages = messages + [{"role": "user", "content": "That was not valid JSON in the required format. Reply again with JSON only."}]
+                messages = messages + [
+                    {
+                        "role": "user",
+                        "content": "That was not valid JSON in the required format. Reply again with JSON only.",
+                    }
+                ]
             except Exception as e:  # network / provider error: don't retry, use fallback
                 log.warning("LLM call failed: %s", str(e)[:200])
                 break
@@ -171,17 +180,22 @@ class DialogEngine:
         if player_text and resp.remember:
             player_lines = " ".join([t["player"] for t in session if t.get("player")] + [player_text])
             mem = knowledge.conversation_memory(
-                npc_id, [Fact(text=i.fact, importance=i.importance) for i in resp.remember], store.day, player_lines)
+                npc_id, [Fact(text=i.fact, importance=i.importance) for i in resp.remember], store.day, player_lines
+            )
             remembered = mem.facts if mem else []
             rejected = [i.fact for i in resp.remember if i.fact not in {f.text for f in remembered}]
             if mem:
                 store.add_memory(mem)
 
         if not fallback:  # a delivered turn counts as recall; news counts as told only if the line says it
-            news_ids = {v.memory.id for v in views
-                        if v.memory.event_id and not v.memory.mentioned
-                        and store.day - v.memory.created_day < rules.news_window_days
-                        and any(knowledge.grounded(f.text, resp.npc_line) for f in v.kept_facts)}
+            news_ids = {
+                v.memory.id
+                for v in views
+                if v.memory.event_id
+                and not v.memory.mentioned
+                and store.day - v.memory.created_day < rules.news_window_days
+                and any(knowledge.grounded(f.text, resp.npc_line) for f in v.kept_facts)
+            }
             store.mark_used([v.memory for v in views], news_ids)
 
         body = {"session_id": session_id, "player": player_text, "npc_line": resp.npc_line, "choices": resp.choices}
@@ -192,7 +206,18 @@ class DialogEngine:
             store.db.execute("UPDATE turns SET body=? WHERE id=?", (json.dumps(body), turn_id))
             store.db.commit()
 
-        return TurnResult(turn_id=turn_id, session_id=session_id, npc_id=npc_id, npc_line=resp.npc_line,
-                          choices=resp.choices, remembered=remembered, rejected=rejected,
-                          used_memory_ids=[v.memory.id for v in views], llm_ms=total_ms or None,
-                          attempts=attempts, fallback=fallback, sent=sent, raw_reply=raw)
+        return TurnResult(
+            turn_id=turn_id,
+            session_id=session_id,
+            npc_id=npc_id,
+            npc_line=resp.npc_line,
+            choices=resp.choices,
+            remembered=remembered,
+            rejected=rejected,
+            used_memory_ids=[v.memory.id for v in views],
+            llm_ms=total_ms or None,
+            attempts=attempts,
+            fallback=fallback,
+            sent=sent,
+            raw_reply=raw,
+        )

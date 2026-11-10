@@ -1,0 +1,41 @@
+name: CI
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run ruff check poc
+      - run: uv run ruff format --check poc
+      - run: uv run pytest -q
+
+  pr-template:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require a filled-in "Local AI review" and the other template sections
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+          body = os.environ.get("BODY") or ""
+          body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+          sections = dict(re.findall(r"^## +(.+?)\s*$\n(.*?)(?=^## |\Z)", body, flags=re.M | re.S))
+          missing = [s for s in ("Summary", "Testing", "Local AI review", "Risk", "How to revert")
+                     if not sections.get(s, "").strip()]
+          if missing:
+              print("PR description is missing or has empty sections: " + ", ".join(missing))
+              sys.exit(1)
+          print("PR template OK")
+          PY

@@ -1,4 +1,5 @@
 """Dialog pipeline tests with a fake LLM (no network)."""
+
 import json
 from pathlib import Path
 
@@ -27,8 +28,11 @@ class FakeLLM:
         return LLMResult(text=r if isinstance(r, str) else json.dumps(r), ms=5.0)
 
 
-GOOD = {"npc_line": "Heard the bandits at Embershard Mine are dead. Was that you?",
-        "choices": ["Yes.", "No.", "Goodbye."], "remember": []}
+GOOD = {
+    "npc_line": "Heard the bandits at Embershard Mine are dead. Was that you?",
+    "choices": ["Yes.", "No.", "Goodbye."],
+    "remember": [],
+}
 SMALLTALK = {"npc_line": "Halt. State your business.", "choices": ["Passing through.", "Trade.", "Goodbye."]}
 
 
@@ -42,8 +46,16 @@ def test_news_not_marked_if_npc_did_not_mention_it(store):
 def store(tmp_path):
     s = Store(tmp_path / "t.db", load_world(DATA / "world.json"), start_day=41.0)
     e = load_events(DATA / "events.json")["embershard_cleared"]
-    s.report_event(WorldEvent(id="ev1", type=e["type"], location=e["location"], day=41.0,
-                              facts=[Fact(**f) for f in e["facts"]], witnesses=e["default_witnesses"]))
+    s.report_event(
+        WorldEvent(
+            id="ev1",
+            type=e["type"],
+            location=e["location"],
+            day=41.0,
+            facts=[Fact(**f) for f in e["facts"]],
+            witnesses=e["default_witnesses"],
+        )
+    )
     s.advance(3)
     return s
 
@@ -78,9 +90,18 @@ def test_provider_error_falls_back_without_retry(store):
 
 
 def test_news_marked_after_delivery_and_session_history(store):
-    llm = FakeLLM([GOOD, {**GOOD, "remember": [
-        {"fact": "The player is named Erik and comes from Falkreath", "importance": 3},
-        {"fact": "The player is a famous dragon slayer", "importance": 5}]}])
+    llm = FakeLLM(
+        [
+            GOOD,
+            {
+                **GOOD,
+                "remember": [
+                    {"fact": "The player is named Erik and comes from Falkreath", "importance": 3},
+                    {"fact": "The player is a famous dragon slayer", "importance": 5},
+                ],
+            },
+        ]
+    )
     d = DialogEngine(store, llm)
     t1 = d.open("eirik")
     assert all(m.mentioned for m in store.memories("eirik") if m.event_id)

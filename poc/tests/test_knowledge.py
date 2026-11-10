@@ -1,4 +1,5 @@
 """Deterministic scenario tests (no network). Acceptance checks 1-4 from poc-python-ui-plan.md."""
+
 from pathlib import Path
 
 import pytest
@@ -17,8 +18,14 @@ def store(tmp_path):
 
 def embershard(day=41.0):
     e = load_events(DATA / "events.json")["embershard_cleared"]
-    return WorldEvent(id="ev1", type=e["type"], location=e["location"], day=day,
-                      facts=[Fact(**f) for f in e["facts"]], witnesses=e["default_witnesses"])
+    return WorldEvent(
+        id="ev1",
+        type=e["type"],
+        location=e["location"],
+        day=day,
+        facts=[Fact(**f) for f in e["facts"]],
+        witnesses=e["default_witnesses"],
+    )
 
 
 def facts_of(store, npc):
@@ -74,10 +81,15 @@ def test_report_is_idempotent(store):
 def test_conversation_decay_detail_then_gist_then_forgotten(store):
     r = store.world.rules
     transcript = "Player: I'm hunting the dragon at Bleak Falls Barrow. My sister Lydia is sick in Falkreath."
-    mem = knowledge.conversation_memory("torvald", [
-        Fact(text="The player is hunting a dragon at Bleak Falls Barrow", importance=4),
-        Fact(text="The player's sister Lydia is sick in Falkreath", importance=2),
-    ], day=10.0, transcript=transcript)
+    mem = knowledge.conversation_memory(
+        "torvald",
+        [
+            Fact(text="The player is hunting a dragon at Bleak Falls Barrow", importance=4),
+            Fact(text="The player's sister Lydia is sick in Falkreath", importance=2),
+        ],
+        day=10.0,
+        transcript=transcript,
+    )
     assert mem is not None and len(mem.facts) == 2
 
     v3 = knowledge.view(mem, 13.0, r)
@@ -90,10 +102,11 @@ def test_conversation_decay_detail_then_gist_then_forgotten(store):
 
 def test_recall_boost_is_capped(store):
     r = store.world.rules
-    mem = knowledge.Memory(npc_id="x", source="conversation", created_day=0, salience=1.0,
-                           facts=[Fact(text="a", importance=3)], recalls=99)
+    mem = knowledge.Memory(
+        npc_id="x", source="conversation", created_day=0, salience=1.0, facts=[Fact(text="a", importance=3)], recalls=99
+    )
     assert knowledge.strength(mem, 0, r) == pytest.approx(1.5)
-    assert knowledge.view(mem, 30, r).stage == "gist"       # boosted 0.136
+    assert knowledge.view(mem, 30, r).stage == "gist"  # boosted 0.136
     assert knowledge.view(mem, 43, r).stage == "forgotten"  # boosted ~0.048
 
 
@@ -113,16 +126,27 @@ def test_grounding_rejects_invented_facts():
     transcript = "Player: I cleared the bandits out of the mine. Torvald: Good riddance."
     assert knowledge.grounded("The player cleared the bandits from the mine", transcript)
     assert not knowledge.grounded("The player is secretly the Dragonborn of legend", transcript)
-    assert knowledge.conversation_memory(
-        "torvald", [Fact(text="The player owns a castle in Morthal", importance=3)], 1.0, transcript) is None
+    assert (
+        knowledge.conversation_memory(
+            "torvald", [Fact(text="The player owns a castle in Morthal", importance=3)], 1.0, transcript
+        )
+        is None
+    )
 
 
 def test_retrieval_guarantees_recent_news_and_mention_marking(store):
     r = store.world.rules
     # bury the rumor under several strong conversation memories
     for i in range(6):
-        store.add_memory(knowledge.Memory(npc_id="torvald", source="conversation", created_day=41.4,
-                                          salience=1.0, facts=[Fact(text=f"chat {i}", importance=3)]))
+        store.add_memory(
+            knowledge.Memory(
+                npc_id="torvald",
+                source="conversation",
+                created_day=41.4,
+                salience=1.0,
+                facts=[Fact(text=f"chat {i}", importance=3)],
+            )
+        )
     store.report_event(embershard())
     store.advance(0.5)
     picked = knowledge.retrieve(store.memories("torvald"), store.day, r)

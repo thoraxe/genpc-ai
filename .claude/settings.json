@@ -1,5 +1,18 @@
 {
   "enabledPlugins": {
     "oh-my-claudecode@omc": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet python -c \"import json,sys,subprocess; p=json.load(sys.stdin).get('tool_input',{}).get('file_path',''); p.endswith('.py') and subprocess.run(['uv','run','--quiet','ruff','format','--quiet',p])\""
+          }
+        ]
+      }
+    ]
   }
 }
