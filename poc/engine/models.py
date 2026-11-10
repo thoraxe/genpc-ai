@@ -1,4 +1,5 @@
 """Core data models. Game-neutral: nothing here knows about Skyrim."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -16,6 +17,7 @@ class Fact(BaseModel):
 
 class Rules(BaseModel):
     """All tunables (parent plan §1 pinned defaults)."""
+
     decay_lambda: float = 0.08
     recall_boost: float = 0.25
     recall_cap: float = 0.5
@@ -63,8 +65,8 @@ class WorldConfig(BaseModel):
 
 class WorldEvent(BaseModel):
     id: str
-    type: str          # opaque tag, e.g. "location_cleared"
-    location: str      # Location id or Settlement id
+    type: str  # opaque tag, e.g. "location_cleared"
+    location: str  # Location id or Settlement id
     day: float
     facts: list[Fact]
     witnesses: list[str]
@@ -78,14 +80,15 @@ class Memory(BaseModel):
     created_day: float
     salience: float
     recalls: int = 0
-    mentioned: bool = False   # has this NPC already told the player about it?
+    mentioned: bool = False  # has this NPC already told the player about it?
     facts: list[Fact]
 
 
 class MemoryView(BaseModel):
     """A memory as seen at a given in-game time (what the inspector and the prompt use)."""
+
     memory: Memory
     strength: float
     stage: Stage
     kept_facts: list[Fact]
-    dropped_facts: list[Fact]   # lost to gist (rumor-hop losses are never stored at all)
+    dropped_facts: list[Fact]  # lost to gist (rumor-hop losses are never stored at all)

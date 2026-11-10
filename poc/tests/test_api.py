@@ -1,4 +1,5 @@
 """API tests with a fake LLM and no TTS (no network)."""
+
 import importlib
 import json
 
@@ -12,8 +13,9 @@ class FakeLLM:
     name = "fake"
 
     def complete_json(self, system, messages):
-        return LLMResult(text=json.dumps({"npc_line": "Well met.", "choices": ["a", "b", "Goodbye."],
-                                          "remember": []}), ms=1.0)
+        return LLMResult(
+            text=json.dumps({"npc_line": "Well met.", "choices": ["a", "b", "Goodbye."], "remember": []}), ms=1.0
+        )
 
 
 @pytest.fixture
@@ -22,6 +24,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("POC_DB", str(tmp_path / "api.db"))
     monkeypatch.setenv("TTS_ENABLED", "0")
     import engine.api as api
+
     api = importlib.reload(api)
     api._llm = FakeLLM()
     return TestClient(api.app)

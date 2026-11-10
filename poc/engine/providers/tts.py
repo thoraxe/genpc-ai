@@ -4,10 +4,12 @@ The engine plays nothing itself in the PoC: the browser streams /api/audio/{turn
 (For a game client without lip-sync, the engine could play the same stream locally.)
 No cache: every NPC line is freshly generated, so repeats are rare.
 """
+
 from __future__ import annotations
 
 import os
-from typing import Iterator, Protocol
+from collections.abc import Iterator
+from typing import Protocol
 
 import httpx
 
@@ -28,8 +30,9 @@ class ElevenLabsTTS:
 
     def stream(self, text: str, voice_id: str) -> Iterator[bytes]:
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream?output_format={self.output_format}"
-        with httpx.stream("POST", url, headers={"xi-api-key": self.api_key},
-                          json={"text": text, "model_id": self.model}, timeout=30) as r:
+        with httpx.stream(
+            "POST", url, headers={"xi-api-key": self.api_key}, json={"text": text, "model_id": self.model}, timeout=30
+        ) as r:
             if r.status_code != 200:
                 raise RuntimeError(f"ElevenLabs {r.status_code}: {r.read()[:200]!r}")
             yield from r.iter_bytes()

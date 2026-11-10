@@ -3,6 +3,7 @@
 Run: uv run python poc/scripts/smoke.py
 Never prints API keys.
 """
+
 import json
 import os
 import sys
@@ -17,7 +18,9 @@ sys.stdout.reconfigure(encoding="utf-8")  # z.ai errors can be in Chinese; Windo
 ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / ".env")
 
-ZAI_BASE = os.getenv("ZAI_BASE_URL", "https://api.z.ai/api/coding/paas/v4/")  # Coding Plan key; standard keys use /api/paas/v4/
+ZAI_BASE = os.getenv(
+    "ZAI_BASE_URL", "https://api.z.ai/api/coding/paas/v4/"
+)  # Coding Plan key; standard keys use /api/paas/v4/
 ZAI_MODEL = os.getenv("ZAI_MODEL", "glm-5.3-flash")
 EL_MODEL = os.getenv("ELEVENLABS_MODEL", "eleven_flash_v2_5")
 
@@ -72,7 +75,9 @@ def check_elevenlabs() -> bool:
             print(f"[11labs] {len(voices)} voices available, e.g.:")
             for v in voices[:8]:
                 labels = v.get("labels") or {}
-                print(f"   {v['voice_id']}  {v['name']}  {labels.get('gender','')} {labels.get('age','')} {labels.get('accent','')}")
+                print(
+                    f"   {v['voice_id']}  {v['name']}  {labels.get('gender', '')} {labels.get('age', '')} {labels.get('accent', '')}"
+                )
         else:
             print(f"[11labs] voices list unavailable ({r.status_code}); trying TTS with voice {vid}")
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{vid}/stream?output_format=mp3_44100_128"

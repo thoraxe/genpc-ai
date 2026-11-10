@@ -1,4 +1,5 @@
 """SQLite persistence plus save slots (whole-state snapshots, standing in for game saves)."""
+
 from __future__ import annotations
 
 import json
@@ -7,7 +8,7 @@ import time
 from pathlib import Path
 
 from . import knowledge
-from .models import Fact, Memory, WorldConfig, WorldEvent
+from .models import Memory, WorldConfig, WorldEvent
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL);
@@ -82,8 +83,10 @@ class Store:
 
     # ----- memories -----
     def _add_memory(self, m: Memory) -> Memory:
-        cur = self.db.execute("INSERT INTO memories(npc_id, event_id, body) VALUES(?,?,?)",
-                              (m.npc_id, m.event_id, m.model_dump_json(exclude={"id"})))
+        cur = self.db.execute(
+            "INSERT INTO memories(npc_id, event_id, body) VALUES(?,?,?)",
+            (m.npc_id, m.event_id, m.model_dump_json(exclude={"id"})),
+        )
         m.id = cur.lastrowid
         return m
 
@@ -114,8 +117,9 @@ class Store:
 
     # ----- conversation turns -----
     def add_turn(self, npc_id: str, body: dict) -> int:
-        cur = self.db.execute("INSERT INTO turns(npc_id, day, body) VALUES(?,?,?)",
-                              (npc_id, self.day, json.dumps(body)))
+        cur = self.db.execute(
+            "INSERT INTO turns(npc_id, day, body) VALUES(?,?,?)", (npc_id, self.day, json.dumps(body))
+        )
         self.db.commit()
         return cur.lastrowid
 
@@ -131,15 +135,18 @@ class Store:
         self.db.commit()
 
     def turns(self, npc_id: str, limit: int = 20) -> list[dict]:
-        rows = self.db.execute("SELECT id, day, body FROM turns WHERE npc_id=? ORDER BY id DESC LIMIT ?",
-                               (npc_id, limit)).fetchall()
+        rows = self.db.execute(
+            "SELECT id, day, body FROM turns WHERE npc_id=? ORDER BY id DESC LIMIT ?", (npc_id, limit)
+        ).fetchall()
         return [{"id": r["id"], "day": r["day"], **json.loads(r["body"])} for r in reversed(rows)]
 
     # ----- save slots -----
     def save(self, label: str = "") -> int:
         blob = {t: [dict(r) for r in self.db.execute(f"SELECT * FROM {t}")] for t in STATE_TABLES}
-        cur = self.db.execute("INSERT INTO saves(label, day, created, blob) VALUES(?,?,?,?)",
-                              (label or f"Day {self.day:g}", self.day, time.time(), json.dumps(blob)))
+        cur = self.db.execute(
+            "INSERT INTO saves(label, day, created, blob) VALUES(?,?,?,?)",
+            (label or f"Day {self.day:g}", self.day, time.time(), json.dumps(blob)),
+        )
         self.db.commit()
         return cur.lastrowid
 

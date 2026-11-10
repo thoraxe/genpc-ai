@@ -2,6 +2,7 @@
 
 Run: uv run uvicorn engine.api:app --app-dir poc --port 8000
 """
+
 from __future__ import annotations
 
 import os
@@ -81,8 +82,14 @@ def npc_or_404(npc_id: str):
 
 
 def _mem_json(m):
-    return {"id": m.id, "npc_id": m.npc_id, "source": m.source, "event_id": m.event_id,
-            "created_day": m.created_day, "facts": [f.model_dump() for f in m.facts]}
+    return {
+        "id": m.id,
+        "npc_id": m.npc_id,
+        "source": m.source,
+        "event_id": m.event_id,
+        "created_day": m.created_day,
+        "facts": [f.model_dump() for f in m.facts],
+    }
 
 
 # ---------- routes ----------
@@ -93,24 +100,36 @@ def index():
 
 @app.post("/api/session/start")
 def session_start():
-    return {"protocol": 1, "capabilities": {"max_choices": 3, "free_text": True,
-                                            "audio": tts.media_type if tts else None},
-            "llm": _llm.name if _llm else os.getenv("LLM_MODEL", os.getenv("ZAI_MODEL", "glm-5.3-flash")),
-            "tts": tts.name if tts else None}
+    return {
+        "protocol": 1,
+        "capabilities": {"max_choices": 3, "free_text": True, "audio": tts.media_type if tts else None},
+        "llm": _llm.name if _llm else os.getenv("LLM_MODEL", os.getenv("ZAI_MODEL", "glm-5.3-flash")),
+        "tts": tts.name if tts else None,
+    }
 
 
 @app.get("/api/world")
 def get_world():
     with lock:
-        counts = {n.id: len([v for v in (knowledge.view(m, store.day, world.rules) for m in store.memories(n.id))
-                             if v.stage != "forgotten"]) for n in world.npcs}
+        counts = {
+            n.id: len(
+                [
+                    v
+                    for v in (knowledge.view(m, store.day, world.rules) for m in store.memories(n.id))
+                    if v.stage != "forgotten"
+                ]
+            )
+            for n in world.npcs
+        }
         return {
             "day": store.day,
             "settlements": [s.model_dump() for s in world.settlements],
-            "locations": [l.model_dump() for l in world.locations],
+            "locations": [loc.model_dump() for loc in world.locations],
             "npcs": [{**n.model_dump(exclude={"bio"}), "known": counts[n.id]} for n in world.npcs],
             "events": [e.model_dump() for e in store.events()],
-            "presets": {k: {"label": v["label"], "default_witnesses": v["default_witnesses"]} for k, v in presets.items()},
+            "presets": {
+                k: {"label": v["label"], "default_witnesses": v["default_witnesses"]} for k, v in presets.items()
+            },
             "saves": store.saves(),
             "rules": world.rules.model_dump(),
         }
@@ -140,8 +159,14 @@ def report_event(e: EventIn):
             etype, loc, facts, witnesses = e.type, e.location, e.facts, e.witnesses or []
         for w in witnesses:
             npc_or_404(w)
-        ev = WorldEvent(id=f"{e.preset or etype}@{store.day:g}#{len(store.events()) + 1}", type=etype,
-                        location=loc, day=store.day, facts=facts, witnesses=witnesses)
+        ev = WorldEvent(
+            id=f"{e.preset or etype}@{store.day:g}#{len(store.events()) + 1}",
+            type=etype,
+            location=loc,
+            day=store.day,
+            facts=facts,
+            witnesses=witnesses,
+        )
         new = store.report_event(ev)
         return {"event": ev.model_dump(), "new_memories": [_mem_json(m) for m in new]}
 
@@ -188,14 +213,21 @@ def npc_knowledge(npc_id: str):
             if m.event_id and m.event_id in events:  # facts that never survived the retelling
                 have = {f.text for f in m.facts}
                 lost = [f.model_dump() for f in events[m.event_id].facts if f.text not in have]
-            out.append({**_mem_json(m), "salience": m.salience, "recalls": m.recalls, "mentioned": m.mentioned,
-                        "strength": round(v.strength, 4), "stage": v.stage,
-                        "kept": [f.model_dump() for f in v.kept_facts],
-                        "faded": [f.model_dump() for f in v.dropped_facts],
-                        "lost_in_retelling": lost})
+            out.append(
+                {
+                    **_mem_json(m),
+                    "salience": m.salience,
+                    "recalls": m.recalls,
+                    "mentioned": m.mentioned,
+                    "strength": round(v.strength, 4),
+                    "stage": v.stage,
+                    "kept": [f.model_dump() for f in v.kept_facts],
+                    "faded": [f.model_dump() for f in v.dropped_facts],
+                    "lost_in_retelling": lost,
+                }
+            )
         out.sort(key=lambda x: x["strength"], reverse=True)
-        return {"npc": npc.model_dump(), "day": store.day, "memories": out,
-                "turns": store.turns(npc_id, limit=12)}
+        return {"npc": npc.model_dump(), "day": store.day, "memories": out, "turns": store.turns(npc_id, limit=12)}
 
 
 @app.get("/api/npc/{npc_id}/prompt")
@@ -217,7 +249,7 @@ def load(save_id: int):
         try:
             store.load(save_id)
         except KeyError:
-            raise HTTPException(404, "unknown save")
+            raise HTTPException(404, "unknown save") from None
         return {"day": store.day}
 
 
