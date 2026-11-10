@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NPC Knowledge Engine · PoC</title>
+<style>
+:root{
+  --bg:#12181c; --panel:#1a2227; --panel2:#212b31; --ink:#e3e9ea; --muted:#93a2a8; --rule:#2c383e;
+  --frost:#6fb5bd; --frost-soft:#1f3a3e; --ember:#e0955c; --ember-soft:#3b2a1e;
+  --good:#6cc08c; --warn:#d9a94a; --bad:#e07a7a;
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+header{display:flex;align-items:baseline;gap:16px;padding:12px 18px;border-bottom:1px solid var(--rule)}
+header h1{font:400 1.35rem var(--serif);margin:0}
+header .sub{color:var(--muted);font-size:.85rem}
+header .status{margin-left:auto;font:.78rem var(--mono);color:var(--muted)}
+main{display:grid;grid-template-columns:300px minmax(0,1fr) 380px;gap:14px;padding:14px;height:calc(100% - 52px)}
+.col{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px;overflow:auto;display:flex;flex-direction:column;gap:14px;min-height:0}
+h2{font:400 1.05rem var(--serif);margin:0;color:var(--frost)}
+h3{font:600 .78rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+button{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--frost)}
+button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--frost-soft);border-color:var(--frost)}
+button.small{padding:3px 8px;font-size:.82rem}
+button:focus-visible,input:focus-visible{outline:2px solid var(--frost);outline-offset:2px}
+input[type=text]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:6px 9px;width:100%}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.day{font:400 2.2rem var(--serif)}
+.muted{color:var(--muted)} .small{font-size:.82rem} .mono{font-family:var(--mono)}
+.card{background:var(--panel2);border:1px solid var(--rule);border-radius:7px;padding:10px;display:flex;flex-direction:column;gap:8px}
+label.chk{display:inline-flex;gap:4px;align-items:center;font-size:.85rem;margin-right:8px}
+.log{font-size:.82rem;display:flex;flex-direction:column;gap:4px}
+.log div{border-left:2px solid var(--rule);padding-left:8px}
+.log .d{font-family:var(--mono);color:var(--muted);margin-right:4px}
+
+/* NPC picker */
+.settle{display:flex;flex-direction:column;gap:6px}
+.npcs{display:flex;gap:6px;flex-wrap:wrap}
+.npc{display:flex;flex-direction:column;align-items:flex-start;padding:6px 10px;text-align:left}
+.npc .r{font-size:.75rem;color:var(--muted)}
+.npc.sel{border-color:var(--ember);background:var(--ember-soft)}
+.badge{font:.7rem var(--mono);padding:0 6px;border-radius:999px;background:var(--frost-soft);color:var(--frost)}
+
+/* dialog */
+.convo{flex:1;display:flex;flex-direction:column;gap:10px;overflow:auto;min-height:120px}
+.line{max-width:80%;padding:8px 12px;border-radius:10px}
+.line.npc{background:var(--panel2);border:1px solid var(--rule);align-self:flex-start}
+.line.npc .who{font:600 .78rem var(--mono);color:var(--ember)}
+.line.player{background:var(--frost-soft);align-self:flex-end}
+.line .meta{font:.72rem var(--mono);color:var(--muted);margin-top:4px}
+.line.fb{border-color:var(--warn)}
+.choices{display:flex;flex-direction:column;gap:6px}
+.choices button{text-align:left}
+.empty{color:var(--muted);text-align:center;margin:auto;max-width:42ch}
+
+/* inspector */
+.mem{border-left:3px solid var(--frost)}
+.mem.hop1{border-left-color:var(--warn)} .mem.hop2{border-left-color:var(--ember)} .mem.conversation{border-left-color:var(--good)}
+.mem.forgotten{opacity:.45}
+.src{font:.72rem var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.bar{position:relative;height:8px;background:var(--bg);border-radius:4px;overflow:visible}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--frost)}
+.bar .t{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--muted)}
+.facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:.86rem}
+.facts li{display:flex;gap:6px;align-items:baseline}
+.imp{font:.7rem var(--mono);min-width:1.6em;text-align:center;border-radius:3px;background:var(--frost-soft);color:var(--frost)}
+.facts .faded,.facts .lost{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--ember)}
+.facts .lost .imp,.facts .faded .imp{background:transparent;border:1px dashed var(--rule);color:var(--muted)}
+.why{font:.7rem var(--mono);color:var(--muted);text-decoration:none;margin-left:auto;white-space:nowrap}
+pre.prompt{white-space:pre-wrap;font:.75rem/1.45 var(--mono);background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:10px;margin:0}
+.err{color:var(--bad);font-size:.85rem}
+details.sent{margin-top:6px;font-size:.75rem}details.sent summary{cursor:pointer;color:var(--muted)}details.sent pre{max-height:40vh;overflow:auto;margin-top:4px}
+@media (max-width:1100px){main{grid-template-columns:1fr;height:auto}.col{max-height:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>NPC Knowledge Engine</h1>
+  <span class="sub">Proof of concept · deterministic gossip, fading memory, save slots</span>
+  <span class="status" id="status"></span>
+</header>
+<main>
+  <!-- WORLD -->
+  <section class="col" aria-label="World">
+    <div>
+      <h3>In-game time</h3>
+      <div class="day" id="day">Day –</div>
+      <div class="row" id="clock">
+        <button data-d="0.5">+½ day</button><button data-d="1">+1 day</button>
+        <button data-d="7">+7 days</button><button data-d="30">+30 days</button>
+      </div>
+    </div>
+    <div>
+      <h3>Make something happen</h3>
+      <div id="presets" class="settle"></div>
+    </div>
+    <div>
+      <h3>Saves</h3>
+      <div class="row"><input type="text" id="saveLabel" placeholder="Label (optional)" style="flex:1"><button id="saveBtn">Save</button></div>
+      <div id="saves" class="log" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:8px"><button class="small" id="resetBtn">Reset world to day 41</button></div>
+    </div>
+    <div>
+      <h3>What happened</h3>
+      <div id="log" class="log"></div>
+    </div>
+  </section>
+
+  <!-- TALK -->
+  <section class="col" aria-label="Talk">
+    <div class="row" style="justify-content:space-between">
+      <h2>Talk to someone</h2>
+      <label class="chk"><input type="checkbox" id="voice"> Voice</label>
+      <label class="chk"><input type="checkbox" id="showSent" data-keep="1"> Show LLM prompt</label>
+    </div>
+    <div id="npcs" class="settle"></div>
+    <div class="convo" id="convo"><p class="empty">Pick someone above. Then make something happen, let time pass, and come back to see what they've heard.</p></div>
+    <div class="choices" id="choices"></div>
+    <form class="row" id="freeForm" hidden><input type="text" id="free" placeholder="…or say something yourself" maxlength="500" style="flex:1"><button class="primary">Say</button><button type="button" id="leave">Leave</button></form>
+    <audio id="audio" preload="none"></audio>
+  </section>
+
+  <!-- INSPECTOR -->
+  <section class="col" aria-label="Inspector">
+    <div class="row" style="justify-content:space-between">
+      <h2 id="insTitle">What they know</h2>
+      <button class="small" id="promptBtn" disabled>Show prompt</button>
+    </div>
+    <p class="small muted" style="margin:0">The engine decides this, not the LLM. The prompt only ever contains the facts shown here (struck-through facts are left out).</p>
+    <pre class="prompt" id="prompt" hidden></pre>
+    <div id="mems" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtDay = d => (Math.round(d*10)/10).toString();
+let W = null, sel = null, session = null, busy = false, logItems = [];
+const SRC = {witnessed:'saw it', hop1:'heard in town', hop2:'travelers’ rumor', conversation:'player told them'};
+
+try { $('#voice').checked = localStorage.getItem('voice') !== '0'; } catch(e) { $('#voice').checked = true; }
+$('#voice').onchange = () => { try { localStorage.setItem('voice', $('#voice').checked ? '1':'0'); } catch(e) {} };
+$('#showSent').onchange = () => document.querySelectorAll('details.sent').forEach(d => d.open = $('#showSent').checked);
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) throw new Error((await r.json().catch(()=>({}))).detail || r.statusText);
+  return r.json();
+}
+function setBusy(b, msg='') { busy = b; $('#status').textContent = msg; document.querySelectorAll('button').forEach(x => { if (!x.dataset.keep) x.disabled = b; }); if (!b) $('#promptBtn').disabled = !sel; }
+function npcName(id) { return (W.npcs.find(n => n.id === id) || {name:id}).name; }
+function log(text) { logItems.unshift({d: W ? W.day : 0, text}); renderLog(); }
+function renderLog() { $('#log').innerHTML = logItems.slice(0, 40).map(i => `<div><span class="d">day ${fmtDay(i.d)}</span>${i.text}</div>`).join('') || '<span class="muted small">Nothing yet.</span>'; }
+function describeNew(mems) {
+  for (const m of mems) log(`${esc(npcName(m.npc_id))} ${m.source === 'witnessed' ? 'saw it' : m.source === 'hop1' ? 'heard it in town' : 'heard a rumor'} · ${m.facts.length} fact${m.facts.length===1?'':'s'}`);
+}
+
+async function refresh() {
+  W = await api('/api/world');
+  $('#day').textContent = 'Day ' + fmtDay(W.day);
+  // presets
+  $('#presets').innerHTML = Object.entries(W.presets).map(([k, p]) => `
+    <div class="card"><strong class="small">${esc(p.label)}</strong>
+      <div>Witnesses: ${W.npcs.map(n => `<label class="chk"><input type="checkbox" data-p="${k}" value="${n.id}" ${p.default_witnesses.includes(n.id)?'checked':''}>${esc(n.name)}</label>`).join('')}</div>
+      <div><button class="small primary" data-ev="${k}">Do it now</button></div></div>`).join('');
+  // saves
+  $('#saves').innerHTML = W.saves.map(s => `<div class="row" style="justify-content:space-between"><span><span class="d">day ${fmtDay(s.day)}</span>${esc(s.label)}</span><button class="small" data-load="${s.id}">Load</button></div>`).join('') || '<span class="muted small">No saves yet.</span>';
+  // npcs grouped by settlement
+  $('#npcs').innerHTML = W.settlements.map(s => {
+    const ns = W.npcs.filter(n => n.settlement === s.id);
+    return `<div><h3>${esc(s.name)}${s.adjacent.length ? ` <span class="muted" style="text-transform:none;letter-spacing:0">· next to ${s.adjacent.map(a => esc((W.settlements.find(x=>x.id===a)||{}).name||a)).join(', ')}</span>` : ''}</h3>
+      <div class="npcs">${ns.map(n => `<button class="npc ${sel===n.id?'sel':''}" data-npc="${n.id}"><span>${esc(n.name)} <span class="badge" title="memories they can still recall">${n.known}</span></span><span class="r">${esc(n.role)}</span></button>`).join('')}</div></div>`;
+  }).join('');
+  if (sel) await inspect();
+}
+
+async function inspect() {
+  const k = await api(`/api/npc/${sel}/knowledge`);
+  $('#insTitle').textContent = `What ${k.npc.name} knows`;
+  const max = 1.5, thr = W.rules;
+  $('#mems').innerHTML = k.memories.map(m => {
+    const pct = Math.min(100, m.strength / max * 100);
+    const facts = [
+      ...m.kept.map(f => `<li><span class="imp">${f.importance}</span>${esc(f.text)}</li>`),
+      ...m.faded.map(f => `<li class="faded"><span class="imp">${f.importance}</span>${esc(f.text)}<span class="why">faded</span></li>`),
+      ...m.lost_in_retelling.map(f => `<li class="lost"><span class="imp">${f.importance}</span>${esc(f.text)}<span class="why">lost in retelling</span></li>`),
+    ].join('');
+    return `<div class="card mem ${m.source} ${m.stage}">
+      <div class="row" style="justify-content:space-between"><span class="src">${SRC[m.source]}</span><span class="small muted mono">day ${fmtDay(m.created_day)} · ${m.stage}${m.recalls ? ` · recalled ${m.recalls}×` : ''}${m.mentioned ? ' · told you' : ''}</span></div>
+      <div class="bar" title="strength ${m.strength.toFixed(2)}"><i style="width:${pct}%;background:${m.stage==='detailed'?'var(--frost)':m.stage==='gist'?'var(--warn)':'var(--bad)'}"></i>
+        <span class="t" style="left:${thr.gist_threshold/max*100}%" title="gist below ${thr.gist_threshold}"></span><span class="t" style="left:${thr.forget_threshold/max*100}%" title="forgotten below ${thr.forget_threshold}"></span></div>
+      <ul class="facts">${facts}</ul></div>`;
+  }).join('') || '<p class="muted small">Nothing beyond everyday life. Ask them about the news and they’ll have nothing to tell.</p>';
+  if (!$('#prompt').hidden) $('#prompt').textContent = (await api(`/api/npc/${sel}/prompt`)).prompt;
+}
+
+function addLine(cls, html) { const d = document.createElement('div'); d.className = 'line ' + cls; d.innerHTML = html; $('#convo').appendChild(d); $('#convo').scrollTop = 1e9; }
+function playAudio(turnId) {
+  if (!$('#voice').checked) return;
+  const a = $('#audio'); a.src = `/api/audio/${turnId}`; a.play().catch(() => {});
+}
+function sentBlock(t) {
+  if (!t.sent) return '';
+  const msgs = t.sent.messages.map(m => `--- ${m.role} ---\n${m.content}`).join('\n\n');
+  const body = `=== system ===\n${t.sent.system}\n\n=== messages ===\n${msgs}\n\n=== raw reply ===\n${t.raw_reply ?? '(no reply)'}`;
+  return `<details class="sent"${$('#showSent').checked ? ' open' : ''}><summary>sent to LLM</summary><pre class="prompt">${esc(body)}</pre></details>`;
+}
+function showTurn(t) {
+  const meta = `${t.llm_ms ? Math.round(t.llm_ms) + ' ms' : ''}${t.attempts > 1 ? ` · ${t.attempts} tries` : ''}${t.fallback ? ' · fallback line' : ''}${t.remembered.length ? ` · will remember: ${t.remembered.map(f => esc(f.text)).join('; ')}` : ''}`;
+  addLine('npc' + (t.fallback ? ' fb' : ''), `<div class="who">${esc(npcName(t.npc_id))}</div>${esc(t.npc_line)}<div class="meta">${meta}</div>${sentBlock(t)}`);
+  playAudio(t.turn_id);
+  session = t.session_id;
+  $('#choices').innerHTML = t.choices.map((c, i) => `<button data-choice="${i}">${esc(c)}</button>`).join('');
+  $('#choices').dataset.choices = JSON.stringify(t.choices);
+  $('#freeForm').hidden = false;
+}
+async function say(text) {
+  addLine('player', esc(text));
+  $('#choices').innerHTML = '';
+  setBusy(true, 'thinking…');
+  try { showTurn(await api('/api/dialog/choose', {npc_id: sel, session_id: session, text})); await refresh(); }
+  catch (e) { addLine('npc fb', `<span class="err">${esc(e.message)}</span>`); }
+  finally { setBusy(false); }
+}
+async function openTalk(id) {
+  sel = id; session = null; $('#convo').innerHTML = ''; $('#choices').innerHTML = ''; $('#freeForm').hidden = true; $('#audio').pause();
+  await refresh();
+  setBusy(true, 'thinking…');
+  try { showTurn(await api('/api/dialog/open', {npc_id: id})); await refresh(); }
+  catch (e) { addLine('npc fb', `<span class="err">${esc(e.message)}</span>`); }
+  finally { setBusy(false); }
+}
+function endTalk() { session = null; $('#choices').innerHTML = ''; $('#freeForm').hidden = true; $('#audio').pause(); addLine('player', '<em>(walks away)</em>'); }
+
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('button'); if (!b || busy) return;
+  try {
+    if (b.dataset.d) { endTalk_if(); setBusy(true); const r = await api('/api/clock/advance', {days: +b.dataset.d}); W.day = r.day; log(`time passes (+${b.dataset.d} d)`); describeNew(r.new_memories); await refresh(); }
+    else if (b.dataset.ev) { const ws = [...document.querySelectorAll(`input[data-p="${b.dataset.ev}"]:checked`)].map(x => x.value); setBusy(true); const r = await api('/api/events', {preset: b.dataset.ev, witnesses: ws}); log(`<strong>${esc(W.presets[b.dataset.ev].label)}</strong>`); describeNew(r.new_memories); await refresh(); }
+    else if (b.dataset.npc) { await openTalk(b.dataset.npc); return; }
+    else if (b.dataset.choice) { const c = JSON.parse($('#choices').dataset.choices)[+b.dataset.choice]; await say(c); return; }
+    else if (b.dataset.load) { endTalk_if(); setBusy(true); const r = await api(`/api/saves/${b.dataset.load}/load`, {}); W.day = r.day; log(`<strong>loaded save</strong> — everything after it is undone`); await refresh(); }
+    else if (b.id === 'saveBtn') { setBusy(true); await api('/api/saves', {label: $('#saveLabel').value}); $('#saveLabel').value = ''; log('game saved'); await refresh(); }
+    else if (b.id === 'resetBtn') { endTalk_if(); setBusy(true); await api('/api/reset', {}); logItems = []; await refresh(); log('world reset'); }
+    else if (b.id === 'leave') { endTalk(); }
+    else if (b.id === 'promptBtn') { const p = $('#prompt'); p.hidden = !p.hidden; b.textContent = p.hidden ? 'Show prompt' : 'Hide prompt'; if (!p.hidden) p.textContent = (await api(`/api/npc/${sel}/prompt`)).prompt; }
+  } catch (e) { log(`<span class="err">${esc(e.message)}</span>`); }
+  finally { if (busy) setBusy(false); }
+});
+function endTalk_if() { if (session) endTalk(); }
+$('#freeForm').addEventListener('submit', ev => { ev.preventDefault(); const t = $('#free').value.trim(); if (t && !busy && session) { $('#free').value = ''; say(t); } });
+
+api('/api/session/start', {}).then(s => { $('#status').dataset.base = `${s.llm} · ${s.tts || 'no voice'}`; $('#status').textContent = $('#status').dataset.base; }).catch(()=>{});
+const _setBusy = setBusy; setBusy = (b, msg='') => { _setBusy(b, msg || ($('#status').dataset.base || '')); };
+refresh().then(renderLog).catch(e => log(`<span class="err">${esc(e.message)}</span>`));
+</script>
+</body>
+</html>
