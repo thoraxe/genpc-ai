@@ -94,12 +94,12 @@ The engine runs at `http://localhost:8000` by default.
 
 | Field | What it is | Required | Example |
 |---|---|---|---|
-| `record_id` | The record ID of a named or world-file NPC. | one of the two | `Character.kab_noodle_vendor_01` |
+| `record_id` | The record ID of a named or world-file NPC. | one of the two | `npc.harbor_vendor` |
 | `entity_id` | The entity ID of a crowd NPC. | one of the two | `1874320956` |
-| `name` | The name that the player sees. 1 to 60 characters. | yes | `Ichiro` |
-| `settlement` | The town `id` from the world file. | yes | `watson` |
+| `name` | The name that the player sees. 1 to 60 characters. | yes | `Bram` |
+| `settlement` | The town `id` from the world file. | yes | `riverwood` |
 | `role` | The job. Optional. A maximum of 40 characters. | no | `noodle vendor` |
-| `faction` | The faction. Optional. A maximum of 40 characters. | no | `Tyger Claws` |
+| `faction` | The faction. Optional. A maximum of 40 characters. | no | `Harbor Guild` |
 | `gender` | `female` or `male`. Optional. | no | `male` |
 
 33. Send `record_id` for a named NPC. Send `entity_id` for a crowd NPC. `[PLANNED: #8]`
@@ -108,7 +108,7 @@ The engine runs at `http://localhost:8000` by default.
 35a. If `name`, `role` or `faction` has a line break, the engine answers with `400`. `[PLANNED: #8]`
 36. If `record_id` is the `id` of a world-file NPC, the engine uses that NPC. It changes nothing. `[PLANNED: #8]`
 37. Else, the engine adds the NPC. If the engine added this NPC before, it changes the details to the new ones. `[PLANNED: #8]`
-38. The answer gives `npc_id`. Use it in later requests. Example: `Character.kab_noodle_vendor_01` or `crowd-1874320956`. `[PLANNED: #8]`
+38. The answer gives `npc_id`. Use it in later requests. Example: `npc.harbor_vendor` or `crowd-1874320956`. `[PLANNED: #8]`
 39. The answer gives `kind`: `world`, `named` or `crowd`. `[PLANNED: #8]`
 40. After the mod sends `POST /api/npcs`, the NPC is a known NPC. Events, conversations, voice and the inspector accept its `npc_id`. `[PLANNED: #8]`
 41. `GET /api/world` also lists the added NPCs. Each NPC in the list has its `kind`. `[PLANNED: #8]`
@@ -118,7 +118,7 @@ Examples:
 - If a mod sends `POST /api/clock/advance` with `days` = `-2`, then the engine answers with `400`.
 - If a mod sends `POST /api/dialog/open` for an NPC that is not in the world file, then the engine answers with `404`.
 - If there is no `ELEVENLABS_API_KEY`, then `GET /api/audio/7` answers with `404`, and `/api/session/start` gives an empty `tts`.
-- If a mod sends `POST /api/npcs` with `record_id` = `Character.wilson`, then the answer gives `kind` = `world`.
+- If a mod sends `POST /api/npcs` with `record_id` = `torvald`, then the answer gives `kind` = `world`.
 - If a mod sends `POST /api/npcs` with no `record_id` and no `entity_id`, then the engine answers with `400`.
 - If a mod sends `POST /api/dialog/open` for `crowd-1874320956` before the mod sends `POST /api/npcs`, then the engine answers with `404`.
 
@@ -133,5 +133,5 @@ Examples:
 |---|---|
 | #8 | A route to add NPCs while the game runs. |
 | #9 | `POST /api/clock/set`: set the clock from the game's own day. |
-| #10 | The voice goes into a sound file that the Cyberpunk mod can play, not only as a stream. |
+| #10 | The voice goes into a sound file that a game mod can play, not only as a stream. |
 | #11 | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |

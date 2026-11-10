@@ -8,7 +8,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 |---|---|---|---|
 | **NPC** | A character in the game that the player can talk to. The player does not control it. | character, bot, agent | `NPC`, `npc_id` |
 | **player** | The person who plays the game. | user, hero | `player` |
-| **town** | A place where NPCs live. Gossip moves between towns. In Cyberpunk, a town is a district. | settlement, village, city | `Settlement` |
+| **town** | A place where NPCs live. Gossip moves between towns. A game can call a town something else, for example a district. | settlement, village, city | `Settlement` |
 | **next town** | A town that the world file lists as a neighbour of a different town. | adjacent town, nearby town | `adjacent` |
 | **place** | A location that is not a town, for example a mine. Each place belongs to one town. | site, area | `Location`, `near_settlement` |
 | **world** | All the towns, places and NPCs of one game. | setting (when you mean the world) | `WorldConfig` |
@@ -18,7 +18,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **added NPC** | An NPC that the mod adds while the game runs. The world file does not have it. A named NPC or a crowd NPC. | registered NPC, dynamic NPC | `kind` = `named` or `crowd` |
 | **named NPC** | An added NPC with a record ID. It remembers the player, like a world-file NPC. | unique NPC | `kind` = `named` |
 | **crowd NPC** | An added NPC with only an entity ID. It keeps no facts from the player after a conversation. | generic NPC, random NPC | `kind` = `crowd` |
-| **record ID** | The fixed name of a character in the game data, for example `Character.wilson`. It does not change between games or loads. | TweakDB ID (in what/ files) | `record_id` |
+| **record ID** | The fixed name of a character in the game data, for example `npc.harbor_vendor`. It does not change between games or loads. | game-specific ID names | `record_id` |
 | **entity ID** | A number that the game gives to a crowd NPC. It is good only until the next load. | hash, entity hash | `entity_id` |
 | **faction** | A group that an NPC belongs to, for example a gang or a company. | gang, affiliation | `faction` |
 | **general description** | The description that each added NPC gets. It comes from the world file. | generic bio, default bio | `generic_bio` |

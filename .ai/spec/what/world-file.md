@@ -17,7 +17,7 @@ The world file describes one game world: its towns, places and NPCs. Each game g
 4. Gossip goes only from a town to the towns in its own `adjacent` list. List the neighbour in both towns if you want gossip to go both ways.
 5. Each place has an `id`, a `name`, and the town it belongs to (`near_settlement`).
 6. Each NPC has an `id`, a `name`, a job (`role`), a town (`settlement`) and a description (`bio`).
-6a. The `id` of a world-file NPC can be the record ID of the character. Example: `Character.wilson`. `[PLANNED: #8]`
+6a. The `id` of a world-file NPC can be the record ID of the character. Example: `npc.harbor_vendor`. `[PLANNED: #8]`
 6b. If the `id` is the record ID, the mod can find the world-file NPC. `[PLANNED: #8]`
 7. An NPC can have a `voice_id` for the voice service. Without it, the NPC has no voice.
 7a. The world file can have a voice list (`voice_pool`). It has a list for `female` and a list for `male`. `[PLANNED: #8]`
@@ -56,5 +56,5 @@ Examples:
 
 | Ticket | Summary |
 |---|---|
-| #7 | A world file for Cyberpunk 2077. Its districts are towns: Watson, Westbrook, City Center, Heywood, Santo Domingo, Pacifica, Dogtown and the Badlands. It has a starter cast. |
+| #7 | A mod sends its own world to the engine. The first mod's world is in the mod's specs. |
 | #8 | NPCs that a mod adds while the game runs, not only NPCs from the world file. |

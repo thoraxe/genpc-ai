@@ -25,7 +25,7 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
    - the rules for the AI model (rules 10–14a below);
    - the format of the reply.
 6a. For an added NPC, the name, job and town come from the mod. `[PLANNED: #8]`
-6b. For an added NPC, the description is the general description. Then the faction follows: "You belong to the Tyger Claws." `[PLANNED: #8]`
+6b. For an added NPC, the description is the general description. Then the faction follows: "You belong to the Harbor Guild." `[PLANNED: #8]`
 6c. If the mod sent no job, the job is "local". If the mod sent no faction, the prompt has no faction. `[PLANNED: #8]`
 6d. If the town is not in the world file, the prompt uses the town `id` that the mod sent. `[PLANNED: #8]`
 7. The prompt never contains facts that only other NPCs know. It never contains facts that the NPC lost or forgot.
@@ -73,7 +73,7 @@ Examples (the live eval checks the examples marked "AI"; the offline tests check
 - AI: the player asks Eirik on day 44 what the stranger took. Then Eirik says that he does not know. He has no fact about the loot.
 - If the AI model sends text in a bad format two times, then the NPC says the fallback line.
 - The player says "I am a dragon slayer". The AI model wants to remember "The player is a dragon slayer". Then the NPC remembers it.
-- The mod adds Ichiro with faction "Tyger Claws". Then his prompt says "You belong to the Tyger Claws." It has no other NPC's description.
+- The mod adds Bram with faction "Harbor Guild". Then his prompt says "You belong to the Harbor Guild." It has no other NPC's description.
 - The player says "My name is V" to a crowd NPC. Then the turn has no facts to remember.
 
 ### What the mod gets

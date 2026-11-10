@@ -16,6 +16,7 @@
 | `poc/tests/` | `test_knowledge.py`, `test_dialog.py`, `test_api.py` | Offline tests with a `FakeLLM`. See `testing-and-eval.md`. |
 | `poc/scripts/eval.py` | `CHECKS`, `run_once`, pass bars | Live eval against the real LLM. |
 | `poc/scripts/smoke.py`, `poc/scripts/live_dialog.py` | — | Manual provider smoke test and a live dialog run. |
+| `mods/<game>/` | `.ai/spec/` | One folder for each game mod, with its own specs. A mod talks to the engine only through the HTTP API (decision 0007). |
 | `.omc/plans/` | `npc-engine-plan.md`, `poc-python-ui-plan.md`, `cyberpunk-mod-plan.md` | Approved plans. The Cyberpunk plan maps to issues #1–#15. |
 | `docs/` | — | Research: prior art, save-state feasibility, monetization. |
 | `REVIEW.md` | — | Review priorities (knowledge leaks first). |
