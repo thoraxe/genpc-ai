@@ -77,6 +77,7 @@ label.chk{display:inline-flex;gap:4px;align-items:center;font-size:.85rem;margin
 .why{font:.7rem var(--mono);color:var(--muted);text-decoration:none;margin-left:auto;white-space:nowrap}
 pre.prompt{white-space:pre-wrap;font:.75rem/1.45 var(--mono);background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:10px;margin:0}
 .err{color:var(--bad);font-size:.85rem}
+details.sent{margin-top:6px;font-size:.75rem}details.sent summary{cursor:pointer;color:var(--muted)}details.sent pre{max-height:40vh;overflow:auto;margin-top:4px}
 @media (max-width:1100px){main{grid-template-columns:1fr;height:auto}.col{max-height:none}}
 </style>
 </head>
@@ -118,6 +119,7 @@ pre.prompt{white-space:pre-wrap;font:.75rem/1.45 var(--mono);background:var(--bg
     <div class="row" style="justify-content:space-between">
       <h2>Talk to someone</h2>
       <label class="chk"><input type="checkbox" id="voice"> Voice</label>
+      <label class="chk"><input type="checkbox" id="showSent" data-keep="1"> Show LLM prompt</label>
     </div>
     <div id="npcs" class="settle"></div>
     <div class="convo" id="convo"><p class="empty">Pick someone above. Then make something happen, let time pass, and come back to see what they've heard.</p></div>
@@ -147,6 +149,7 @@ const SRC = {witnessed:'saw it', hop1:'heard in town', hop2:'travelers’ rumor'
 
 try { $('#voice').checked = localStorage.getItem('voice') !== '0'; } catch(e) { $('#voice').checked = true; }
 $('#voice').onchange = () => { try { localStorage.setItem('voice', $('#voice').checked ? '1':'0'); } catch(e) {} };
+$('#showSent').onchange = () => document.querySelectorAll('details.sent').forEach(d => d.open = $('#showSent').checked);
 
 async function api(path, body) {
   const r = await fetch(path, body === undefined ? {} : {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
@@ -205,9 +208,15 @@ function playAudio(turnId) {
   if (!$('#voice').checked) return;
   const a = $('#audio'); a.src = `/api/audio/${turnId}`; a.play().catch(() => {});
 }
+function sentBlock(t) {
+  if (!t.sent) return '';
+  const msgs = t.sent.messages.map(m => `--- ${m.role} ---\n${m.content}`).join('\n\n');
+  const body = `=== system ===\n${t.sent.system}\n\n=== messages ===\n${msgs}\n\n=== raw reply ===\n${t.raw_reply ?? '(no reply)'}`;
+  return `<details class="sent"${$('#showSent').checked ? ' open' : ''}><summary>sent to LLM</summary><pre class="prompt">${esc(body)}</pre></details>`;
+}
 function showTurn(t) {
   const meta = `${t.llm_ms ? Math.round(t.llm_ms) + ' ms' : ''}${t.attempts > 1 ? ` · ${t.attempts} tries` : ''}${t.fallback ? ' · fallback line' : ''}${t.remembered.length ? ` · will remember: ${t.remembered.map(f => esc(f.text)).join('; ')}` : ''}`;
-  addLine('npc' + (t.fallback ? ' fb' : ''), `<div class="who">${esc(npcName(t.npc_id))}</div>${esc(t.npc_line)}<div class="meta">${meta}</div>`);
+  addLine('npc' + (t.fallback ? ' fb' : ''), `<div class="who">${esc(npcName(t.npc_id))}</div>${esc(t.npc_line)}<div class="meta">${meta}</div>${sentBlock(t)}`);
   playAudio(t.turn_id);
   session = t.session_id;
   $('#choices').innerHTML = t.choices.map((c, i) => `<button data-choice="${i}">${esc(c)}</button>`).join('');

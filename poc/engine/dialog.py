@@ -61,6 +61,8 @@ class TurnResult(BaseModel):
     llm_ms: float | None = None
     attempts: int = 0
     fallback: bool = False
+    sent: dict | None = None  # exactly what went to the LLM on the last attempt: {system, messages}
+    raw_reply: str | None = None  # the LLM's raw text on the last attempt
 
 
 def _knowledge_block(views: list[MemoryView], now: float, rules) -> str:
@@ -144,12 +146,14 @@ class DialogEngine:
         messages = _history_messages(session)
         messages.append({"role": "user", "content": player_text or GREETING})
 
-        resp, attempts, total_ms, fallback = None, 0, 0.0, False
+        resp, attempts, total_ms, fallback, sent, raw = None, 0, 0.0, False, None, None
         for attempt in range(2):
             attempts += 1
+            sent, raw = {"system": system, "messages": messages}, None
             try:
                 r = self.llm.complete_json(system, messages)
                 total_ms += r.ms
+                raw = r.text
                 resp = DialogResponse.model_validate(json.loads(r.text))
                 break
             except (json.JSONDecodeError, ValidationError) as e:
@@ -191,4 +195,4 @@ class DialogEngine:
         return TurnResult(turn_id=turn_id, session_id=session_id, npc_id=npc_id, npc_line=resp.npc_line,
                           choices=resp.choices, remembered=remembered, rejected=rejected,
                           used_memory_ids=[v.memory.id for v in views], llm_ms=total_ms or None,
-                          attempts=attempts, fallback=fallback)
+                          attempts=attempts, fallback=fallback, sent=sent, raw_reply=raw)

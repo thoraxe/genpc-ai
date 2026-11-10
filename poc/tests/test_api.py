@@ -44,6 +44,8 @@ def test_full_flow(client):
     assert t["npc_line"] == "Well met." and len(t["choices"]) == 3
     t2 = client.post("/api/dialog/choose", json={"npc_id": "eirik", "session_id": t["session_id"], "text": "hi"}).json()
     assert t2["session_id"] == t["session_id"]
+    assert t2["sent"]["messages"][-1] == {"role": "user", "content": "hi"}
+    assert "Eirik" in t2["sent"]["system"] and t2["raw_reply"]
 
     assert "Embershard" not in client.get("/api/npc/sabine/prompt").json()["prompt"]
     client.post(f"/api/saves/{slot}/load")
