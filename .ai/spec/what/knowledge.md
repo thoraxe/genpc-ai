@@ -9,6 +9,7 @@ All numbers below are the defaults. The world file can change them (see `world-f
 ### Witnesses
 
 1. A witness gets all the facts of the event, on the day of the event.
+1a. An added NPC can be a witness of an event after the mod adds it. `[PLANNED: #8]` (owner question 2)
 2. A witness memory starts at full strength (`1.0`).
 
 Example: Hrolf sees the bandits die on day 41. On day 41 he knows all 5 facts: the bandits are dead, the steel armor, the loot, the war axe, and dusk.
@@ -19,6 +20,13 @@ Example: Hrolf sees the bandits die on day 41. On day 41 he knows all 5 facts: t
 4. An NPC gets a maximum of one memory for each event. A witness never also gets gossip about it.
 5. An event in a place counts as an event in the town of that place. An event in a town counts as an event in that town.
 5a. If the place or town of the event is not in the world file, no gossip goes out. Only the witnesses know the event.
+5b. An added NPC gets gossip like a world-file NPC. Its town is the town that the mod sent. `[PLANNED: #8]` (owner question 1)
+5c. When the engine adds an NPC, the NPC also gets the gossip of earlier events that is already due. `[PLANNED: #8]`
+   Example: an event in Watson on day 41. The mod adds Ichiro in Watson on day 42. His memory has day 41.5.
+5d. If the town of an added NPC is not in the world file, the NPC gets no gossip. `[PLANNED: #8]`
+5e. If the mod sends a new town for a named NPC, the NPC keeps all its memories. `[PLANNED: #8]` (owner question 3)
+5f. After the move, gossip goes to the named NPC by its new town. This includes gossip of earlier events. `[PLANNED: #8]` (owner question 3)
+5g. A world-file NPC keeps the town from the world file. The engine does not use the town from the mod. `[PLANNED: #8]`
 6. **Same town:** gossip goes to every NPC in the town of the event after half a day (`hop1_delay_days` = `0.5`).
 7. Same-town gossip keeps only facts of importance 3 or more (`hop1_min_importance` = `3`).
 8. Same-town gossip starts at strength `0.8` (`hop1_salience`).
@@ -69,6 +77,7 @@ With 2 or more recalls, a witness memory becomes vague after 18.2 days and forgo
 ### What the NPC learns from the player
 
 29. An NPC remembers a fact about the player only if the player really said it in this conversation.
+29a. A crowd NPC never keeps a fact from the player. `[PLANNED: #8]`
 30. The engine checks each fact that the AI model wants to remember. It finds the key words in the fact. A key word has 4 or more letters and is not a common word ("the", "about", "player" and others).
 31. The engine keeps the fact only if half or more of its key words are in the player's words. It uses all the player's words in this conversation.
 32. The engine does not keep a fact that has no key words.

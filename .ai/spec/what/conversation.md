@@ -12,6 +12,8 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
 4. The AI model sees the earlier turns of this conversation only. It does not see earlier conversations as turns.
 4a. The engine looks at only the last 20 turns of the NPC. In a very long conversation, the AI model does not see the oldest turns.
 5. An NPC knows about earlier conversations only through memories of facts from the player (see `knowledge.md` rules 29–33).
+5a. A crowd NPC has no facts from the player at the start of each conversation. `[PLANNED: #8]`
+5b. In one conversation, a crowd NPC sees the earlier turns of that conversation (rule 4). `[PLANNED: #8]`
 
 ### What the prompt contains
 
@@ -22,6 +24,10 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
    - the memories that the engine chose for this NPC (see `knowledge.md` rules 24–28);
    - the rules for the AI model (rules 10–14a below);
    - the format of the reply.
+6a. For an added NPC, the name, job and town come from the mod. `[PLANNED: #8]`
+6b. For an added NPC, the description is the general description. Then the faction follows: "You belong to the Tyger Claws." `[PLANNED: #8]`
+6c. If the mod sent no job, the job is "local". If the mod sent no faction, the prompt has no faction. `[PLANNED: #8]`
+6d. If the town is not in the world file, the prompt uses the town `id` that the mod sent. `[PLANNED: #8]`
 7. The prompt never contains facts that only other NPCs know. It never contains facts that the NPC lost or forgot.
 8. For each memory, the prompt tells how the NPC knows it and how old it is:
    - witness: "you saw this yourself";
@@ -39,6 +45,7 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
 13. Say recent news without a request from the player, if you did not tell it yet.
 14. The line is 1 or 2 short spoken sentences. It has no stage directions. Give exactly 3 choices of less than 12 words. One choice lets the player leave.
 14a. List the facts that the player told about themself in their last line. Give each fact an importance from 1 to 5. If there are none, give an empty list.
+14b. The prompt of a crowd NPC does not have rule 14a. It does not ask for facts about the player. `[PLANNED: #8]`
 
 ### The reply from the AI model
 
@@ -54,6 +61,7 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
 ### After a good reply
 
 22. The engine stores facts from the player only if the player said something in this turn. A greeting never adds facts.
+22a. For a crowd NPC, the engine stores no facts from the player. This is true also if the AI model sends facts. `[PLANNED: #8]`
 23. The engine checks each fact against everything the player said in this conversation (see `knowledge.md` rules 29–32).
 24. Each memory that went into the prompt gets one recall.
 25. Recent news becomes "told" only if the NPC's line really contains it. The engine uses the same key-word check as rule 23, on the NPC's line.
@@ -65,6 +73,8 @@ Examples (the live eval checks the examples marked "AI"; the offline tests check
 - AI: the player asks Eirik on day 44 what the stranger took. Then Eirik says that he does not know. He has no fact about the loot.
 - If the AI model sends text in a bad format two times, then the NPC says the fallback line.
 - The player says "I am a dragon slayer". The AI model wants to remember "The player is a dragon slayer". Then the NPC remembers it.
+- The mod adds Ichiro with faction "Tyger Claws". Then his prompt says "You belong to the Tyger Claws." It has no other NPC's description.
+- The player says "My name is V" to a crowd NPC. Then the turn has no facts to remember.
 
 ### What the mod gets
 
