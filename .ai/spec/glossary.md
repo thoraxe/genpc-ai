@@ -12,7 +12,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **next town** | A town that the world file lists as a neighbour of a different town. | adjacent town, nearby town | `adjacent` |
 | **place** | A location that is not a town, for example a mine. Each place belongs to one town. | site, area | `Location`, `near_settlement` |
 | **world** | All the towns, places and NPCs of one game. | setting (when you mean the world) | `WorldConfig` |
-| **world file** | The file that describes the world (`poc/data/world.json`). | config, map | `world.json` |
+| **world file** | A file that describes one world. The test world is `poc/data/world.json`. A mod sends its own world to the engine. | config, map | `world.json` |
 | **setting text** | A short text in the world file. It tells every NPC how to speak. | flavour, style | `setting` |
 | **world-file NPC** | An NPC that the world file describes. It has a hand-written description, and it can have a voice. | cast NPC | `world.npcs`, `kind` = `world` |
 | **added NPC** | An NPC that the mod adds while the game runs. The world file does not have it. A named NPC or a crowd NPC. | registered NPC, dynamic NPC | `kind` = `named` or `crowd` |

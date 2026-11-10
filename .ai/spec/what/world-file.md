@@ -50,15 +50,22 @@ Examples:
 
 ### Which world the engine uses
 
-15. The setting `POC_WORLD` chooses the world. `POC_WORLD` is a name, for example `cyberpunk`. `[PLANNED: #7]`
-16. If `POC_WORLD` is empty, the engine uses `poc/data/world.json` and `poc/data/events.json`. This is the Skyrim world. `[PLANNED: #7]`
-16a. If `POC_WORLD` is a name `<name>`, the engine uses `poc/data/world.<name>.json` and `poc/data/events.<name>.json`. Example: `cyberpunk` uses `poc/data/world.cyberpunk.json` and `poc/data/events.cyberpunk.json`. `[PLANNED: #7]`
-16b. If the world file for that name does not exist, the engine does not start. It shows the missing file name. `[PLANNED: #7]`
-16c. Each world keeps its knowledge in its own database file: `poc.<name>.db` in the `POC_VAR_DIR` folder. Example: `cyberpunk` uses `poc/var/poc.cyberpunk.db`. If you set `POC_DB`, the engine uses that file instead. `[PLANNED: #7]`
+15. When the engine starts, it uses the test world (`poc/data/world.json`). The test page and the tests use it. `[PLANNED: #7]`
+16. A mod sends its own world to the engine with `POST /api/world`. Send it before any event or conversation. `[PLANNED: #7]`
+16a. The engine uses one world at a time: the last world that a mod sent. `[PLANNED: #7]`
+16b. Each world has a name (`id`), for example `cyberpunk`. `[PLANNED: #7]`
+16c. Each world keeps its own knowledge. Events, memories, turns and saves of one world never appear in a different world. `[PLANNED: #7]`
+16d. A mod can send a world that the engine knew before. Then the engine uses the knowledge that it kept for that world. `[PLANNED: #7]`
+16e. If the world that the mod sends has changes, for example a new NPC, the engine uses the new world. The memories stay. `[PLANNED: #7]` (owner question 7)
+16f. If the world is not correct, the engine refuses it and keeps the old world. The answer tells why. `[PLANNED: #7]`
+16g. The engine does not keep the mod's world after it stops. The mod sends the world at each game start. `[PLANNED: #7]`
+
+Example: the engine starts with the test world. The Cyberpunk mod sends `cyberpunk`. Then Night City is the world, and Torvald does not exist.
 
 ### The Cyberpunk world
 
-17. The Cyberpunk world file has 7 towns. Each town is a district of Night City. `[PLANNED: #7]`
+17. The Cyberpunk world file is `mods/cyberpunk/world.json`. The mod ships it. `[PLANNED: #7]`
+17a. The Cyberpunk world has 7 towns. Each town is a district of Night City. `[PLANNED: #7]`
 18. Each town lists its next towns in this table. Each link is in both towns. `[PLANNED: #7]` (owner question 3)
 
 | Town (`id`) | Next towns |
@@ -108,9 +115,9 @@ Example: an event in Kabuki counts as an event in Watson. Gossip goes to City Ce
 25. In the Cyberpunk world file, next-town gossip arrives after 1 day (`hop2_delay_days` = `1.0`). Example: event on day 41, gossip on day 42. `[PLANNED: #7]` (owner question 4)
 26. The Cyberpunk world file does not change the other knowledge settings. `[PLANNED: #7]`
 
-### The Cyberpunk presets (`poc/data/events.cyberpunk.json`)
+### The Cyberpunk presets (`mods/cyberpunk/events.json`)
 
-27. The Cyberpunk preset file has 3 presets. `[PLANNED: #7]`
+27. The Cyberpunk preset file has 3 presets. Only the tests use it. `[PLANNED: #7]`
 
 **Preset 1:** "Clear a Maelstrom gig in Northside". Place: Northside (Watson). Witness: Regina Jones.
 
