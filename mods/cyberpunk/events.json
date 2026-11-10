@@ -1,0 +1,84 @@
+{
+  "maelstrom_gig_northside": {
+    "label": "Clear a Maelstrom gig in Northside",
+    "type": "gig_completed",
+    "location": "northside",
+    "default_witnesses": [
+      "regina_jones"
+    ],
+    "facts": [
+      {
+        "text": "The Maelstrom hideout in Northside is gone",
+        "importance": 5
+      },
+      {
+        "text": "A solo merc did it alone",
+        "importance": 4
+      },
+      {
+        "text": "The merc took a crate of military weapons",
+        "importance": 3
+      },
+      {
+        "text": "The merc used a silenced pistol",
+        "importance": 2
+      },
+      {
+        "text": "It happened after midnight",
+        "importance": 1
+      }
+    ]
+  },
+  "police_fight_the_glen": {
+    "label": "Fight the police in The Glen",
+    "type": "police_fight",
+    "location": "the_glen",
+    "default_witnesses": [
+      "padre"
+    ],
+    "facts": [
+      {
+        "text": "A merc fought the police in The Glen",
+        "importance": 5
+      },
+      {
+        "text": "Two police officers died",
+        "importance": 4
+      },
+      {
+        "text": "The merc escaped in a stolen car",
+        "importance": 3
+      },
+      {
+        "text": "The car was yellow",
+        "importance": 1
+      }
+    ]
+  },
+  "wraiths_camp_badlands": {
+    "label": "Clear a Wraiths camp in the Badlands",
+    "type": "location_cleared",
+    "location": "badlands",
+    "default_witnesses": [
+      "dakota_smith"
+    ],
+    "facts": [
+      {
+        "text": "A Wraiths raider camp in the Badlands is empty now",
+        "importance": 5
+      },
+      {
+        "text": "A merc killed the raiders",
+        "importance": 4
+      },
+      {
+        "text": "The merc freed a captive nomad",
+        "importance": 3
+      },
+      {
+        "text": "The merc came on a motorcycle",
+        "importance": 2
+      }
+    ]
+  }
+}

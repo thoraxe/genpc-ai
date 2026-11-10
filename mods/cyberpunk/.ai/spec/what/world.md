@@ -6,9 +6,9 @@ The mod sends this world to the engine when the game starts. It describes Night 
 
 ### Towns, places and NPCs
 
-1. The Cyberpunk world file is `mods/cyberpunk/world.json`. The mod ships it. `[PLANNED: #7]`
-2. The Cyberpunk world has 7 towns. Each town is a district of Night City. `[PLANNED: #7]`
-3. Each town lists its next towns in this table. Each link is in both towns. `[PLANNED: #7]` (owner question 3)
+1. The Cyberpunk world file is `mods/cyberpunk/world.json`. The mod ships it.
+2. The Cyberpunk world has 7 towns. Each town is a district of Night City.
+3. Each town lists its next towns in this table. Each link is in both towns. (owner question 3)
 
 | Town (`id`) | Next towns |
 |---|---|
@@ -20,8 +20,8 @@ The mod sends this world to the engine when the game starts. It describes Night 
 | Pacifica (`pacifica`) | Heywood, Santo Domingo |
 | Badlands (`badlands`) | Westbrook, Santo Domingo |
 
-4. The Cyberpunk world file has no Dogtown. An event in Dogtown goes only to its witnesses (engine `knowledge.md` rule 5a). `[PLANNED: #7]` (owner question 2)
-5. Each part of a district is a place. It belongs to its district. `[PLANNED: #7]` (owner question 6)
+4. The Cyberpunk world file has no Dogtown. An event in Dogtown goes only to its witnesses (engine `knowledge.md` rule 5a). (owner question 2)
+5. Each part of a district is a place. It belongs to its district. (owner question 6)
 
 | Place (`id`) | Town |
 |---|---|
@@ -34,7 +34,7 @@ The mod sends this world to the engine when the game starts. It describes Night 
 
 Example: an event in Kabuki counts as an event in Watson. Gossip goes to City Center and Westbrook.
 
-6. The starter cast has these 9 NPCs. `[PLANNED: #7]` (owner question 1)
+6. The starter cast has these 9 NPCs. (owner question 1)
 
 | NPC | Job (`role`) | Town | Description (`bio`) | Check |
 |---|---|---|---|---|
@@ -48,25 +48,25 @@ Example: an event in Kabuki counts as an event in Watson. Gossip goes to City Ce
 | Mr. Hands | fixer | Pacifica | A polite, mysterious fixer who dresses well. He speaks with old-fashioned manners. | Exists. Phantom Liberty uses him a lot. Confirm that he is OK. |
 | Dakota Smith | fixer | Badlands (Rocky Ridge) | A practical fixer who runs a garage in the desert. She speaks plainly and trusts actions more than words. | Exists. |
 
-7. Each Cyberpunk NPC `id` will be the game's record ID: the fixed name of the character in the game data. The mod uses this ID to find the NPC. We must still confirm the IDs in the game. `[PLANNED: #7]`
-8. Each NPC in the starter cast has no `voice_id` now. The owner will choose the voices later (#1). `[PLANNED: #7]`
-9. The Cyberpunk setting text is this: `[PLANNED: #7]`
+7. Each Cyberpunk NPC `id` will be the game's record ID: the fixed name of the character in the game data. The mod uses this ID to find the NPC. We must still confirm the IDs in the game.
+8. Each NPC in the starter cast has no `voice_id` now. The owner will choose the voices later (#1).
+9. The Cyberpunk setting text is this:
 
 > Speak like a person who lives in Night City in the year 2077. Night City is a hard, dangerous city. Corporations and gangs control it. Use some street words, but keep your meaning clear.
 
-10. In the Cyberpunk world file, next-town gossip arrives after 1 day (`hop2_delay_days` = `1.0`). Example: event on day 41, gossip on day 42. `[PLANNED: #7]` (owner question 4)
-11. The Cyberpunk world file does not change the other knowledge settings. `[PLANNED: #7]`
+10. In the Cyberpunk world file, next-town gossip arrives after 1 day (`hop2_delay_days` = `1.0`). Example: event on day 41, gossip on day 42. (owner question 4)
+11. The Cyberpunk world file does not change the other knowledge settings.
 
 ### How the mod gives the world to the engine
 
-12. When the game starts, the mod sends this world to the engine (engine `http-api.md` rule 8a). `[PLANNED: #7]`
-13. The world name (`id`) is `cyberpunk`. `[PLANNED: #7]`
-14. The world starts at day 0 (`start_day` = `0`). A new game starts at hour 0. `[PLANNED: #7]`
-15. The general description for added NPCs is: "You are an ordinary person in Night City. You have no special story." `[PLANNED: #7]` (owner question 7)
+12. When the game starts, the mod sends this world to the engine (engine `http-api.md` rule 8a).
+13. The world name (`id`) is `cyberpunk`.
+14. The world starts at day 0 (`start_day` = `0`). A new game starts at hour 0.
+15. The general description for added NPCs is: "You are an ordinary person in Night City. You have no special story." (owner question 7)
 
 ### The Cyberpunk presets (`mods/cyberpunk/events.json`)
 
-16. The Cyberpunk preset file has 3 presets. Only the tests use it. The tests send each preset in the full form (engine `http-api.md` rule 13). `[PLANNED: #7]`
+16. The Cyberpunk preset file has 3 presets. Only the tests use it. The tests send each preset in the full form (engine `http-api.md` rule 13).
 
 **Preset 1:** "Clear a Maelstrom gig in Northside". Place: Northside (Watson). Witness: Regina Jones.
 
