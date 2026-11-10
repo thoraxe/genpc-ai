@@ -5,8 +5,8 @@ What a reviewer, human or AI, should look for in this repo, in priority order. W
 ## 1. Knowledge leaks (highest)
 The product's core promise is that an NPC can't say what it doesn't know.
 - `build_system_prompt` and anything it calls may include only the NPC's bio, the setting, and the `MemoryView`s returned by `knowledge.retrieve` for **that** NPC.
-- Dropped and faded facts (`MemoryView.dropped`, gist views) must not reach the prompt.
-- New prompt fields need a test proving that an NPC without the knowledge doesn't get it, like the Solitude test.
+- `MemoryView.dropped_facts` and forgotten views must not reach the prompt. Gist views do reach it, but only with their `kept_facts` and a "vaguely remember" note.
+- New prompt fields need an offline test proving that an NPC without the knowledge doesn't get it, modelled on `test_prompt_contains_only_that_npcs_knowledge` in `poc/tests/test_dialog.py`.
 
 ## 2. Determinism of the knowledge rules
 - Nothing in `knowledge.py` may depend on randomness, wall-clock time or the LLM. It depends only on stored state, in-game time and `Rules`.
