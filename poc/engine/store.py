@@ -49,7 +49,13 @@ class Store:
     def advance(self, days: float) -> list[Memory]:
         if days < 0:
             raise ValueError("time only moves forward; load a save to go back")
-        self._set_meta("day", self.day + days)
+        return self.set_day(self.day + days)
+
+    def set_day(self, day: float) -> list[Memory]:
+        """Move the clock to exactly `day` (stored as given, so a repeated sync compares equal)."""
+        if day < self.day:
+            raise ValueError("time only moves forward; load a save to go back")
+        self._set_meta("day", day)
         new = self.propagate()
         self.db.commit()
         return new

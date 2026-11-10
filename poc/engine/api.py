@@ -5,6 +5,7 @@ Run: uv run uvicorn engine.api:app --app-dir poc --port 8000
 
 from __future__ import annotations
 
+import math
 import os
 import threading
 from pathlib import Path
@@ -30,6 +31,7 @@ VAR.mkdir(parents=True, exist_ok=True)
 world = load_world(POC / "data" / "world.json")
 presets = load_events(POC / "data" / "events.json")
 store = Store(os.getenv("POC_DB", VAR / "poc.db"), world, start_day=START_DAY)
+CLOCK_EPS = 1e-6  # in days (~0.09 s): mod-side float jitter below this is "the same time"
 lock = threading.Lock()  # one sqlite connection shared across request threads
 _llm = None
 tts = tts_mod.from_env()
@@ -48,6 +50,10 @@ app = FastAPI(title="NPC Knowledge Engine PoC")
 # ---------- schemas ----------
 class Advance(BaseModel):
     days: float
+
+
+class ClockSet(BaseModel):
+    day: float  # the game's current time, in in-game days
 
 
 class EventIn(BaseModel):
@@ -141,6 +147,20 @@ def advance(a: Advance):
         raise HTTPException(400, "days must be in (0, 365]")
     with lock:
         new = store.advance(a.days)
+        return {"day": store.day, "new_memories": [_mem_json(m) for m in new]}
+
+
+@app.post("/api/clock/set")
+def clock_set(c: ClockSet):
+    """Sync to the game's clock. Forward only: going back in time is a save load, never a clock change."""
+    if not math.isfinite(c.day):
+        raise HTTPException(400, "day must be a finite number")
+    with lock:
+        if c.day < store.day - CLOCK_EPS:
+            raise HTTPException(409, f"clock is at day {store.day!r}; it only moves forward (load a save to go back)")
+        if c.day - store.day > 365:
+            raise HTTPException(400, "a single clock jump may be at most 365 days")
+        new = store.set_day(c.day) if c.day > store.day + CLOCK_EPS else []  # within EPS counts as the same time
         return {"day": store.day, "new_memories": [_mem_json(m) for m in new]}
 
 
