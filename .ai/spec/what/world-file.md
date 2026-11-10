@@ -7,7 +7,7 @@ The world file describes one game world: its towns, places and NPCs. Each game g
 ### The parts of a world file
 
 1. The world file has these parts:
-   - `id`: the name of the world, for example `cyberpunk`. `[PLANNED: #7]`
+   - `id`: the name of the world, for example `harbor_city`. `[PLANNED: #7]`
    - `start_day`: the day on the clock when the world starts. This part is optional. The default is `POC_START_DAY`. `[PLANNED: #7]`
    - `setting`: the setting text. Every NPC gets it in the prompt. It tells the NPC how to speak.
    - `settlements`: the towns.
@@ -60,11 +60,11 @@ Examples:
 16d. Each world has its own clock, events, memories, turns, added NPCs and saves. `[PLANNED: #7]`
 16e. A switch to a different world switches all of these. A reset or a load changes only the world in use. `[PLANNED: #7]`
 16f. Nothing from one world goes into a different world. This is true for prompts, gossip, the inspector and saves. `[PLANNED: #7]`
-16g. A new world starts at its start day. Example: the Cyberpunk world starts at day 0. `[PLANNED: #7]`
+16g. A new world starts at its start day. Example: a world with `start_day` = `0` starts at day 0. `[PLANNED: #7]`
 16h. A reset sets the clock of the world in use to its start day. `[PLANNED: #7]`
 16i. A mod can send a world `id` that the engine has knowledge for. Then the engine uses that knowledge again. `[PLANNED: #7]`
-16j. A world can change between two sends, for example after a mod update. The engine uses the new world. The memories stay. `[PLANNED: #7]` (owner question 7)
-16k. After such a change: `[PLANNED: #7]` (owner question 7)
+16j. A world can change between two sends, for example after a mod update. The engine uses the new world. The memories stay. `[PLANNED: #7]` (owner question 1)
+16k. After such a change: `[PLANNED: #7]` (owner question 1)
    - An NPC that is not in the new world is unknown. Its memories stay, but requests for it get `404`.
    - New next towns apply to gossip that has not arrived yet.
    - New knowledge settings apply to all memories from then on.
@@ -80,114 +80,11 @@ Examples:
 16r. `POST /api/session/start` and `GET /api/world` give the `id` of the world in use. If it is not the mod's world, send the world again. `[PLANNED: #7]`
 16s. Presets belong only to the test world. In a mod world, `GET /api/world` gives no presets. `[PLANNED: #7]`
 
-Examples:
-- The engine starts with the test world. The Cyberpunk mod sends `cyberpunk`. Then Night City is the world at day 0. A request to talk to Torvald gets `404`.
-- The player plays Cyberpunk until day 12, then closes the game. The next day, the mod sends `cyberpunk` again. Then the clock is at day 12, and every NPC remembers what it knew.
-- The engine restarts while the game runs. `POST /api/session/start` gives `test`. The mod sends `cyberpunk` again and continues.
-- A mod update removes Dino from the world. A request to talk to Dino gets `404`. If a later update adds Dino again, he still has his memories.
-
-### The Cyberpunk world
-
-17. The Cyberpunk world file is `mods/cyberpunk/world.json`. The mod ships it. `[PLANNED: #7]`
-17a. The Cyberpunk world has 7 towns. Each town is a district of Night City. `[PLANNED: #7]`
-18. Each town lists its next towns in this table. Each link is in both towns. `[PLANNED: #7]` (owner question 3)
-
-| Town (`id`) | Next towns |
-|---|---|
-| Watson (`watson`) | City Center, Westbrook |
-| Westbrook (`westbrook`) | Watson, City Center, Badlands |
-| City Center (`city_center`) | Watson, Westbrook, Heywood, Santo Domingo |
-| Heywood (`heywood`) | City Center, Santo Domingo, Pacifica |
-| Santo Domingo (`santo_domingo`) | City Center, Heywood, Pacifica, Badlands |
-| Pacifica (`pacifica`) | Heywood, Santo Domingo |
-| Badlands (`badlands`) | Westbrook, Santo Domingo |
-
-19. The Cyberpunk world file has no Dogtown. An event in Dogtown goes only to its witnesses (`knowledge.md` rule 5a). `[PLANNED: #7]` (owner question 2)
-20. Each part of a district is a place. It belongs to its district. `[PLANNED: #7]` (owner question 6)
-
-| Place (`id`) | Town |
-|---|---|
-| Little China (`little_china`), Kabuki (`kabuki`), Northside (`northside`), Arasaka Waterfront (`arasaka_waterfront`) | Watson |
-| Japantown (`japantown`), Charter Hill (`charter_hill`), North Oak (`north_oak`) | Westbrook |
-| Corpo Plaza (`corpo_plaza`), Downtown (`downtown`) | City Center |
-| The Glen (`the_glen`), Wellsprings (`wellsprings`), Vista del Rey (`vista_del_rey`) | Heywood |
-| Arroyo (`arroyo`), Rancho Coronado (`rancho_coronado`) | Santo Domingo |
-| Coastview (`coastview`), West Wind Estate (`west_wind_estate`) | Pacifica |
-
-Example: an event in Kabuki counts as an event in Watson. Gossip goes to City Center and Westbrook.
-
-21. The starter cast has these 9 NPCs. `[PLANNED: #7]` (owner question 1)
-
-| NPC | Job (`role`) | Town | Description (`bio`) | Check |
-|---|---|---|---|---|
-| Regina Jones | fixer | Watson | A calm, careful fixer who gives gigs in Watson. She cares about the people of her district more than about money. | Exists. Confirm that the player can talk to her in person. |
-| Robert Wilson | gun shop owner | Watson (Little China) | An old soldier who runs a small gun shop and shooting range. He is friendly and gives honest advice about guns. | Exists. |
-| Cassius Ryder | ripperdoc (cyberware doctor) | Watson (Little China) | A tired street doctor who installs cyberware. He talks little and wants payment first. | To confirm: name and place. |
-| Wakako Okada | fixer | Westbrook (Japantown) | An old, sharp fixer with strong links to the Tyger Claws. She is polite, but she does not forgive a broken deal. | Exists. |
-| Dino Dinovic | fixer | City Center | A smooth fixer who works for clients in the corporate towers. He talks about business and money. | Exists. Confirm that the player can talk to him in person. |
-| Sebastian "Padre" Ibarra | fixer | Heywood | An older fixer with ties to the Valentinos. He speaks quietly and values loyalty and family. | Exists. Confirm the place. |
-| Muamar "El Capitan" Reyes | fixer | Santo Domingo | A loud, cheerful fixer who also sells cars. He likes to tell jokes about his deals. | To confirm: town. |
-| Mr. Hands | fixer | Pacifica | A polite, mysterious fixer who dresses well. He speaks with old-fashioned manners. | Exists. Phantom Liberty uses him a lot. Confirm that he is OK. |
-| Dakota Smith | fixer | Badlands (Rocky Ridge) | A practical fixer who runs a garage in the desert. She speaks plainly and trusts actions more than words. | Exists. |
-
-22. Each Cyberpunk NPC `id` will be the game's record ID: the fixed name of the character in the game data. The mod uses this ID to find the NPC. We must still confirm the IDs in the game. `[PLANNED: #7]`
-23. Each NPC in the starter cast has no `voice_id` now. The owner will choose the voices later (#1). `[PLANNED: #7]`
-24. The Cyberpunk setting text is this: `[PLANNED: #7]`
-
-> Speak like a person who lives in Night City in the year 2077. Night City is a hard, dangerous city. Corporations and gangs control it. Use some street words, but keep your meaning clear.
-
-25. In the Cyberpunk world file, next-town gossip arrives after 1 day (`hop2_delay_days` = `1.0`). Example: event on day 41, gossip on day 42. `[PLANNED: #7]` (owner question 4)
-26. The Cyberpunk world file does not change the other knowledge settings. `[PLANNED: #7]`
-
-### The Cyberpunk presets (`mods/cyberpunk/events.json`)
-
-27. The Cyberpunk preset file has 3 presets. Only the tests use it. The tests send each preset in the full form (`http-api.md` rule 13). `[PLANNED: #7]`
-
-**Preset 1:** "Clear a Maelstrom gig in Northside". Place: Northside (Watson). Witness: Regina Jones.
-
-| Fact | Importance |
-|---|---|
-| The Maelstrom hideout in Northside is gone | 5 |
-| A solo merc did it alone | 4 |
-| The merc took a crate of military weapons | 3 |
-| The merc used a silenced pistol | 2 |
-| It happened after midnight | 1 |
-
-**Preset 2:** "Fight the police in The Glen". Place: The Glen (Heywood). Witness: Padre.
-
-| Fact | Importance |
-|---|---|
-| A merc fought the police in The Glen | 5 |
-| Two police officers died | 4 |
-| The merc escaped in a stolen car | 3 |
-| The car was yellow | 1 |
-
-**Preset 3:** "Clear a Wraiths camp in the Badlands". Town: Badlands. Witness: Dakota Smith.
-
-| Fact | Importance |
-|---|---|
-| A Wraiths raider camp in the Badlands is empty now | 5 |
-| A merc killed the raiders | 4 |
-| The merc freed a captive nomad | 3 |
-| The merc came on a motorcycle | 2 |
-
-A "merc" is a person who does jobs for money. In the game, the player is a merc.
-
-Examples for preset 1, with the event on day 41:
-- On day 41, Regina knows all 5 facts.
-- On day 41.4, Robert Wilson and Cassius Ryder know nothing.
-- On day 41.5, Robert Wilson and Cassius Ryder know 3 facts.
-- On day 42, Wakako Okada and Dino Dinovic know 2 facts: the hideout is gone, and a solo merc did it.
-- Padre (Heywood), El Capitan (Santo Domingo), Mr. Hands (Pacifica) and Dakota Smith (Badlands) never know.
-
-Examples for preset 2, with the event on day 41:
-- On day 42, Dino, El Capitan and Mr. Hands know 2 facts: the fight, and the two dead officers.
-- Regina, Robert Wilson, Cassius, Wakako and Dakota never know.
-
-Examples for preset 3, with the event on day 41:
-- On day 41, Dakota Smith knows all 4 facts.
-- On day 42, Wakako Okada (Westbrook) and El Capitan (Santo Domingo) know 2 facts: the camp is empty, and a merc killed the raiders.
-- Regina, Robert Wilson, Cassius, Dino, Padre and Mr. Hands never know.
+Examples (`harbor_city` is a made-up mod world with `start_day` = `0`):
+- The engine starts with the test world. A mod sends `harbor_city`. Then `harbor_city` is the world at day 0. A request to talk to Torvald gets `404`.
+- The player plays until day 12, then closes the game. The next day, the mod sends `harbor_city` again. Then the clock is at day 12, and every NPC remembers what it knew.
+- The engine restarts while the game runs. `POST /api/session/start` gives `test`. The mod sends `harbor_city` again and continues.
+- A mod update removes the NPC `dockworker_1`. A request to talk to it gets `404`. If a later update adds it again, it still has its memories.
 
 ## Constraints
 

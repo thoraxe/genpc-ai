@@ -34,7 +34,7 @@ The engine runs at `http://localhost:8000` by default.
 7. For each NPC, the answer gives the number of memories that the NPC did not forget (`known`).
 8. This answer does not give the NPC's description. The inspector route gives it (rule 20).
 8a. `POST /api/world` sends a world to the engine. The body is the world, in the same format as the world file. `[PLANNED: #7]`
-8b. The answer gives the world `id`, the number of towns and the number of NPCs. Example: `cyberpunk`, 7 towns, 9 NPCs. `[PLANNED: #7]`
+8b. The answer gives the world `id`, the number of towns and the number of NPCs. Example: `harbor_city`, 3 towns, 5 NPCs. `[PLANNED: #7]`
 8c. If the world is not correct (`world-file.md` rule 16n), the engine answers with `400`. The answer tells why. `[PLANNED: #7]`
 8d. Rule 8c uses `400`, not `422`, also for a missing part. The world in use stays. `[PLANNED: #7]`
 
