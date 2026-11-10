@@ -29,12 +29,13 @@ The product's core promise is that an NPC can't say what it doesn't know.
 ## 6. API compatibility with game mods
 - The `/api/*` request and response shapes are a contract with the mods. Adding a field is fine, but renaming or removing one needs a note in the PR and a matching mod change.
 
-## 7. Spec PRs
-A spec PR changes only `.ai/spec/`. Check:
+## 7. Spec stage of a behaviour PR
+In the spec stage, the PR changes only `.ai/spec/`. Check:
 - The Summary and the new rules follow "Writing rules for what/" in `.ai/spec/README.md`, and use the glossary words.
 - Each rule is testable, has a real-value example where it has a number, and is marked `[PLANNED: #N]`.
 - The Summary has 3–6 examples, what it will not do, and questions with recommended answers.
-- New rules do not contradict or renumber existing rules, and do not clash with other open spec PRs.
+- New rules do not contradict or renumber existing rules, and do not clash with other open behaviour PRs.
+- In the code stage: the code does what the approved rules say, the tests check the Summary's examples, and no `[PLANNED: #N]` mark of this issue is left.
 - The Summary and the commit message have no closing word ("closes", "fixes", "resolves") before an issue number.
 - Nothing in the spec would put another NPC's knowledge, world state, lost facts or faded facts into a prompt (§1).
 

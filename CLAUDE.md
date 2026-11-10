@@ -7,7 +7,7 @@ All specifications live in `.ai/spec/`. Start with `.ai/spec/README.md` for the 
 - `what/` (behaviour), `glossary.md`, `constraints.md`, `decisions/` and the Summary of every spec PR **must** be written in extremely simple, plain English, following ASD-STE100 where possible. Follow "Writing rules for what/" in `.ai/spec/README.md`, and use the `glossary.md` word for each thing.
 - `how/` (code map) uses the same simple sentences but the code's exact names. Follow "Writing rules for how/" in `.ai/spec/README.md`.
 - A PR that changes a `what/` rule lists each changed rule (file and number) in plain words in its Summary.
-- A spec PR adds the new rules to the right `what/` files, marked `[PLANNED: #N]`. The code PR that builds it updates the rules and marks them `[DONE: #N]`. A PR that changes behaviour must update the matching `what/` and `how/` files.
+- `main` always describes what the engine does now. New rules reach `main` in the same PR as the code that builds them. `[PLANNED: #N]` on `main` is rare: only for a spec the owner chose to merge ahead of its code. A PR that changes behaviour must update the matching `what/` and `how/` files.
 
 ## Stack
 - Python 3.12+ managed with **uv** (never pip or venv).
@@ -33,13 +33,14 @@ uv run python poc/scripts/eval.py 10
 - **Every bug fix adds a regression test.**
 
 ## Workflow
-- **The owner reviews behaviour, not code.** The owner doesn't read code. Before coding anything that changes what an NPC, a mod or a player experiences, open a **spec PR** and wait for the owner to approve it.
-  - Goals and early questions stay on the issue. The spec itself is a PR, not an issue comment.
-  - Branch `spec/<issue>-<slug>`. The PR changes only `.ai/spec/` files: the new rules in `what/` marked `[PLANNED: #N]`, plus glossary words. Write "Spec for #N", not "Closes #N": the issue stays open until the code is done.
-  - The PR description (Summary section) is the plain-language spec: what it does, 3–6 concrete examples ("if the player does X, then Y"), what it deliberately won't do, and questions for the owner, each with a recommended answer. No code, no jargon: follow "Writing rules for what/" in `.ai/spec/README.md`.
-  - Approval is the owner's "OK" comment on the PR. (PRs are opened from the owner's account, so GitHub's Approve button is not available to them.) Then merge the spec PR. Never merge a spec PR without the owner's OK. If the owner answers a question differently, update the rules and the Summary, post the changed rules in a comment, and get the owner's OK again before merging.
-  - The other template sections of a spec PR: **Testing** = the checks output (no code changed); **Local AI review** = one review against "Writing rules for what/", the existing rules, and `REVIEW.md` "Spec PRs"; **Risk** = low (specs only); **How to revert** = revert the squash commit.
-  - The code PR follows, links the issue ("Closes #N"), and changes the rules to `[DONE: #N]`. The tests check the spec's examples. If the code PR must change an approved rule, get the owner's OK on that change first.
+- **The owner reviews behaviour, not code.** The owner doesn't read code. Each change to what an NPC, a mod or a player experiences is **one PR in two stages**: first the spec, then the code.
+  - Goals and early questions stay on the issue. The spec itself is in the PR, not in an issue comment.
+  - **Spec stage.** Branch `spec/<issue>-<slug>`. The first commits change only `.ai/spec/` files: the new rules in `what/` marked `[PLANNED: #N]` (so reviewers can see them), plus glossary words.
+    - The Summary is the plain-language spec: what it does, 3–6 concrete examples ("if the player does X, then Y"), what it deliberately won't do, and questions for the owner, each with a recommended answer. No code, no jargon: follow "Writing rules for what/" in `.ai/spec/README.md`. Write "Spec for #N", not "Closes #N", in this stage.
+    - The other template sections in this stage: **Testing** = the checks output (no code yet); **Local AI review** = one review against "Writing rules for what/", the existing rules, and `REVIEW.md` §7; **Risk** = "spec stage: no code yet"; **How to revert** = close the PR.
+    - Approval is the owner's "OK" comment on the PR. (PRs are opened from the owner's account, so GitHub's Approve button is not available to them.) If the owner answers a question differently, update the rules and the Summary, post the changed rules in a comment, and get the owner's OK again.
+  - **Code stage.** Only after the OK: add the code and the tests to the same PR. The tests check the spec's examples. Remove the `[PLANNED: #N]` marks, update `how/`, and add "Closes #N" to the Summary. Update Testing, Local AI review, Risk and How to revert for the code. If the code shows that an approved rule must change, post the change and get the owner's OK on it first.
+  - **Merge** only when the owner's OK covers the final rules, the code stage is done, CI is green and the reviews are clean. Never merge the spec stage alone, unless the owner asks for that; then the rules stay `[PLANNED: #N]` on `main` and a later PR builds them.
 - Make small PRs to `main` and squash-merge them. Branch names: `spec/`, `feat/`, `fix/`, `docs/`, `chore/`.
 - Before opening a PR:
   1. Run the checks.
@@ -49,8 +50,8 @@ uv run python poc/scripts/eval.py 10
 - **The AI review is the code gate. Risk sets how thorough it is:**
   - **low** (docs, plans): checks plus one review;
   - **medium** (engine or mod code): checks plus one review, with every finding fixed or answered;
-  - **high** (`knowledge.py`, prompt building, save/load, `.github/`): add a **second, independent** review that gets only the diff and the approved spec (the merged spec PR: its rules and its Summary), never the first review's conclusions, plus the live eval if the prompt or knowledge rules changed.
-- Once CI is green and the reviews are clean, the PR is ready to merge. A spec PR also needs the owner's OK (see above). Tell the owner in a line or two of plain language what changed for the player or the mod. Never ask them to read a code diff. For a spec PR, the owner reads the Summary and may comment on the plain-English rules.
+  - **high** (`knowledge.py`, prompt building, save/load, `.github/`): add a **second, independent** review that gets only the diff and the approved spec (the rules and the Summary that the owner said OK to), never the first review's conclusions, plus the live eval if the prompt or knowledge rules changed.
+- Once CI is green and the reviews are clean, the PR is ready to merge. A behaviour PR also needs the owner's OK and a finished code stage (see above). Tell the owner in a line or two of plain language what changed for the player or the mod. Never ask them to read a code diff. In a behaviour PR, the owner reads the Summary and may comment on the plain-English rules.
 
 ## Non-goals (for now)
 Lip sync, speech input, local LLMs, paid Cyberpunk content, and publishing to Nexus without the owner's approval.

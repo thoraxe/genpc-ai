@@ -1,6 +1,6 @@
 # 0005: Each spec is a PR
 
-**Status:** accepted
+**Status:** accepted. Decision 0006 replaces the "merge the spec first" part.
 **Date:** 2026-11-10
 
 ## Context
