@@ -1,5 +1,5 @@
 ## Summary
-<!-- In plain language first, for a reader who does not read code: what is different for the player, NPC or mod, with a before/after example. Then technical detail. Link the issue: a code PR writes "Closes #N"; a spec PR writes "Spec for #N" (it must not close the issue). -->
+<!-- In plain language first, for a reader who does not read code: what is different for the player, NPC or mod, with a before/after example. Then technical detail. Link the issue. Behaviour PR: write "Spec for #N" in the spec stage, and change it to "Closes #N" when you add the code. Other PRs: "Closes #N". -->
 
 ## Testing
 <!-- Commands you ran and their output (ruff, pytest; live eval if the prompt or knowledge rules changed). -->

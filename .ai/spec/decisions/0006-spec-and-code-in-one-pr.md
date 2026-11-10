@@ -16,14 +16,14 @@ Decision 0005 merged each spec PR before its code. The new rules then were on `m
 - If a rule changes after the OK, the owner must give a new OK.
 - The owner can ask to merge a spec before its code. Then its rules stay `[PLANNED: #N]` on `main`.
 
-This replaces the "merge the spec first" part of decision 0005. The rest of 0005 stays.
+This replaces these parts of decision 0005: the merge before the code, the separate code PR, and the `[DONE: #N]` marks. The rest of 0005 stays.
 
 The spec for #8 is already on `main` with `[PLANNED: #8]` marks. Its code PR removes the marks.
 
 ## Other options
 
 - **Merge the spec first, with `[PLANNED: #N]` marks (decision 0005).** We did not keep this. The rules on `main` did not always tell what the engine does.
-- **A spec PR and a separate code PR that waits for it.** We did not choose this. It gives two PRs for one change, and the spec still waits on a branch.
+- **A spec PR and a separate code PR that waits for it.** We did not choose this. It gives two PRs for one change. The spec still waits on a branch.
 
 ## Results
 
