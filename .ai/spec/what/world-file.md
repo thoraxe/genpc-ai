@@ -17,8 +17,16 @@ The world file describes one game world: its towns, places and NPCs. Each game g
 4. Gossip goes only from a town to the towns in its own `adjacent` list. List the neighbour in both towns if you want gossip to go both ways.
 5. Each place has an `id`, a `name`, and the town it belongs to (`near_settlement`).
 6. Each NPC has an `id`, a `name`, a job (`role`), a town (`settlement`) and a description (`bio`).
+6a. `[PLANNED: #8]` The `id` of a world-file NPC can be the record ID of the character. Example: `Character.wilson`.
+6b. `[PLANNED: #8]` If the `id` is the record ID, the mod can find the world-file NPC.
 7. An NPC can have a `voice_id` for the voice service. Without it, the NPC has no voice.
-8. The engine does not contain any town, place or NPC. They all come from the world file.
+7a. `[PLANNED: #8]` The world file can have a voice list (`voice_pool`). It has a list for `female` and a list for `male`.
+7b. `[PLANNED: #8]` The engine chooses a voice from the voice list by the NPC's ID. The same NPC always gets the same voice.
+7c. `[PLANNED: #8]` If the mod sends no gender, the engine chooses from all voices in the voice list.
+7d. `[PLANNED: #8]` If the voice list is empty or not in the world file, added NPCs have no voice.
+7e. `[PLANNED: #8]` The world file can have a general description (`generic_bio`). Each added NPC gets it.
+7f. `[PLANNED: #8]` If the world file has no general description, the engine uses "You are an ordinary person. You have no special story."
+8. `[PLANNED: #8]` The engine does not contain any town, place or NPC. They come from the world file or from the mod (`http-api.md` rule 31).
 
 ### The preset events file (`poc/data/events.json`)
 
