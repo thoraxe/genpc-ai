@@ -1,6 +1,6 @@
 # 0005: Each spec is a PR
 
-**Status:** accepted
+**Status:** accepted. Decision 0006 replaces these parts: the merge before the code, the separate code PR, and the `[DONE: #N]` marks. "Only `.ai/spec/` files" is now true only for the spec stage.
 **Date:** 2026-11-10
 
 ## Context
