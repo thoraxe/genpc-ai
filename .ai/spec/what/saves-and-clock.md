@@ -19,7 +19,7 @@ The engine sends the result of each change to the mod. For the exact fields, see
 5d. If the day is the same as the clock, nothing changes. The engine does not send an error. `[PLANNED: #9]`
 5e. If the day is earlier than the clock, the engine refuses. The clock does not change. `[PLANNED: #9]`
 5f. If the game's hours go back, the player loaded a game save. Load the save with the same name first. Then set the clock (see #11). `[PLANNED: #9]`
-5g. For a game that sets the clock from its hours, the start day is 0. Example: set `POC_START_DAY` to `0` for Cyberpunk. `[PLANNED: #9]` (owner question 2)
+5g. For a game that sets the clock from its hours, the start day is 0. Its world file gives `start_day` = `0`. `[PLANNED: #9]` (owner question 2)
 
 Example: the clock is at day 41. The mod moves it by 0.5 days. The clock is now at day 41.5, and Torvald gets the gossip.
 
