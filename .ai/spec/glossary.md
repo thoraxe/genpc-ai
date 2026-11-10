@@ -66,7 +66,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **day** | One day in the game. Never a real day. Days can have parts: 41.5 is the middle of day 41. | date, time | `day` |
 | **clock** | The current day in the game. | time, timer | `meta.day` |
 | **save** | A copy of everything that NPCs know, at one moment. | snapshot, checkpoint | `saves` table |
-| **save name** | A name that the mod gives a save, for example `cp-1042`. The game keeps the same name in its own save file. | token, key, slot (in what/ files) | `token` |
+| **save name** | A name that the mod gives a save, for example `cp-1042`. The game keeps the same name in its own save file. | token, key, save slot | `token` |
 | **save number** | The number that the engine gives each save, for example `7`. | save ID | `id`, `save_id` |
 | **load** | Use a save again. Everything after the save stops existing. | restore, revert | `Store.load` |
 | **start day** | The day on the clock at the start, and after a reset. It is 41 now. | first day | `POC_START_DAY` |

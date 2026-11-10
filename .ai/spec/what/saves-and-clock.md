@@ -30,7 +30,7 @@ Example: the clock is at day 41. The mod moves it by 0.5 days. The clock is now 
 11. A save also keeps which recent news each NPC told, and how many recalls each memory has.
 12. Each save has a label. If the mod gives no label, the label is "Day N" (for example, "Day 41.5").
 12a. A save can have a save name. The mod chooses the save name. Example: `cp-1042`. `[PLANNED: #11]`
-12b. A save name has 1 to 64 characters. Use only letters, digits, `-`, `_` and `.`. `[PLANNED: #11]`
+12b. A save name has 1 to 64 characters. Use only letters A–Z and a–z, digits, `-`, `_` and `.`. `[PLANNED: #11]`
 12c. A save name must have one letter or more. Example: `cp-1042` is correct, and `1042` is not. `[PLANNED: #11]`
 12d. If the mod saves with a save name that the engine has, the engine replaces that save. `[PLANNED: #11]`
 12e. A replaced save keeps its save number. It gets the new copy, the new label and the new day. `[PLANNED: #11]`
@@ -44,8 +44,8 @@ Example: the clock is at day 41. The mod moves it by 0.5 days. The clock is now 
 15a. The mod can load a save by its save name or by its save number. `[PLANNED: #11]`
 15b. If no save has that save name, the engine changes nothing. It answers "not found" (`404`). `[PLANNED: #11]`
 15c. The engine does not remove saves. If the player deletes a game save, the engine save stays. `[PLANNED: #11]`
-15d. If a load by save name answers `404`, reset the engine. Then no NPC knows anything. `[PLANNED: #11, #14]` (only if the owner chooses 1(a))
-15e. A load by save name treats NPCs that the mod added (#8) like a load by save number. See `saves-and-clock.md` rules 13a–13b in the #8 spec. `[PLANNED: #11, #8]`
+15d. If a load by save name answers `404`, reset the engine. Then no NPC knows anything. `[PLANNED: #11]` (owner question 1)
+15e. A load by save name treats NPCs that the mod added (#8) like a load by save number. See `saves-and-clock.md` rules 13a–13b. `[PLANNED: #11]` (owner question 2)
 
 ### Reset
 
