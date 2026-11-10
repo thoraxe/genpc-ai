@@ -77,32 +77,6 @@ The engine runs at `http://localhost:8000` by default.
 
 26. `GET /` gives the test page.
 
-### NPCs
-
-31. `[PLANNED: #8]` Send `POST /api/npcs` before each greeting. It tells the engine which NPC the player talks to.
-32. `[PLANNED: #8]` The request has these fields:
-
-| Field | What it is | Example |
-|---|---|---|
-| `record_id` | The record ID of a named or world-file NPC. | `Character.kab_noodle_vendor_01` |
-| `entity_id` | The entity ID of a crowd NPC. | `1874320956` |
-| `name` | The name that the player sees. 1 to 60 characters. | `Ichiro` |
-| `settlement` | The town `id` from the world file. | `watson` |
-| `role` | The job. Optional. A maximum of 40 characters. | `noodle vendor` |
-| `faction` | The faction. Optional. A maximum of 40 characters. | `Tyger Claws` |
-| `gender` | `female` or `male`. Optional. | `male` |
-
-33. `[PLANNED: #8]` Send `record_id` for a named NPC. Send `entity_id` for a crowd NPC.
-34. `[PLANNED: #8]` If the request has both `record_id` and `entity_id`, or has neither, the engine answers with `400`.
-35. `[PLANNED: #8]` If `name`, `role`, `faction` or `gender` is not in its range in rule 32, the engine answers with `400`.
-36. `[PLANNED: #8]` If `record_id` is the `id` of a world-file NPC, the engine uses that NPC. It changes nothing.
-37. `[PLANNED: #8]` Else, the engine adds the NPC. If the engine added this NPC before, it changes the details to the new ones.
-38. `[PLANNED: #8]` The answer gives `npc_id`. Use it in later requests. Example: `Character.kab_noodle_vendor_01` or `crowd-1874320956`.
-39. `[PLANNED: #8]` The answer gives `kind`: `world`, `named` or `crowd`.
-40. `[PLANNED: #8]` After rule 31, the NPC is a known NPC. Events, conversations, voice and the inspector accept its `npc_id`.
-41. `[PLANNED: #8]` `GET /api/world` also lists the added NPCs. Each NPC in the list has its `kind`.
-42. `[PLANNED: #8]` An added NPC gets its voice from the voice list (see `world-file.md` rules 7a–7d).
-
 ### Voice
 
 27. `GET /api/audio/{turn_id}` gives the voice of the NPC's line in that turn. The sound arrives in parts, so it can start to play before it is complete.
@@ -111,7 +85,34 @@ The engine runs at `http://localhost:8000` by default.
    - the turn is unknown;
    - the NPC has no voice.
 29. The engine makes the voice again for each request. It does not keep old sound files.
-30. Each NPC has its own voice, from `voice_id` in the world file.
+30. A world-file NPC has its own voice, from `voice_id` in the world file. An added NPC gets a voice from the voice list (rule 42). `[PLANNED: #8]`
+
+### NPCs
+
+31. Send `POST /api/npcs` before each greeting. It tells the engine which NPC the player talks to. `[PLANNED: #8]`
+32. The request has these fields: `[PLANNED: #8]`
+
+| Field | What it is | Required | Example |
+|---|---|---|---|
+| `record_id` | The record ID of a named or world-file NPC. | one of the two | `Character.kab_noodle_vendor_01` |
+| `entity_id` | The entity ID of a crowd NPC. | one of the two | `1874320956` |
+| `name` | The name that the player sees. 1 to 60 characters. | yes | `Ichiro` |
+| `settlement` | The town `id` from the world file. | yes | `watson` |
+| `role` | The job. Optional. A maximum of 40 characters. | no | `noodle vendor` |
+| `faction` | The faction. Optional. A maximum of 40 characters. | no | `Tyger Claws` |
+| `gender` | `female` or `male`. Optional. | no | `male` |
+
+33. Send `record_id` for a named NPC. Send `entity_id` for a crowd NPC. `[PLANNED: #8]`
+34. If the request has both `record_id` and `entity_id`, or has neither, the engine answers with `400`. This is also true for a missing `name` or `settlement`. Rules 34–35a use `400`, not `422`. `[PLANNED: #8]`
+35. If `name`, `role`, `faction` or `gender` is not in its range in rule 32, the engine answers with `400`. `[PLANNED: #8]`
+35a. If `name`, `role` or `faction` has a line break, the engine answers with `400`. `[PLANNED: #8]`
+36. If `record_id` is the `id` of a world-file NPC, the engine uses that NPC. It changes nothing. `[PLANNED: #8]`
+37. Else, the engine adds the NPC. If the engine added this NPC before, it changes the details to the new ones. `[PLANNED: #8]`
+38. The answer gives `npc_id`. Use it in later requests. Example: `Character.kab_noodle_vendor_01` or `crowd-1874320956`. `[PLANNED: #8]`
+39. The answer gives `kind`: `world`, `named` or `crowd`. `[PLANNED: #8]`
+40. After the mod sends `POST /api/npcs`, the NPC is a known NPC. Events, conversations, voice and the inspector accept its `npc_id`. `[PLANNED: #8]`
+41. `GET /api/world` also lists the added NPCs. Each NPC in the list has its `kind`. `[PLANNED: #8]`
+42. An added NPC gets its voice from the voice list (see `world-file.md` rules 7a–7d). `[PLANNED: #8]`
 
 Examples:
 - If a mod sends `POST /api/clock/advance` with `days` = `-2`, then the engine answers with `400`.
@@ -119,7 +120,7 @@ Examples:
 - If there is no `ELEVENLABS_API_KEY`, then `GET /api/audio/7` answers with `404`, and `/api/session/start` gives an empty `tts`.
 - If a mod sends `POST /api/npcs` with `record_id` = `Character.wilson`, then the answer gives `kind` = `world`.
 - If a mod sends `POST /api/npcs` with no `record_id` and no `entity_id`, then the engine answers with `400`.
-- If a mod sends `POST /api/dialog/open` for `crowd-1874320956` before rule 31, then the engine answers with `404`.
+- If a mod sends `POST /api/dialog/open` for `crowd-1874320956` before the mod sends `POST /api/npcs`, then the engine answers with `404`.
 
 ## Constraints
 
