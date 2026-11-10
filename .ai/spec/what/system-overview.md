@@ -47,9 +47,9 @@ You set these values in the `.env` file at the top of the repo. Secret keys go o
 | `ELEVENLABS_API_KEY` | The secret key for the voice service. Without it, NPCs have no voice. | — (optional) |
 | `ELEVENLABS_MODEL` | The voice model. | `eleven_flash_v2_5` |
 | `TTS_ENABLED` | Set to `0`, `false` or `no` to stop the voice. | `1` |
-| `POC_START_DAY` | The day on the clock at the start, and after a reset. | `41` |
-| `POC_VAR_DIR` | The folder for the database. | `poc/var` |
-| `POC_DB` | The database file. | `poc/var/poc.db` |
+| `POC_START_DAY` | The start day of the test world, and of a mod world that gives no `start_day`. | `41` |
+| `POC_VAR_DIR` | The folder for the databases. Each mod world has its own database file there. | `poc/var` |
+| `POC_DB` | The database file of the test world. | `poc/var/poc.db` |
 
 The world file can change the knowledge numbers (for example, how fast memories fade). See `world-file.md`.
 

@@ -12,7 +12,8 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **next town** | A town that the world file lists as a neighbour of a different town. | adjacent town, nearby town | `adjacent` |
 | **place** | A location that is not a town, for example a mine. Each place belongs to one town. | site, area | `Location`, `near_settlement` |
 | **world** | All the towns, places and NPCs of one game. | setting (when you mean the world) | `WorldConfig` |
-| **world file** | The file that describes the world (`poc/data/world.json`). | config, map | `world.json` |
+| **test world** | The small fantasy world in the engine (`poc/data/world.json`). The test page and the tests use it. | demo world, Skyrim world | `id` = `test` |
+| **world file** | A file that describes one world. The test world is `poc/data/world.json`. A mod sends its own world to the engine. | config, map | `world.json` |
 | **setting text** | A short text in the world file. It tells every NPC how to speak. | flavour, style | `setting` |
 | **world-file NPC** | An NPC that the world file describes. It has a hand-written description, and it can have a voice. | cast NPC | `world.npcs`, `kind` = `world` |
 | **added NPC** | An NPC that the mod adds while the game runs. The world file does not have it. A named NPC or a crowd NPC. | registered NPC, dynamic NPC | `kind` = `named` or `crowd` |
@@ -67,7 +68,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **clock** | The current day in the game. | time, timer | `meta.day` |
 | **save** | A copy of everything that NPCs know, at one moment. | snapshot, checkpoint | `saves` table |
 | **load** | Use a save again. Everything after the save stops existing. | restore, revert | `Store.load` |
-| **start day** | The day on the clock at the start, and after a reset. It is 41 now. | first day | `POC_START_DAY` |
+| **start day** | The day on the clock when a world starts, and after a reset. The world file can give it. Else it is `POC_START_DAY` (41). | first day | `start_day`, `POC_START_DAY` |
 | **reset** | Remove all events, memories and turns, and set the clock to the start day. Saves stay. | wipe, clear | `Store.reset` |
 
 ## Project

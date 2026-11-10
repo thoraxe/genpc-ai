@@ -5,18 +5,21 @@ Run: uv run uvicorn engine.api:app --app-dir poc --port 8000
 
 from __future__ import annotations
 
+import hashlib
 import os
 import threading
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel
+from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from pydantic import BaseModel, ValidationError
 
 from . import knowledge
 from .dialog import DialogEngine
-from .models import Fact, WorldEvent
+from .models import Fact, WorldConfig, WorldEvent, world_problems
 from .providers import llm as llm_mod
 from .providers import tts as tts_mod
 from .store import Store, load_events, load_world
@@ -27,9 +30,26 @@ START_DAY = float(os.getenv("POC_START_DAY", "41"))
 VAR = Path(os.getenv("POC_VAR_DIR", POC / "var"))
 VAR.mkdir(parents=True, exist_ok=True)
 
+TEST_WORLD_ID = "test"  # the built-in test world; a mod cannot use this name
+TEST_DB = Path(os.getenv("POC_DB", VAR / "poc.db"))
+
+
+def _start_day(w: WorldConfig) -> float:
+    return w.start_day if w.start_day is not None else START_DAY
+
+
+def _db_path(world_id: str) -> Path:
+    """Each world keeps its knowledge in its own database file (world-file.md rule 16d).
+
+    The file name is a hash of the world id, so a mod's id can never become a path."""
+    if world_id == TEST_WORLD_ID:
+        return TEST_DB
+    return VAR / f"world-{hashlib.sha256(world_id.encode()).hexdigest()[:16]}.db"
+
+
 world = load_world(POC / "data" / "world.json")
-presets = load_events(POC / "data" / "events.json")
-store = Store(os.getenv("POC_DB", VAR / "poc.db"), world, start_day=START_DAY)
+presets = load_events(POC / "data" / "events.json")  # presets belong only to the test world
+store = Store(_db_path(world.id), world, start_day=_start_day(world))
 lock = threading.Lock()  # one sqlite connection shared across request threads
 _llm = None
 tts = tts_mod.from_env()
@@ -105,6 +125,7 @@ def session_start():
         "capabilities": {"max_choices": 3, "free_text": True, "audio": tts.media_type if tts else None},
         "llm": _llm.name if _llm else os.getenv("LLM_MODEL", os.getenv("ZAI_MODEL", "glm-5.3-flash")),
         "tts": tts.name if tts else None,
+        "world": world.id,
     }
 
 
@@ -122,6 +143,7 @@ def get_world():
             for n in world.npcs
         }
         return {
+            "world": world.id,
             "day": store.day,
             "settlements": [s.model_dump() for s in world.settlements],
             "locations": [loc.model_dump() for loc in world.locations],
@@ -133,6 +155,41 @@ def get_world():
             "saves": store.saves(),
             "rules": world.rules.model_dump(),
         }
+
+
+@app.post("/api/world")
+def set_world(body: object = Body(None)):
+    """A mod sends its own world (world-file.md rules 16-16s, http-api.md rules 8a-8d)."""
+    global world, presets, store
+    if not isinstance(body, dict):
+        raise HTTPException(400, "world is not correct: the body must be a JSON object")
+    try:
+        w = WorldConfig.model_validate(body)
+    except ValidationError as e:
+        reasons = "; ".join(f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()[:5])
+        raise HTTPException(400, f"world is not correct: {reasons}") from None
+    if w.id.casefold() == TEST_WORLD_ID:
+        raise HTTPException(400, f"world is not correct: a mod cannot use the world name {TEST_WORLD_ID!r}")
+    problems = world_problems(w)
+    if problems:
+        raise HTTPException(400, "world is not correct: " + "; ".join(problems))
+    with lock:
+        if store.world.id == w.id:
+            store.world = w  # same world, maybe changed: memories stay (rules 16j-16k)
+        else:  # open the new world first: if that fails, the world in use stays (rule 16m)
+            new = Store(_db_path(w.id), w, start_day=_start_day(w))
+            old, store = store, new
+            old.db.close()
+        world, presets = w, {}
+    return {"world": w.id, "towns": len(w.settlements), "npcs": len(w.npcs)}
+
+
+@app.exception_handler(RequestValidationError)
+async def _bad_request_body(request: Request, exc: RequestValidationError):
+    """A body that is not JSON: `/api/world` answers 400, not 422 (http-api.md rule 8d)."""
+    if request.url.path == "/api/world":
+        return JSONResponse(status_code=400, content={"detail": "world is not correct: the body is not valid JSON"})
+    return await request_validation_exception_handler(request, exc)
 
 
 @app.post("/api/clock/advance")
@@ -173,17 +230,17 @@ def report_event(e: EventIn):
 
 @app.post("/api/dialog/open")
 def dialog_open(o: Open):
-    npc_or_404(o.npc_id)
     with lock:
+        npc_or_404(o.npc_id)
         return dialog().open(o.npc_id).model_dump()
 
 
 @app.post("/api/dialog/choose")
 def dialog_choose(c: Choose):
-    npc_or_404(c.npc_id)
     if not c.text.strip() or len(c.text) > 500:
         raise HTTPException(400, "text must be 1-500 characters")
     with lock:
+        npc_or_404(c.npc_id)
         return dialog().choose(c.session_id, c.npc_id, c.text.strip()).model_dump()
 
 
@@ -193,9 +250,9 @@ def audio(turn_id: int):
         raise HTTPException(404, "TTS disabled (set ELEVENLABS_API_KEY, TTS_ENABLED=1)")
     with lock:
         t = store.turn(turn_id)
-    if not t:
-        raise HTTPException(404, "unknown turn")
-    npc = npc_or_404(t["npc_id"])
+        if not t:
+            raise HTTPException(404, "unknown turn")
+        npc = npc_or_404(t["npc_id"])
     if not npc.voice_id:
         raise HTTPException(404, "npc has no voice")
     return StreamingResponse(tts.stream(t["npc_line"], npc.voice_id), media_type=tts.media_type)
@@ -203,8 +260,8 @@ def audio(turn_id: int):
 
 @app.get("/api/npc/{npc_id}/knowledge")
 def npc_knowledge(npc_id: str):
-    npc = npc_or_404(npc_id)
     with lock:
+        npc = npc_or_404(npc_id)
         events = {e.id: e for e in store.events()}
         out = []
         for m in store.memories(npc_id):
@@ -232,8 +289,8 @@ def npc_knowledge(npc_id: str):
 
 @app.get("/api/npc/{npc_id}/prompt")
 def npc_prompt(npc_id: str):
-    npc_or_404(npc_id)
     with lock:
+        npc_or_404(npc_id)
         return {"prompt": DialogEngine(store, None).preview_prompt(npc_id)}
 
 
@@ -256,5 +313,5 @@ def load(save_id: int):
 @app.post("/api/reset")
 def reset():
     with lock:
-        store.reset(START_DAY)
+        store.reset(_start_day(world))
         return {"day": store.day}

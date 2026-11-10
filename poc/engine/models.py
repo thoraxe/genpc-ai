@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 Source = Literal["witnessed", "hop1", "hop2", "conversation"]
 Stage = Literal["detailed", "gist", "forgotten"]
@@ -57,11 +57,48 @@ class NPC(BaseModel):
 
 
 class WorldConfig(BaseModel):
+    id: str  # world name; each world keeps its own knowledge
+    start_day: float | None = Field(None, allow_inf_nan=False)  # None = POC_START_DAY
     setting: str = ""  # world flavour and speech style for every NPC prompt
     rules: Rules = Rules()
     settlements: list[Settlement]
     locations: list[Location] = []
     npcs: list[NPC]
+
+    @field_validator("id")
+    @classmethod
+    def id_not_blank(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("the world has no id")
+        return v
+
+
+def world_problems(world: WorldConfig) -> list[str]:
+    """Reasons why a world is not correct (world-file.md rule 16n). Empty list = correct."""
+    problems: list[str] = []
+    if not world.settlements:
+        problems.append("the world has no settlements")
+    if not world.npcs:
+        problems.append("the world has no npcs")
+    for kind, items in (("settlement", world.settlements), ("location", world.locations), ("npc", world.npcs)):
+        seen: set[str] = set()
+        for item in items:
+            if item.id in seen:
+                problems.append(f"two {kind}s have the id {item.id!r}")
+            seen.add(item.id)
+    towns = {t.id for t in world.settlements}
+    for t in world.settlements:
+        for a in t.adjacent:
+            if a not in towns:
+                problems.append(f"settlement {t.id!r} lists an unknown next town {a!r}")
+    for loc in world.locations:
+        if loc.near_settlement not in towns:
+            problems.append(f"location {loc.id!r} names an unknown town {loc.near_settlement!r}")
+    for n in world.npcs:
+        if n.settlement not in towns:
+            problems.append(f"npc {n.id!r} names an unknown town {n.settlement!r}")
+    return problems
 
 
 class WorldEvent(BaseModel):
