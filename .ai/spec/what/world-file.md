@@ -71,6 +71,7 @@ Examples:
    - An NPC that is not in the new world is unknown. Its memories stay, but requests for it get `404`.
    - New next towns apply to gossip that has not arrived yet.
    - New knowledge settings apply to all memories from then on.
+   - A new day length applies to the next `hours` from the mod. The clock and the memories keep their days. `[PLANNED: #9]` (owner question 4)
 16l. Do not use an NPC `id` again for a different character. The new character gets the memories of the old one.
 16m. If the world is not correct, the engine refuses it. It keeps the world in use, and the answer tells why.
 16n. A world is not correct if one of these is true:

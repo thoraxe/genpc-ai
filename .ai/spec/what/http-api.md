@@ -128,7 +128,7 @@ The engine runs at `http://localhost:8000` by default.
 
 Examples:
 - If a mod sends `POST /api/clock/advance` with `days` = `-2`, then the engine answers with `400`.
-- If the clock is at day 41.5 and a mod sends `POST /api/clock/set` with `hours` = `984`, then the engine answers with `400`. `[PLANNED: #9]`
+- In a world with 24-hour days: if the clock is at day 41.5 and a mod sends `POST /api/clock/set` with `hours` = `984`, then the engine answers with `400`. `[PLANNED: #9]`
 - If a mod sends `POST /api/dialog/open` for an NPC that is not in the world file, then the engine answers with `404`.
 - If there is no `ELEVENLABS_API_KEY`, then `GET /api/audio/7` answers with `404`, and `/api/session/start` gives an empty `tts`.
 - If a mod sends `POST /api/npcs` with `record_id` = `torvald`, then the answer gives `kind` = `world`.
