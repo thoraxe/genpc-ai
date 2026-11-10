@@ -66,6 +66,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 |---|---|---|---|
 | **day** | One day in the game. Never a real day. Days can have parts: 41.5 is the middle of day 41. | date, time | `day` |
 | **clock** | The current day in the game. | time, timer | `meta.day` |
+| **hour** | One hour in the game. Never a real hour. 24 hours are one day. | game time, time | `hours` |
 | **save** | A copy of everything that NPCs know, at one moment. | snapshot, checkpoint | `saves` table |
 | **load** | Use a save again. Everything after the save stops existing. | restore, revert | `Store.load` |
 | **start day** | The day on the clock when a world starts, and after a reset. The world file can give it. Else it is `POC_START_DAY` (41). | first day | `start_day`, `POC_START_DAY` |
