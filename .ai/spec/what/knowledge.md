@@ -18,6 +18,7 @@ Example: Hrolf sees the bandits die on day 41. On day 41 he knows all 5 facts: t
 3. Gossip goes only to NPCs who are not witnesses and do not know the event yet.
 4. An NPC gets a maximum of one memory for each event. A witness never also gets gossip about it.
 5. An event in a place counts as an event in the town of that place. An event in a town counts as an event in that town.
+5a. If the place or town of the event is not in the world file, no gossip goes out. Only the witnesses know the event.
 6. **Same town:** gossip goes to every NPC in the town of the event after half a day (`hop1_delay_days` = `0.5`).
 7. Same-town gossip keeps only facts of importance 3 or more (`hop1_min_importance` = `3`).
 8. Same-town gossip starts at strength `0.8` (`hop1_salience`).
@@ -26,7 +27,7 @@ Example: Hrolf sees the bandits die on day 41. On day 41 he knows all 5 facts: t
 11. Next-town gossip starts at strength `0.6` (`hop2_salience`).
 12. Gossip does not go further than the next towns.
 13. If no fact has a high enough importance, no gossip goes to that group.
-14. The facts that gossip loses are lost. The NPC can never get them back from that gossip.
+14. Gossip does not carry the facts below its importance limit. These are lost facts. The NPC never gets them from that gossip.
 15. The day of a gossip memory is the day it arrives, not the day the engine finds it. Example: an event on day 41, and the clock jumps to day 50. Torvald's memory has day 41.5, so it is already 8.5 days old.
 16. Gossip arrives when the clock moves forward, and when a mod sends an event.
 
@@ -38,11 +39,11 @@ Example: the bandits die at Embershard Mine on day 41. The mine belongs to River
 
 ### Fading
 
-17. Each memory has a strength. The strength gets smaller as days go by.
+17. Each memory has a strength. The strength gets smaller as days pass.
 18. Strength = start strength × e^(−`0.08` × age in days) × (1 + recall boost). (`decay_lambda` = `0.08`.)
 19. Each recall adds `0.25` to the recall boost (`recall_boost`). The recall boost is never more than `0.5` (`recall_cap`). Thus 2 recalls give the maximum.
 20. A memory is **clear** if its strength is `0.35` or more (`gist_threshold`). The NPC knows all its facts.
-21. A memory is **vague** if its strength is less than `0.35`. The NPC keeps only facts of importance 3 or more (`gist_min_importance`).
+21. A memory is **vague** if its strength is less than `0.35`. The NPC keeps only facts of importance 3 or more (`gist_min_importance`). The other facts are faded facts.
 22. A memory is **forgotten** if its strength is less than `0.05` (`forget_threshold`). The NPC knows none of its facts.
 23. A vague memory tells the AI model that the NPC "only vaguely remembers".
 
@@ -63,13 +64,13 @@ With 2 or more recalls, a witness memory becomes vague after 18.2 days and forgo
 25. The engine sends a maximum of 5 memories in one turn (`retrieval_k`). It chooses the strongest ones.
 26. Recent news always goes first. Recent news is a memory of an event that the NPC did not tell yet. The NPC got it less than 3 days ago (`news_window_days`).
 27. A maximum of 2 recent news memories get this first place (`news_slots`).
-28. The engine sends only the facts that the NPC still has. It never sends lost or faded facts.
+28. The engine sends only the facts that the NPC still has. It never sends lost facts or faded facts.
 
 ### What the NPC learns from the player
 
 29. An NPC remembers a fact about the player only if the player really said it in this conversation.
 30. The engine checks each fact that the AI model wants to remember. It finds the key words in the fact. A key word has 4 or more letters and is not a common word ("the", "about", "player" and others).
-31. The engine keeps the fact only if half or more of its key words are in the player's words in this conversation.
+31. The engine keeps the fact only if half or more of its key words are in the player's words. It uses all the player's words in this conversation.
 32. The engine does not keep a fact that has no key words.
 33. A fact from the player starts at full strength (`1.0`). It fades like all other memories.
 

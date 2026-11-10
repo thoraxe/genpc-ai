@@ -5,13 +5,13 @@
 
 ## Context
 
-Most AI NPC mods give every NPC the same AI model, and the AI model knows everything. Thus a farmer can know a secret from the other end of the world. The AI model also invents facts. We want NPCs that know only what makes sense.
+Most AI NPC mods give every NPC the same AI model, and the AI model knows everything. Thus a farmer can know a secret from the other end of the world. The AI model also invents facts. We want each NPC to know only what it saw or heard.
 
 ## Decision
 
 - Fixed rules in the engine decide what each NPC knows: witnesses, gossip, fading and saves.
 - The engine sends the AI model only the facts of the NPC that talks.
-- The AI model only writes the line and the choices.
+- The AI model writes the line and the choices. It also suggests facts about the player.
 - The engine checks every reply. It keeps a fact from the player only if the player really said it.
 
 ## Other options

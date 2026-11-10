@@ -1,6 +1,6 @@
 # HTTP API
 
-The HTTP API is how a mod talks to the engine. The test web page uses the same API. A mod sends a request to an address (a "route") and gets an answer back in JSON (a text format for data).
+The HTTP API is how a mod talks to the engine. The test page uses the same API. A mod sends a request to an address (a "route"). The engine sends an answer in JSON (a text format for data).
 
 The engine runs at `http://localhost:8000` by default.
 
@@ -9,9 +9,11 @@ The engine runs at `http://localhost:8000` by default.
 ### General
 
 1. Every route is the same for every game. No route has a game name in it.
-2. The routes and the fields in their answers are an agreement with the mods. You can add a new field. Do not rename or remove a field without a note in the PR and a change in the mod.
+2. The routes and the fields in their answers are an agreement with the mods. You can add a new field.
+2a. Do not rename or remove a field without a note in the PR and a change in the mod.
 3. If a request names an unknown NPC, save, turn or preset, the engine answers with error `404` ("not found").
-4. If a request has a value that is not permitted, the engine answers with error `400` ("bad request").
+4. If a value is outside its permitted range, the engine answers with error `400` ("bad request"). Rules 9, 14 and 19 give the ranges.
+4a. If a field is missing or has the wrong type, the engine answers with error `422`. Example: an `importance` of 9.
 
 ### Start
 
@@ -21,14 +23,14 @@ The engine runs at `http://localhost:8000` by default.
      - `max_choices`: the maximum number of choices (`3`).
      - `free_text`: the player can type free text (`true`).
      - `audio`: the sound format of the voice. It is empty if there is no voice.
-   - `llm`: the name of the AI model.
+   - `llm`: the name of the AI model. Before the first conversation, it is the model name only. After it, it is the model name and the service address.
    - `tts`: the name of the voice service, or empty.
 
 ### World
 
 6. `GET /api/world` gives the full world: the day, towns, places, NPCs, events, presets, saves and knowledge settings.
 7. For each NPC, the answer gives the number of memories that the NPC did not forget (`known`).
-8. The answer does not give the NPC's description. Only the prompt uses it.
+8. This answer does not give the NPC's description. The inspector route gives it (rule 20).
 
 ### Clock
 
@@ -39,8 +41,13 @@ The engine runs at `http://localhost:8000` by default.
 
 11. `POST /api/events` tells the engine about an event. Use one of two forms.
 12. **Preset form:** send `preset` (the name of an event in `poc/data/events.json`). You can also send `witnesses`. If you send no `witnesses`, the engine uses the preset's default witnesses.
-13. **Full form:** send `type` (a short tag, for example `location_cleared`), `location` (a place or town), `facts` (each with `text` and `importance`) and `witnesses`.
-14. If the request has no preset and does not have all of `type`, `location` and `facts`, the engine answers with `400`.
+13. **Full form:** send these fields:
+   - `type`: a short tag, for example `location_cleared`;
+   - `location`: a place or a town;
+   - `facts`: each with `text` and `importance`;
+   - `witnesses`.
+13a. The engine does not check `location`. If the place or town is not in the world file, only the witnesses know the event.
+14. A request without a preset must have `type`, `location` and `facts`. If one is missing, the engine answers with `400`.
 15. The answer gives the stored event and the memories that it made (`new_memories`).
 
 ### Conversation
@@ -48,16 +55,16 @@ The engine runs at `http://localhost:8000` by default.
 16. `POST /api/dialog/open` with `npc_id` starts a conversation with a greeting. The answer is one turn (see `conversation.md` rule 27).
 17. `POST /api/dialog/choose` with `npc_id`, `session_id` and `text` sends what the player says. The answer is the next turn.
 18. `session_id` is the conversation number from the greeting turn.
-19. `text` must have 1 to 500 characters. The engine removes spaces at the start and the end.
+19. `text` must have a maximum of 500 characters, and it must not be only spaces. The engine then removes spaces at the start and the end.
 
 ### Inspector
 
-20. `GET /api/npc/{npc_id}/knowledge` shows all the memories of one NPC, the strongest first. It also shows the last 12 turns.
+20. `GET /api/npc/{npc_id}/knowledge` shows all the memories of one NPC, the strongest first. It also shows the NPC's description and the last 12 turns.
 21. For each memory, the answer shows:
    - its strength, and if it is clear, vague or forgotten (`stage`);
    - the facts that it keeps (`kept`);
-   - the facts that faded (`faded`);
-   - the facts that gossip lost (`lost_in_retelling`).
+   - the faded facts (`faded`);
+   - the lost facts (`lost_in_retelling`).
 22. `GET /api/npc/{npc_id}/prompt` shows the prompt that the NPC will get in the next turn. It does not call the AI model.
 
 ### Saves
@@ -68,12 +75,15 @@ The engine runs at `http://localhost:8000` by default.
 
 ### Test page
 
-26. `GET /` gives the test web page.
+26. `GET /` gives the test page.
 
 ### Voice
 
 27. `GET /api/audio/{turn_id}` gives the voice of the NPC's line in that turn. The sound arrives in parts, so it can start to play before it is complete.
-28. The engine answers with `404` if the voice is off, if the turn is unknown, or if the NPC has no voice.
+28. The engine answers with `404` in these cases:
+   - the voice is off;
+   - the turn is unknown;
+   - the NPC has no voice.
 29. The engine makes the voice again for each request. It does not keep old sound files.
 30. Each NPC has its own voice, from `voice_id` in the world file.
 
@@ -85,13 +95,13 @@ Examples:
 ## Constraints
 
 - The API is for one computer only. It has no login.
-- The engine handles one request at a time. Two mods at the same time wait for each other.
+- The engine makes changes to knowledge and conversations one at a time. If two requests change them at the same time, one waits for the other.
 
 ## Planned Changes
 
 | Ticket | Summary |
 |---|---|
 | #8 | A route to add NPCs while the game runs. |
-| #9 | `POST /api/clock/set`: set the clock from the game's time. |
+| #9 | `POST /api/clock/set`: set the clock from the game's own day. |
 | #10 | The voice goes into a sound file that the Cyberpunk mod can play, not only as a stream. |
 | #11 | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |

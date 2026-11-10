@@ -9,13 +9,14 @@ The owner and other human reviewers approve behaviour from the specs (see decisi
 
 ## Decision
 
-- We use spec-first. Behaviour rules are in `.ai/spec/what/`. The code map is in `.ai/spec/how/`.
+- We use spec-first: we write and approve the rules before we write the code. Behaviour rules are in `.ai/spec/what/`. The code map is in `.ai/spec/how/`.
 - Every `what/` file, the glossary, the constraints, the decisions, and every plain-language spec in an issue use extremely simple, plain English.
 - We follow ASD-STE100 (Simplified Technical English) where possible: short sentences, one idea in each sentence, active voice, simple tenses, and one word for one thing.
 - `glossary.md` gives the one word for each thing.
-- `how/` files are for AI agents. They can use technical language.
+- `how/` files use the same simple sentences, but they use the exact names from the code. The owner does not need to review them.
+- Each PR summary lists the changed `what/` rules in plain words. Thus a reviewer seldom needs to read `how/`.
 
-The writing rules are in "Writing rules for what/" in `../README.md`.
+The writing rules are in "Writing rules for what/" and "Writing rules for how/" in `../README.md`.
 
 ## Other options
 

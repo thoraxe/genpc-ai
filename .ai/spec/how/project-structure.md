@@ -23,13 +23,22 @@
 
 ## Key Entry Points
 
-- **Server:** `uv run uvicorn engine.api:app --app-dir poc --port 8000`. Importing `engine.api` loads `.env`, the world file and presets, opens the SQLite store (creating `poc/var/` if needed) and builds the TTS provider. The LLM provider is built lazily on the first dialog call (`dialog()`), so the server starts without an LLM key.
-- **Tests:** `uv run pytest -q`. `pyproject.toml` sets `pythonpath = ["poc"]`, so tests import `engine.*`.
-- **Live eval:** `uv run python poc/scripts/eval.py 10`. Needs `.env`.
+**Server:** `uv run uvicorn engine.api:app --app-dir poc --port 8000`. The import of `engine.api` does these steps:
+1. It loads `.env`, the world file and the presets.
+2. It opens the SQLite store. It makes `poc/var/` if necessary.
+3. It builds the TTS provider.
+
+The engine builds the LLM provider at the first dialog call (`dialog()`). Thus the server starts without an LLM key.
+
+**Tests:** `uv run pytest -q`. `pyproject.toml` sets `pythonpath = ["poc"]`. Thus tests can import `engine.*`.
+
+**Live eval:** `uv run python poc/scripts/eval.py 10`. It needs `.env`.
 
 ## Naming Conventions
 
-- The code says `settlement`, `location`, `hop1`/`hop2`, `gist`, `detailed`, `salience`, `mentioned`, `session`. The `what/` specs use plain words for the same things. `.ai/spec/glossary.md` maps every plain word to its code name. Do not rename code to match the plain words without an approved change. The API field names are a contract.
+- The code uses `settlement`, `location`, `hop1`/`hop2`, `gist`, `detailed`, `salience`, `mentioned` and `session`.
+- The `what/` specs use plain words for the same things. `.ai/spec/glossary.md` gives the code name for each plain word.
+- Do not rename code to match the plain words without an approved change. The API field names are an agreement with the mods.
 - Memory sources: `witnessed`, `hop1` (same town), `hop2` (next town), `conversation` (from the player).
 - Event ids from the API: `{preset or type}@{day:g}#{event count + 1}`.
 - Branches: `feat/`, `fix/`, `docs/`, `chore/` (see `CLAUDE.md`).

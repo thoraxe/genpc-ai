@@ -7,7 +7,7 @@ genpc-ai is an engine for AI characters (NPCs) in games. The engine decides what
 | Layer | Path | Purpose | Written for |
 |---|---|---|---|
 | **what/** | `.ai/spec/what/` | What the system must do: rules, the HTTP API, data files, settings. | The owner **and** AI agents. Plain English (see "Writing rules for what/"). |
-| **how/** | `.ai/spec/how/` | Where the code is: files, call paths, patterns, pitfalls. | AI agents. Technical language is permitted. |
+| **how/** | `.ai/spec/how/` | Where the code is: files, call paths, patterns, pitfalls. | AI agents and code reviewers. Simple sentences with the code's own names (see "Writing rules for how/"). |
 | **decisions/** | `.ai/spec/decisions/` | Why we made important choices. | Both. |
 
 Also read `glossary.md` (the words we use, each with one meaning) and `constraints.md` (rules for the full project).
@@ -24,7 +24,7 @@ Out of scope:
 ## Audience
 
 - `what/` files: the owner reviews them. The owner does not read code. Every rule must be clear to a person who does not know Python, JSON or HTTP.
-- `how/` files: AI agents. Content is precise and technical.
+- `how/` files: AI agents and human code reviewers. Content is precise and uses the code's names, in simple sentences.
 
 ## Quick Start
 
@@ -47,7 +47,7 @@ Out of scope:
 | `what/knowledge.md` | `how/knowledge-engine.md` |
 | `what/saves-and-clock.md` | `how/knowledge-engine.md` |
 | `what/conversation.md` | `how/dialog-pipeline.md` |
-| `what/http-api.md` | `how/project-structure.md` |
+| `what/http-api.md` | `how/project-structure.md`, `how/dialog-pipeline.md` (voice) |
 | `what/world-file.md` | `how/knowledge-engine.md` |
 | (all) | `how/testing-and-eval.md` |
 
@@ -83,7 +83,21 @@ The owner reviews behaviour, not code. Thus every `what/` file uses **extremely 
 19. Give 3 to 6 examples in the form "If the player does X, then Y" for each new behaviour.
 20. Write what the change will **not** do.
 
-We do not have the official ASD-STE100 dictionary in the repo. Use the rules above, and choose the simplest common word when you are not sure. `how/` files do not have to obey these rules. They are for agents, but they must still be clear.
+We do not have the official ASD-STE100 dictionary in the repo. Use the rules above, and choose the simplest common word when you are not sure.
+
+## Writing rules for how/
+
+`how/` files are for AI agents and for human reviewers of code changes. They use the same sentences, but the words of the code.
+
+1. Obey the `what/` rules 1–7 (sentences), 13 (no idioms), 17 (plain point first) and 18 (testable).
+2. Do not obey the `what/` rules 8–12 (words). Use the exact names from the code in `code` style, for example `settlement`, `gist`, `hop1`. `glossary.md` gives the plain word for each code name.
+3. Tables of files and symbols do not have to obey the sentence rules. Keep each table cell short.
+4. Tell the reader which `what/` rules a section implements, for example "(`what/knowledge.md` rules 6–16)".
+
+## Reviewing spec changes
+
+- The owner approves changes to `what/` files. The owner does not need to review `how/` files. The AI review checks them.
+- In the PR summary, list each changed `what/` rule by file and number, in plain words. For example: "knowledge.md rule 6: same-town gossip now arrives after 1 day, not half a day."
 
 ## Conventions
 

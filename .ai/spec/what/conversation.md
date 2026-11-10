@@ -10,6 +10,7 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
 2. After the greeting, the player says something. The player can use one of the 3 choices or type free text.
 3. The engine gives each conversation a number. The mod sends this number with each later turn.
 4. The AI model sees the earlier turns of this conversation only. It does not see earlier conversations as turns.
+4a. The engine looks at only the last 20 turns of the NPC. In a very long conversation, the AI model does not see the oldest turns.
 5. An NPC knows about earlier conversations only through memories of facts from the player (see `knowledge.md` rules 29–33).
 
 ### What the prompt contains
@@ -19,7 +20,7 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
    - the day in the game;
    - the setting text from the world file;
    - the memories that the engine chose for this NPC (see `knowledge.md` rules 24–28);
-   - the rules for the AI model (rules 10–14 below);
+   - the rules for the AI model (rules 10–14a below);
    - the format of the reply.
 7. The prompt never contains facts that only other NPCs know. It never contains facts that the NPC lost or forgot.
 8. For each memory, the prompt tells how the NPC knows it and how old it is:
@@ -37,11 +38,13 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
 12. Gossip and vague memories must sound unsure ("they say", "I heard"). Do not add facts.
 13. Say recent news without a request from the player, if you did not tell it yet.
 14. The line is 1 or 2 short spoken sentences. It has no stage directions. Give exactly 3 choices of less than 12 words. One choice lets the player leave.
+14a. List the facts that the player told about themself in their last line. Give each fact an importance from 1 to 5. If there are none, give an empty list.
 
 ### The reply from the AI model
 
 15. The engine does not trust the reply. It checks the format of each reply.
-16. A good reply has a line (1 to 600 characters), 3 or more choices, and a list of facts to remember. Each fact has an importance from 1 to 5.
+16. A good reply has a line of 1 to 600 characters and 3 or more choices.
+16a. A reply can also have a list of facts to remember. Each fact must have an importance from 1 to 5. If one fact has a bad importance, the full reply is bad.
 17. If the reply has more than 3 choices, the engine keeps the first 3. It removes empty choices before it counts.
 18. If the reply has a bad format, the engine asks the AI model one more time.
 19. If the second reply also has a bad format, the engine uses the fallback line.
@@ -56,23 +59,23 @@ A conversation is the talk between the player and one NPC. Each turn, the engine
 25. Recent news becomes "told" only if the NPC's line really contains it. The engine uses the same key-word check as rule 23, on the NPC's line.
 26. After a fallback line, no memory gets a recall, and no news becomes told.
 
-Examples:
-- If the player talks to Torvald on day 41.5 and asks for news, then Torvald says that the bandits at the mine are dead.
-- If Torvald's line is only "Welcome to the inn!", then the bandit news stays recent news. Torvald says it in a later turn.
-- If the player asks Eirik on day 44 what the stranger took, then Eirik says that he does not know. He has no fact about the loot.
-- If the AI model sends text that is not in the correct format two times, then the NPC says the fallback line.
-- If the player says "I am a dragon slayer" and the AI model wants to remember "The player is a dragon slayer", then the NPC remembers it.
+Examples (the live eval checks the examples marked "AI"; the offline tests check the others):
+- AI: the player talks to Torvald on day 41.5 and asks for news. Then Torvald says that the bandits at the mine are dead.
+- If Torvald's line is only "Welcome to the inn!", then the bandit news stays recent news. The next prompt still asks Torvald to say it.
+- AI: the player asks Eirik on day 44 what the stranger took. Then Eirik says that he does not know. He has no fact about the loot.
+- If the AI model sends text in a bad format two times, then the NPC says the fallback line.
+- The player says "I am a dragon slayer". The AI model wants to remember "The player is a dragon slayer". Then the NPC remembers it.
 
-### What the mod gets back
+### What the mod gets
 
-27. Each turn gives back:
+27. Each turn sends these things to the mod:
    - the turn number and the conversation number;
    - the NPC;
    - the line and the 3 choices;
    - the facts that the NPC will remember;
    - the facts that the engine refused;
    - the memories that went into the prompt.
-28. Each turn also gives back the full prompt and the raw reply of the last try. The test page shows them under each line.
+28. Each turn also sends the full prompt and the raw reply of the last try. The test page shows them under each line.
 29. Each turn tells how long the AI model took, how many tries it used, and if the engine used the fallback line.
 
 ## Configuration Surface
@@ -82,8 +85,8 @@ The AI model settings are in `system-overview.md`. These values are fixed in the
 | Value | Setting |
 |---|---|
 | Wait for the AI model | a maximum of 20 seconds |
-| Length of the AI model reply | a maximum of 500 tokens |
-| Reply format | JSON only |
+| Length of the AI model reply | a maximum of 500 tokens (a token is a part of a word, about 4 letters) |
+| Reply format | JSON only (a text format for data) |
 | Tries | 2 for a bad format, 1 for a service failure |
 
 ## Constraints

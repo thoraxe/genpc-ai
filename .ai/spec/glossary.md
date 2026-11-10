@@ -25,11 +25,14 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **witness** | An NPC who saw the event. | observer | `witnesses`, source `witnessed` |
 | **gossip** | Facts that an NPC heard from other people, not saw. | rumor, hearsay, news, hop | source `hop1`, `hop2` |
 | **memory** | All the facts that one NPC knows about one event, or about one conversation. | knowledge item, record | `Memory` |
-| **strength** | A number that shows how well an NPC remembers a memory. It gets smaller as days go by. | salience (salience is only the start value) | `strength()` |
+| **strength** | A number that shows how well an NPC remembers a memory. It gets smaller as days pass. | salience (salience is only the start value) | `strength()` |
+| **lost fact** | A fact of an event that gossip did not carry, because its importance was too low. The NPC never knew it. | dropped fact | `lost_in_retelling` (inspector only) |
+| **faded fact** | A fact that a vague memory does not keep, because its importance is too low. | forgotten fact | `dropped_facts`, `faded` |
+| **key word** | A word of 4 or more letters that is not a common word ("the", "about", "player" and others). The engine compares key words to check a fact. | term | `_terms`, `_STOP` |
 | **clear** | A memory that the NPC remembers with all its facts. | detailed, sharp | stage `detailed` |
 | **vague** | A memory that the NPC remembers only partly. The NPC keeps only the important facts. | gist, fuzzy | stage `gist` |
 | **forgotten** | A memory that the NPC does not remember. It never goes to the AI model. | lost, deleted | stage `forgotten` |
-| **recall** | One time that the engine gives a memory to the AI model in a delivered reply. Each recall makes a memory fade more slowly. | use, access | `recalls` |
+| **recall** | One time that the engine gives a memory to the AI model in a delivered reply. Each recall makes the memory stronger. Only the first 2 recalls have an effect. | use, access | `recalls` |
 | **recent news** | A memory of an event that the NPC got less than 3 days ago and did not tell the player yet. | fresh gossip | `news_window_days`, `mentioned` |
 | **told** | The NPC said the recent news to the player. The engine checks the NPC's words to decide this. | mentioned, shared | `mentioned` |
 
@@ -54,7 +57,8 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **day** | One day in the game. Never a real day. Days can have parts: 41.5 is the middle of day 41. | date, time | `day` |
 | **clock** | The current day in the game. | time, timer | `meta.day` |
 | **save** | A copy of everything that NPCs know, at one moment. | snapshot, checkpoint | `saves` table |
-| **load** | Put a save back. Everything after the save stops existing. | restore, revert | `Store.load` |
+| **load** | Use a save again. Everything after the save stops existing. | restore, revert | `Store.load` |
+| **start day** | The day on the clock at the start, and after a reset. It is 41 now. | first day | `POC_START_DAY` |
 | **reset** | Remove all events, memories and turns, and set the clock to the start day. Saves stay. | wipe, clear | `Store.reset` |
 
 ## Project
@@ -65,3 +69,7 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **mod** | A small program inside a game. It sends events to the engine and shows the NPC's line. | plugin, client (in what/ files) | — |
 | **owner** | The person who decides what the product does. The owner reads specs, not code. | user, boss | — |
 | **live eval** | A test that uses the real AI model many times. It counts how often NPCs say wrong things. | benchmark | `poc/scripts/eval.py` |
+| **preset** | An event that is ready in a file, for tests and demos. | template, sample event | `poc/data/events.json` |
+| **test page** | A simple web page for tests. It uses the HTTP API like a mod. | UI, web UI | `poc/ui/index.html` |
+| **inspector** | The part of the test page (and its route) that shows all the memories of one NPC. | debugger | `/api/npc/{id}/knowledge` |
+| **PR** | A "pull request": a set of changes that waits for review before it goes into the project. | merge request | — |

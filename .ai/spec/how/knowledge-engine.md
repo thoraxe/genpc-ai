@@ -1,38 +1,67 @@
 # Knowledge Engine
 
-Covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-file.md`.
+This file covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-file.md`.
 
 ## Module Map
 
 | File | Key Symbols | Responsibility |
 |---|---|---|
-| `poc/engine/knowledge.py` | `strength`, `view` | Decay: `salience * exp(-decay_lambda * age) * (1 + min(recall_cap, recall_boost * recalls))`; stage thresholds. |
-| `poc/engine/knowledge.py` | `event_settlement`, `witness_memories`, `due_rumors` | Map a location to its settlement; witness memories; hop1/hop2 rumor memories. |
-| `poc/engine/knowledge.py` | `retrieve` | Top-k non-forgotten views plus guaranteed recent-news slots. |
-| `poc/engine/knowledge.py` | `_STOP`, `_terms`, `grounded`, `conversation_memory` | Key-term grounding for player facts and for news "told" detection. |
+| `poc/engine/knowledge.py` | `strength`, `view` | Decay formula and stage thresholds. |
+| `poc/engine/knowledge.py` | `event_settlement`, `witness_memories`, `due_rumors` | Location → settlement; witness memories; hop1/hop2 memories. |
+| `poc/engine/knowledge.py` | `retrieve` | Top-k views, with recent news first. |
+| `poc/engine/knowledge.py` | `_STOP`, `_terms`, `grounded`, `conversation_memory` | Key-term check for player facts and for "told" news. |
 | `poc/engine/store.py` | `Store` | SQLite tables `meta` (clock), `events`, `memories`, `turns`, `saves`. |
-| `poc/engine/models.py` | `Rules`, `Memory`, `MemoryView` | Tunables and stored/derived memory shapes. |
+| `poc/engine/models.py` | `Rules`, `Memory`, `MemoryView` | Settings, and stored and derived memory shapes. |
 
 ## Data Flow
 
-**Event report:** `api.report_event` → builds `WorldEvent` (id, current `store.day`) → `Store.report_event` → skip if id exists → insert event → `knowledge.witness_memories` (minus existing knowers) → `Store.propagate()` → commit. Returns the new memories.
+**Decay** (`what/knowledge.md` rules 17–23)
+- `strength` = `salience * exp(-decay_lambda * age) * (1 + min(recall_cap, recall_boost * recalls))`.
+- `age` is `now - created_day`. It is never less than 0.
+- `view` gives stage `forgotten` below `forget_threshold` and `gist` below `gist_threshold`. Else it gives `detailed`.
 
-**Clock advance:** `Store.advance(days)` → raises on negative → set `meta.day` → `propagate()` → commit.
+**Event report** (`what/saves-and-clock.md` rules 6–9)
+1. `api.report_event` builds a `WorldEvent` with the current `store.day` and a new id.
+2. `Store.report_event` returns `[]` if the id is already in `events`.
+3. It inserts the event.
+4. It adds the `witness_memories` for NPCs that do not know the event yet.
+5. It calls `Store.propagate()` and commits.
+6. It returns all the new memories.
 
-**Propagate:** for every stored event, `knowledge.due_rumors(event, world, day, _knowers(event.id))`. `due_rumors` mutates `already_known` as it adds, so hop1 NPCs are not re-added as hop2, and a witness never gets a rumor. Memories are created with `created_day = event.day + delay` (arrival time), not `now`.
+**Clock advance** (`what/saves-and-clock.md` rules 1–5)
+1. `Store.advance(days)` raises `ValueError` if `days` is negative.
+2. It adds `days` to `meta.day`.
+3. It calls `propagate()` and commits.
 
-**Retrieval:** `knowledge.retrieve(memories, day, rules)` → `view()` each → drop forgotten → sort by strength desc → pick up to `news_slots` news views (has `event_id`, not `mentioned`, age < `news_window_days`) → news first, then the rest → slice to `max(retrieval_k, len(news))`.
+**Propagate** (`what/knowledge.md` rules 3–16)
+- `propagate` calls `knowledge.due_rumors(event, world, day, _knowers(event.id))` for each stored event.
+- `due_rumors` adds each new NPC to `already_known`. Thus a hop1 NPC does not also get hop2, and a witness never gets a hop memory.
+- `due_rumors` sets `created_day` to `event.day + delay` (the arrival day). It does not use `now`.
 
-**Recall / mentioned:** after a non-fallback turn, `DialogEngine._turn` calls `Store.mark_used(views, news_ids)`: every retrieved memory gets `recalls += 1`; news memories whose kept facts are `grounded` in the NPC line get `mentioned = True`.
+**Retrieval** (`what/knowledge.md` rules 24–28)
+1. `retrieve` calls `view()` for each memory and removes `forgotten` views.
+2. It sorts the views by strength, the strongest first.
+3. It takes a maximum of `news_slots` news views. A news view has an `event_id`, is not `mentioned`, and is younger than `news_window_days`.
+4. It puts the news views first, then the other views.
+5. It keeps the first `max(retrieval_k, len(news))` views.
 
-**Save/load:** `Store.save` dumps every row of `STATE_TABLES` (`meta`, `events`, `memories`, `turns`) as JSON into `saves.blob`. `Store.load` deletes those tables and re-inserts the rows, including original ids. `reset` deletes the same tables and resets `meta.day`. The `saves` table is never part of a snapshot.
+**Recall and "told"** (`what/conversation.md` rules 24–26)
+- After a turn without the fallback line, `DialogEngine._turn` calls `Store.mark_used(views, news_ids)`.
+- `mark_used` adds 1 to `recalls` for each retrieved memory.
+- `mark_used` sets `mentioned = True` for each id in `news_ids`. `news_ids` holds the news memories with a kept fact that is `grounded` in the NPC line.
+
+**Save, load and reset** (`what/saves-and-clock.md` rules 10–17)
+- `Store.save` writes every row of `STATE_TABLES` (`meta`, `events`, `memories`, `turns`) as JSON into `saves.blob`.
+- `Store.load` deletes the rows of those tables. Then it inserts the saved rows again, with their old ids.
+- `Store.reset` deletes the rows of the same tables and sets `meta.day` to the start day.
+- No snapshot contains the `saves` table.
 
 ## Key Abstractions
 
-- **`Memory` vs `MemoryView`:** `Memory` is stored. `MemoryView` is derived at a given day (strength, stage, kept/dropped facts) and is never stored. Decay is therefore lazy: nothing changes in the DB as time passes, except new rumor rows.
-- **Rumor losses are never stored.** A hop memory only holds facts above the hop threshold. The inspector computes "lost in retelling" by diffing against the event's facts (`api.npc_knowledge`). Gist losses are `MemoryView.dropped_facts`.
-- **One memory per (NPC, event).** Enforced via `_knowers` in both `report_event` and `propagate`, not by a DB constraint.
-- **Memory body as JSON.** `memories.body` holds the whole `Memory` minus `id`; `npc_id` and `event_id` are duplicated into columns for querying.
+- **`Memory` and `MemoryView`.** The engine stores `Memory`. It calculates `MemoryView` for a given day and never stores it. Thus decay changes nothing in the database. Only new hop memories add rows.
+- **The engine never stores hop losses.** A hop memory holds only the facts above the hop threshold. `api.npc_knowledge` finds the "lost in retelling" facts. It compares the memory with the facts of its event. Gist losses are in `MemoryView.dropped_facts`.
+- **One memory for each NPC and event.** `_knowers` enforces this in `report_event` and in `propagate`. No database constraint enforces it.
+- **The memory body is JSON.** `memories.body` holds the full `Memory` without `id`. The `npc_id` and `event_id` columns are copies, for queries.
 
 ## Integration Points
 
@@ -41,13 +70,13 @@ Covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-file.md`.
 | `dialog.DialogEngine` | `knowledge.retrieve`, `knowledge.conversation_memory`, `knowledge.grounded` | Direct calls |
 | `dialog.DialogEngine` | `Store.memories`, `Store.add_memory`, `Store.mark_used`, `Store.turns`, `Store.add_turn` | Direct calls |
 | `api` routes | `Store.*`, `knowledge.view` | Direct calls under `api.lock` |
-| World file | `Rules` | `WorldConfig.rules` pydantic default, overridable in JSON |
+| World file | `Rules` | `WorldConfig.rules` default; the JSON can change it |
 
 ## Implementation Notes
 
-- **No LLM, randomness or wall-clock in `knowledge.py`.** `Store.save` uses `time.time()` only for the save's `created` field, which is outside the knowledge model.
-- **Adjacency is one-directional.** `due_rumors` reads only the event settlement's own `adjacent` list.
-- **`report_event` idempotency is by event id**, but the API builds a fresh id from the event count, so repeated API posts create new events.
-- **Adding stored state?** Add the table to `STATE_TABLES`, or saves will silently keep the new data across a load (REVIEW.md §3).
-- **The `turns` table** stores `session_id` inside the JSON body. The first turn's own row id becomes the session id, written back with an `UPDATE` in `_turn`.
-- **Single connection, `check_same_thread=False`.** Thread safety comes only from `api.lock`. Scripts and tests that use `Store` directly do not take the lock.
+- `knowledge.py` uses no LLM, no randomness and no wall clock. `Store.save` uses `time.time()` only for the `created` field of a save. That field is not part of the knowledge model.
+- Adjacency goes in one direction. `due_rumors` reads only the `adjacent` list of the event's own settlement.
+- `report_event` uses the event id to ignore a second report. The API makes a new id from the event count each time. Thus two API posts make two events.
+- If you add stored state, add its table to `STATE_TABLES`. If you do not, a load does not remove that data. Data from after the save then stays in the game (`REVIEW.md` §3).
+- The `turns` table keeps `session_id` in the JSON body. The row id of the first turn becomes the `session_id`. `_turn` writes it back with an `UPDATE`.
+- The store has one connection with `check_same_thread=False`. Only `api.lock` makes it thread-safe. Scripts and tests that use `Store` directly do not take the lock.

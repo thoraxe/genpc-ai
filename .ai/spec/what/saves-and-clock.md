@@ -2,15 +2,17 @@
 
 The clock is the day in the game. Saves keep a copy of everything that NPCs know. When the player loads a save, every NPC knows only what it knew at that save.
 
+The engine sends the result of each change to the mod. For the exact fields, see `http-api.md`.
+
 ## Behavioral Rules
 
 ### Clock
 
 1. The clock starts at the start day (`POC_START_DAY`, default `41`).
-2. The clock only moves forward. To go back in time, load a save.
+2. The clock only moves forward. To go to an earlier day, load a save.
 3. One clock move is more than 0 days and a maximum of 365 days.
-4. When the clock moves, gossip that is due arrives (see `knowledge.md` rule 16). The engine gives back the new memories.
-5. Memories fade by the clock, not by the real time.
+4. When the clock moves, gossip that is due arrives (see `knowledge.md` rule 16). The engine sends the new memories to the mod.
+5. Memories fade by the clock, not by the real clock of the computer.
 
 Example: the clock is at day 41. The mod moves it by 0.5 days. The clock is now at day 41.5, and Torvald gets the gossip.
 
@@ -26,7 +28,7 @@ Example: the clock is at day 41. The mod moves it by 0.5 days. The clock is now 
 10. A save keeps a copy of all events, memories, conversation turns and the clock.
 11. A save also keeps which recent news each NPC told, and how many recalls each memory has.
 12. Each save has a label. If the mod gives no label, the label is "Day N" (for example, "Day 41.5").
-13. When the player loads a save, the engine removes all events, memories, turns and the clock. Then it puts back the copy from the save.
+13. When the player loads a save, the engine removes all events, memories, turns and the clock. Then it copies the save into their place.
 14. After a load, nothing from after the save stays. This includes memories, conversations and facts from the player.
 15. A load does not remove saves. The player can load a different save later.
 

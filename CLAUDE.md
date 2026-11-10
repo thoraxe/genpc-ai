@@ -4,8 +4,9 @@ A game-agnostic engine for generative-AI NPCs. A deterministic knowledge model s
 
 ## Specs
 All specifications live in `.ai/spec/`. Start with `.ai/spec/README.md` for the overview, reading order and structure. `ARCHITECTURE.md` is the human-facing overview.
-- `what/` (behaviour), `glossary.md`, `constraints.md`, `decisions/` and every plain-language spec in an issue **must** be written in extremely simple, plain English, following ASD-STE100 where possible. Follow "Writing rules for what/" in `.ai/spec/README.md`, and use only the words in `glossary.md`.
-- `how/` (code map) is for agents and can be technical.
+- `what/` (behaviour), `glossary.md`, `constraints.md`, `decisions/` and every plain-language spec in an issue **must** be written in extremely simple, plain English, following ASD-STE100 where possible. Follow "Writing rules for what/" in `.ai/spec/README.md`, and use the `glossary.md` word for each thing.
+- `how/` (code map) uses the same simple sentences but the code's exact names. Follow "Writing rules for how/" in `.ai/spec/README.md`.
+- A PR that changes a `what/` rule lists each changed rule (file and number) in plain words in its Summary.
 - When the owner approves a spec, copy its rules into the right `what/` file marked `[PLANNED: #N]`. The PR that builds it updates the rule and marks it `[DONE: #N]`. A PR that changes behaviour must update the matching `what/` and `how/` files.
 
 ## Stack

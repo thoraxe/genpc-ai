@@ -4,7 +4,7 @@ This page explains how genpc-ai works, for human readers. The exact rules are in
 
 ## The idea in one paragraph
 
-genpc-ai gives AI characters (NPCs) in a game a memory that makes sense. Fixed rules decide what each NPC knows. An NPC knows what it saw. Other NPCs hear gossip later, with fewer facts. Memories fade as days go by in the game. A save keeps a copy of all of this, and a load puts the copy back. An AI model writes only the words that the NPC says. It gets only the facts of that one NPC, so it cannot tell a secret that the NPC does not know.
+genpc-ai gives AI characters (NPCs) in a game a memory that is logical. Fixed rules decide what each NPC knows. An NPC knows what it saw. Other NPCs hear gossip later, with fewer facts. Memories fade as days pass in the game. A save keeps a copy of all of this, and a load uses the copy again. An AI model writes the words that the NPC says. It also suggests facts about the player, and the engine checks them. It gets only the facts of that one NPC, so it cannot tell a secret that the NPC does not know.
 
 ## The parts
 
@@ -43,7 +43,7 @@ flowchart LR
 - **Knowledge rules:** fixed rules for witnesses, gossip and fading. They never use the AI model.
 - **Conversation:** makes each turn. It chooses the NPC's memories, writes the prompt, asks the AI model and checks the reply.
 - **Database:** one SQLite file. It keeps the clock, events, memories, turns and saves.
-- **World file:** a JSON file for each game. It has the towns, places, NPCs and the knowledge numbers. The engine has nothing for one specific game.
+- **World file:** a JSON file for each game. It has the towns, places and NPCs. It can also change the knowledge numbers. The engine has nothing for one specific game.
 
 ## How gossip spreads
 
@@ -60,7 +60,7 @@ flowchart LR
     E -.->|"too far"| S
 ```
 
-Each memory then fades. A memory is **clear**, then **vague** (only the important facts stay), then **forgotten**. Each time an NPC uses a memory in a conversation, it fades a little more slowly.
+Each memory then fades. A memory is **clear**, then **vague** (only the important facts stay), then **forgotten**. When an NPC uses a memory in a conversation, the memory gets stronger. Only the first 2 uses have an effect.
 
 ## One conversation turn
 
@@ -70,7 +70,7 @@ sequenceDiagram
     participant E as Engine
     participant AI as AI model
     M->>E: player talks to Torvald
-    E->>E: choose Torvald's 5 strongest memories<br/>(recent news first)
+    E->>E: choose up to 5 of Torvald's strongest memories<br/>(recent news first)
     E->>AI: prompt: Torvald's description,<br/>his memories, the rules
     AI-->>E: line, 3 choices, facts to remember
     alt bad format
