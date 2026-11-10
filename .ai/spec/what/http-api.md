@@ -23,6 +23,7 @@ The engine runs at `http://localhost:8000` by default.
      - `max_choices`: the maximum number of choices (`3`).
      - `free_text`: the player can type free text (`true`).
      - `audio`: the sound format of the voice. It is empty if there is no voice.
+     - `audio_slots`: the number of slot files that the engine can write. It is `0` if the voice is off, or if there is no slot folder. `[PLANNED: #10]`
    - `llm`: the name of the AI model. Before the first conversation, it is the model name only. After it, it is the model name and the service address.
    - `tts`: the name of the voice service, or empty.
    - `world`: the `id` of the world in use (`world-file.md` rule 16r).
@@ -121,6 +122,37 @@ The engine runs at `http://localhost:8000` by default.
 41. `GET /api/world` also lists the added NPCs. Each NPC in the list has its `kind`. `[PLANNED: #8]`
 42. An added NPC gets its voice from the voice list (see `world-file.md` rules 7a–7d). `[PLANNED: #8]`
 
+**Slot files**
+
+30a. `POST /api/audio/{turn_id}/slot` puts the voice of the NPC's line into a slot file. `[PLANNED: #10]` **[TEST #5]**
+30b. A slot file is a sound file with a fixed name in the slot folder. The mod tells `Audioware` the names before the game starts. `[PLANNED: #10]`
+30c. The slot files have the names `genpc_voice_1.mp3` to `genpc_voice_N.mp3`. `N` is the setting `AUDIO_SLOT_COUNT`. Example: with `4`, the last file is `genpc_voice_4.mp3`. `[PLANNED: #10]`
+30d. Each request uses the next slot file. After the last slot file, the engine uses slot file 1 again. `[PLANNED: #10]` **[TEST #5]**
+   - Example with 4 slot files: turns 12, 13, 14, 15 and 16 get slots 1, 2, 3, 4 and 1.
+30e. Each request gets a different slot file, also if two requests arrive at the same time. `[PLANNED: #10]` **[TEST #5]**
+30f. The engine writes the full voice, and then it answers. The mod never gets a slot file with only part of the voice. `[PLANNED: #10]`
+30g. The answer gives these fields: `[PLANNED: #10]`
+   - `turn_id`: the turn number.
+   - `slot`: the name of the slot file without `.mp3`, for example `genpc_voice_2`.
+   - `file`: the full path of the slot file.
+30h. When the engine starts again, it uses slot file 1 first. `[PLANNED: #10]`
+
+**When the engine does not write a slot file**
+
+30i. The engine answers with `404` and changes no slot file in these cases: `[PLANNED: #10]`
+   - the voice is off (rule 28);
+   - the turn is unknown;
+   - the NPC has no voice;
+   - the setting `AUDIO_SLOT_DIR` is empty;
+   - the slot folder is not there.
+30j. If the voice service fails, the engine answers with `502` ("bad gateway"). The slot file keeps its old sound. `[PLANNED: #10]`
+30k. A failed request also uses its slot file in the rotation. Example: turn 14 fails on slot 3. Then turn 15 gets slot 4. `[PLANNED: #10]`
+30l. The engine does not make the slot folder. `[PLANNED: #10]`
+
+**The test page**
+
+30m. A slot request does not change `GET /api/audio/{turn_id}`. The test page still gets the voice as a stream (rule 27). `[PLANNED: #10]`
+
 Examples:
 - If a mod sends `POST /api/clock/advance` with `days` = `-2`, then the engine answers with `400`.
 - If a mod sends `POST /api/dialog/open` for an NPC that is not in the world file, then the engine answers with `404`.
@@ -128,6 +160,9 @@ Examples:
 - If a mod sends `POST /api/npcs` with `record_id` = `torvald`, then the answer gives `kind` = `world`.
 - If a mod sends `POST /api/npcs` with no `record_id` and no `entity_id`, then the engine answers with `400`.
 - If a mod sends `POST /api/dialog/open` for `crowd-1874320956` before the mod sends `POST /api/npcs`, then the engine answers with `404`.
+- If a mod sends `POST /api/audio/12/slot` and the next slot is 1, then the answer gives `slot` = `genpc_voice_1`. `[PLANNED: #10]`
+- If a mod asks for 5 slot voices with 4 slot files, then the fifth voice goes into `genpc_voice_1.mp3`. `[PLANNED: #10]`
+- If the voice service fails for turn 14, then the answer is `502`, and `genpc_voice_3.mp3` keeps its old sound. `[PLANNED: #10]`
 
 ## Constraints
 
@@ -141,5 +176,5 @@ Examples:
 | #7 | `POST /api/world`: a mod sends its world to the engine. |
 | #8 | A route to add NPCs while the game runs. |
 | #9 | `POST /api/clock/set`: set the clock from the game's own day. |
-| #10 | The voice goes into a sound file that a game mod can play, not only as a stream. |
+| #10 | `POST /api/audio/{turn_id}/slot`: the voice goes into a slot file that the mod can play. It depends on test #5. |
 | #11 | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |

@@ -59,6 +59,8 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **prompt** | The text that the engine sends to the AI model before a turn. | instructions, context | `build_system_prompt` |
 | **fallback line** | A safe line that the engine uses if the AI model fails. | default reply, error line | `FALLBACK` |
 | **voice** | The sound of the NPC's line. A voice service makes it from the text. | audio, TTS (in what/ files) | `tts`, `voice_id` |
+| **slot file** | A sound file with a fixed name. The engine writes a voice into it. The mod plays it in the game. `[PLANNED: #10]` | audio slot, buffer | `genpc_voice_N.mp3` |
+| **slot folder** | The folder with the slot files. The mod installs it with the game. `[PLANNED: #10]` | audio dir | `AUDIO_SLOT_DIR` |
 
 ## Time and saves
 
