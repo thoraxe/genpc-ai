@@ -1,5 +1,5 @@
 ## Summary
-<!-- What changed and why. Link the issue: "Closes #N". -->
+<!-- In plain language first, for a reader who does not read code: what is different for the player, NPC or mod, with a before/after example. Then technical detail. Link the issue: "Closes #N". -->
 
 ## Testing
 <!-- Commands you ran and their output (ruff, pytest; live eval if the prompt or knowledge rules changed). -->

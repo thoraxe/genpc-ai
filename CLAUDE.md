@@ -26,16 +26,18 @@ uv run python poc/scripts/eval.py 10
 - **Every bug fix adds a regression test.**
 
 ## Workflow
+- **The owner reviews behaviour, not code.** The owner doesn't read code. Before coding anything that changes what an NPC, a mod or a player experiences, post a **plain-language spec** as an issue comment and wait for the owner's OK. The spec covers what it should do, 3–6 concrete examples ("if the player does X, then Y"), and what it deliberately won't do. No code, no jargon. The tests should check those examples.
 - Make small PRs to `main` and squash-merge them. Branch names: `feat/`, `fix/`, `docs/`, `chore/`.
 - Before opening a PR:
   1. Run the checks.
   2. Run a **local AI review** with `/code-review` on the branch, or a fresh-context subagent review against `REVIEW.md`.
   3. Fix the findings or explain why they don't apply.
   4. Fill in every section of the PR template. CI rejects a PR whose "Local AI review" section is empty.
-- **Risk sets the review:**
-  - **low** (docs, plans): may merge once CI is green;
-  - **medium** (engine or mod code): the owner approves;
-  - **high** (`knowledge.py`, prompt building, save/load, `.github/`): the owner reads the diff.
+- **The AI review is the code gate. Risk sets how thorough it is:**
+  - **low** (docs, plans): checks plus one review;
+  - **medium** (engine or mod code): checks plus one review, with every finding fixed or answered;
+  - **high** (`knowledge.py`, prompt building, save/load, `.github/`): add a **second, independent** review that gets only the diff and the approved spec, never the first review's conclusions, plus the live eval if the prompt or knowledge rules changed.
+- Once CI is green and the reviews are clean, the PR is ready to merge. Tell the owner in a line or two of plain language what changed for the player or the mod. Never ask them to read a diff.
 
 ## Non-goals (for now)
 Lip sync, speech input, local LLMs, paid Cyberpunk content, and publishing to Nexus without the owner's approval.
