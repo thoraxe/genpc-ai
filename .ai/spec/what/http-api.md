@@ -83,7 +83,14 @@ The engine runs at `http://localhost:8000` by default.
 ### Saves
 
 23. `POST /api/saves` with an optional `label` makes a save. The answer gives the new save number and the list of all saves.
+23a. `POST /api/saves` can also have `token`: the save name (see `saves-and-clock.md` rules 12a–12f).
+23b. If a save with that `token` exists, the engine replaces it. The answer gives the old save number.
+23c. If `token` breaks `saves-and-clock.md` rule 12b or 12c, the engine answers `400`. It makes no save.
+23d. The list of saves gives the `token` of each save. A save without a save name has an empty `token` (`null`).
 24. `POST /api/saves/{save_id}/load` loads a save. The answer gives the day of the save.
+24a. `POST /api/saves/{token}/load` loads the save with that save name. The answer gives the day of the save.
+24b. If the value has only digits, the engine uses it as a save number. Example: `/api/saves/7/load` loads save `7`.
+24c. If the value breaks `saves-and-clock.md` rule 12b, the engine answers `400`. Example: `cp*1042`.
 25. `POST /api/reset` resets the world. The answer gives the start day.
 
 ### Test page
@@ -171,6 +178,7 @@ Examples:
 - If a mod sends `POST /api/npcs` with `record_id` = `torvald`, then the answer gives `kind` = `world`.
 - If a mod sends `POST /api/npcs` with no `record_id` and no `entity_id`, then the engine answers with `400`.
 - If a mod sends `POST /api/dialog/open` for `crowd-1874320956` before the mod sends `POST /api/npcs`, then the engine answers with `404`.
+- If a mod sends `POST /api/saves/cp-0007/load` and no save has that name, then the engine answers `404`.
 - If a mod sends `POST /api/audio/12/slot` and the next slot is 1, then the answer gives `slot` = `genpc_voice_1`.
 - If a mod asks for 5 slot voices with 4 slot files, then the fifth voice goes into `genpc_voice_1.mp3`.
 - With 4 slot files, turns 12 and 13 used slots 1 and 2. Thus turn 14 gets slot 3. If the voice service fails for turn 14, then the answer is `502`, and `genpc_voice_3.mp3` keeps its old sound.
@@ -188,4 +196,4 @@ Examples:
 | ~~#8~~ | A route to add NPCs while the game runs. |
 | #9 | `POST /api/clock/set`: set the clock from the game's own day. |
 | ~~#10~~ | `POST /api/audio/{turn_id}/slot`: the voice goes into a slot file that the mod can play. |
-| #11 | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |
+| ~~#11~~ | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |

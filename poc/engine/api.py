@@ -123,6 +123,15 @@ class Choose(BaseModel):
 
 class SaveIn(BaseModel):
     label: str = ""
+    token: object = None  # the save name; checked by `_save_name_ok` so that a wrong type is 400, not 422
+
+
+SAVE_NAME = re.compile(r"[A-Za-z0-9._-]{1,64}")  # saves-and-clock.md rule 12b
+
+
+def _save_name_ok(token: object) -> bool:
+    """Rules 12b-12c: 1 to 64 of A-Z, a-z, 0-9, `-`, `_`, `.`, and one letter or more."""
+    return isinstance(token, str) and bool(SAVE_NAME.fullmatch(token)) and any(c.isalpha() for c in token)
 
 
 LINE_BREAKS = "\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029"
@@ -483,13 +492,27 @@ def npc_prompt(npc_id: str):
 
 @app.post("/api/saves")
 def save(s: SaveIn):
+    """A save, with an optional save name (http-api.md rules 23-23d)."""
+    if s.token is not None and not _save_name_ok(s.token):
+        raise HTTPException(400, "token must have 1 to 64 of A-Z, a-z, 0-9, '-', '_', '.', and one letter or more")
     with lock:
-        return {"id": store.save(s.label), "saves": store.saves()}
+        return {"id": store.save(s.label, s.token), "saves": store.saves()}
 
 
-@app.post("/api/saves/{save_id}/load")
-def load(save_id: int):
+@app.post("/api/saves/{ref}/load")
+def load(ref: str):
+    """Load by save number (only digits) or by save name (http-api.md rules 24-24c)."""
+    by_number = ref.isascii() and ref.isdigit()
+    if not by_number and not SAVE_NAME.fullmatch(ref):
+        raise HTTPException(400, "a save name has 1 to 64 of A-Z, a-z, 0-9, '-', '_', '.'")
     with lock:
+        if by_number:
+            n = int(ref)
+            save_id = n if n < 2**63 else None  # a bigger number is no save (SQLite holds 64 bits)
+        else:
+            save_id = store.save_id(ref)
+        if save_id is None:
+            raise HTTPException(404, "unknown save")
         try:
             store.load(save_id)
         except KeyError:

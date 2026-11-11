@@ -71,6 +71,8 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **hour** | One hour in the game. Never a real hour. The world file says how many hours make one day (default 24). | game time, time | `hours` |
 | **calendar** | The part of a world file that tells how long a day is in that game. | time settings | `calendar`, `hours_per_day` |
 | **save** | A copy of everything that NPCs know, at one moment. | snapshot, checkpoint | `saves` table |
+| **save name** | A name that the mod gives a save, for example `cp-1042`. The game keeps the same name in its own save file. | token, key, save slot | `token` |
+| **save number** | The number that the engine gives each save, for example `7`. | save ID | `id`, `save_id` |
 | **load** | Use a save again. Everything after the save stops existing. | restore, revert | `Store.load` |
 | **start day** | The day on the clock when a world starts, and after a reset. The world file can give it. Else it is `POC_START_DAY` (41). | first day | `start_day`, `POC_START_DAY` |
 | **reset** | Remove all events, memories and turns, and set the clock to the start day. Saves stay. | wipe, clear | `Store.reset` |
