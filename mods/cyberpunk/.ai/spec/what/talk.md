@@ -26,6 +26,9 @@ Words in this file:
 
 5. Look at an NPC and press the talk key. The talk panel opens when the player releases the key. [PLANNED: #12]
 5a. The talk key is `G`. The player can change it in the settings (rule 30). (owner question 1) [PLANNED: #12]
+5b. When the player looks at an NPC that can talk, the hint "[G] Talk" shows on the screen. It shows the key from the settings. (owner question 1) [PLANNED: #12]
+5c. The talk key does not replace a game action. Example: `F` still opens "Trade" for a vendor. [PLANNED: #12]
+5d. The hint does not show for a story character, a dead NPC or an NPC more than 4 metres away. [PLANNED: #12]
 6. The NPC must be in talk distance: a maximum of 4 metres. Example: at 3 metres, the panel opens. At 6 metres, it does not open. [PLANNED: #12]
 7. In these cases, the panel does not open. The mod shows a short note on the screen. [PLANNED: #12]
 
