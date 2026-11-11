@@ -250,6 +250,16 @@ def test_added_npc_voice_comes_from_the_list(env):
     assert npc["voice_id"] in HARBOR["voice_pool"]["male"]
 
 
+def test_voice_from_other_list_when_gender_list_is_empty(env):
+    """world-file.md 7ca: a female NPC in a world with only male voices gets a male voice."""
+    _, client = env
+    male_only = {**HARBOR, "voice_pool": {"female": [], "male": ["voice-m1", "voice-m2"]}}
+    assert client.post("/api/world", json=male_only).status_code == 200
+    add(client, {"record_id": "npc.sailor", "name": "Ada", "settlement": "harbor", "gender": "female"})
+    npc = next(n for n in client.get("/api/world").json()["npcs"] if n["id"] == "npc.sailor")
+    assert npc["voice_id"] in ["voice-m1", "voice-m2"]
+
+
 def test_defaults_for_missing_details(env):
     """conversation.md 6c-6d, world-file.md 7d, 7f: job "local", no faction, unknown town id, default description, no voice."""
     _, client = env
