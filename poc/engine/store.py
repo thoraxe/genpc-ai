@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sqlite3
 import time
 from pathlib import Path
@@ -47,6 +48,8 @@ class Store:
         return float(self._meta("day"))
 
     def advance(self, days: float) -> list[Memory]:
+        if not math.isfinite(days):
+            raise ValueError("days must be a real number")
         if days < 0:
             raise ValueError("time only moves forward; load a save to go back")
         self._set_meta("day", self.day + days)

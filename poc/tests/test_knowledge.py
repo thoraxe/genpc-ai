@@ -157,3 +157,9 @@ def test_retrieval_guarantees_recent_news_and_mention_marking(store):
     again = knowledge.retrieve(store.memories("torvald"), store.day, r)
     assert all(not (v.memory.event_id and not v.memory.mentioned) for v in again)
     assert next(m for m in store.memories("torvald") if m.id == rumor.id).recalls == 1
+
+
+def test_store_refuses_a_non_number_advance(store):
+    with pytest.raises(ValueError):
+        store.advance(float("nan"))
+    assert store.day == 41.0
