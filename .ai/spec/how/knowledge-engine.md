@@ -76,10 +76,10 @@ This file covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-
 **Save, load and reset** (`what/saves-and-clock.md` rules 10–17)
 - `Store.save` writes every row of `STATE_TABLES` (`meta`, `events`, `memories`, `turns`) as JSON into `saves.blob`.
 - Save names (rules 12a–12f, 15a–15e):
-  - The `saves` table has a `token` column with a unique index. `NULL` (no save name) can repeat. `Store.__init__` adds the column to a database from before save names.
+  - The `saves` table has a `token` column with a unique index. `NULL` (no save name) can repeat. `SCHEMA` has no `token` column. `Store.__init__` adds it with `ALTER TABLE` to every database that lacks it (new ones and ones from before save names), then makes the index. `Store.save` does not check the name; the API does.
   - `Store.save(label, token)`: if `save_id(token)` finds a save, an `UPDATE` replaces its label, day, time and snapshot, and keeps its id. Else it inserts a new row.
   - `api.save` checks the name with `_save_name_ok` (`SAVE_NAME` plus one letter or more). `SaveIn.token` is `object`, so a wrong type is `400`, not `422`.
-  - `api.load` takes `{ref}`. Only ASCII digits mean a save number; a number with more than 18 digits is `404`, because SQLite holds 64 bits. Else `ref` must match `SAVE_NAME` (`400`), and `Store.save_id` finds the number (`404` if none). Then `Store.load` runs as for a number.
+  - `api.load` takes `{ref}`. Only ASCII digits mean a save number; a number of `2**63` or more is `404`, because SQLite holds 64 bits. Leading zeros are fine. A `/` in a name (`%2F`) never reaches the route: the router answers `404`. Else `ref` must match `SAVE_NAME` (`400`), and `Store.save_id` finds the number (`404` if none). Then `Store.load` runs as for a number.
 - `Store.load` deletes the rows of those tables. Then it inserts the saved rows again, with their old ids.
 - `Store.reset` deletes the rows of the same tables and sets `meta.day` to the start day.
 - No snapshot contains the `saves` table or the `npcs` table. Thus an added named NPC stays after a load, with its last town (rule 14a).

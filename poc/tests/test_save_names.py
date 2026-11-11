@@ -7,12 +7,15 @@ Offline: a fake LLM and no TTS.
 import importlib
 import json
 import sqlite3
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from engine.providers.llm import LLMResult
 from engine.store import Store, load_world
+
+DATA = Path(__file__).resolve().parent.parent / "data"
 
 
 class FakeLLM:
@@ -114,6 +117,19 @@ def test_digits_load_a_save_number(client):
     assert _load(client, str(first)).json() == {"day": 41}
     assert _load(client, "999").status_code == 404
     assert _load(client, "9" * 30).status_code == 404  # too big for a save number: no save, not a crash
+    assert _load(client, "0" * 20 + str(first)).json() == {"day": 41}  # leading zeros
+
+
+def test_named_save_loads_by_number(client):
+    """Rule 15a: the mod can load a named save by its save number too."""
+    n = _save(client, token="cp-1").json()["id"]
+    client.post("/api/clock/advance", json={"days": 1})
+    assert _load(client, str(n)).json() == {"day": 41}
+
+
+def test_name_without_letter_is_unknown_on_load(client):
+    """Rule 24c checks only rule 12b on a load. `---` follows rule 12b, so it is 404 (no such save), not 400."""
+    assert _load(client, "---").status_code == 404
 
 
 @pytest.mark.parametrize("ref", ["cp*1042", "a" * 65, "caf%C3%A9", "cp%201042"])
@@ -154,9 +170,12 @@ def test_database_from_before_save_names(tmp_path):
     db.execute("INSERT INTO saves(label, day, created, blob) VALUES('old', 41, 0, ?)", (json.dumps(blob),))
     db.commit()
     db.close()
-    world = load_world("poc/data/world.json")
+    world = load_world(DATA / "world.json")
     store = Store(path, world, start_day=41)
     assert [(s["label"], s["token"]) for s in store.saves()] == [("old", None)]
     assert store.save("new", "cp-1") == 2 and store.save_id("cp-1") == 2
     store.load(1)
     assert store.day == 41
+    store.db.close()
+    again = Store(path, world, start_day=41)  # a second start does not change the database
+    assert [s["token"] for s in again.saves()] == [None, "cp-1"]

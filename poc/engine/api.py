@@ -97,7 +97,7 @@ class Choose(BaseModel):
 
 class SaveIn(BaseModel):
     label: str = ""
-    token: object = None  # the save name; checked by `_save_name` so that a wrong type is 400, not 422
+    token: object = None  # the save name; checked by `_save_name_ok` so that a wrong type is 400, not 422
 
 
 SAVE_NAME = re.compile(r"[A-Za-z0-9._-]{1,64}")  # saves-and-clock.md rule 12b
@@ -437,7 +437,8 @@ def load(ref: str):
         raise HTTPException(400, "a save name has 1 to 64 of A-Z, a-z, 0-9, '-', '_', '.'")
     with lock:
         if by_number:
-            save_id = int(ref) if len(ref) <= 18 else None  # a longer number is no save (SQLite holds 64 bits)
+            n = int(ref)
+            save_id = n if n < 2**63 else None  # a bigger number is no save (SQLite holds 64 bits)
         else:
             save_id = store.save_id(ref)
         if save_id is None:
