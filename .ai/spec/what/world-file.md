@@ -22,16 +22,16 @@ The world file describes one game world: its towns, places and NPCs. Each game g
 4. Gossip goes only from a town to the towns in its own `adjacent` list. List the neighbour in both towns if you want gossip to go both ways.
 5. Each place has an `id`, a `name`, and the town it belongs to (`near_settlement`).
 6. Each NPC has an `id`, a `name`, a job (`role`), a town (`settlement`) and a description (`bio`).
-6a. The `id` of a world-file NPC can be the record ID of the character. Example: `npc.harbor_vendor`. `[PLANNED: #8]`
-6b. If the `id` is the record ID, the mod can find the world-file NPC. `[PLANNED: #8]`
+6a. The `id` of a world-file NPC can be the record ID of the character. Example: `npc.harbor_vendor`.
+6b. If the `id` is the record ID, the mod can find the world-file NPC.
 7. An NPC can have a `voice_id` for the voice service. Without it, the NPC has no voice.
-7a. The world file can have a voice list (`voice_pool`). It has a list for `female` and a list for `male`. `[PLANNED: #8]`
-7b. The engine chooses a voice from the voice list by the NPC's ID. The same NPC always gets the same voice. `[PLANNED: #8]`
-7c. If the mod sends no gender, the engine chooses from all voices in the voice list. `[PLANNED: #8]`
-7d. If the voice list is empty or not in the world file, added NPCs have no voice. `[PLANNED: #8]`
-7e. The world file can have a general description (`generic_bio`). Each added NPC gets it. `[PLANNED: #8]` (owner question 5)
-7f. If the world file has no general description, the engine uses "You are an ordinary person. You have no special story." `[PLANNED: #8]` (owner question 5)
-8. The engine does not contain any town, place or NPC. They come from the world file or from the mod (`http-api.md` rule 31). `[PLANNED: #8]`
+7a. The world file can have a voice list (`voice_pool`). It has a list for `female` and a list for `male`.
+7b. The engine chooses a voice from the voice list by the NPC's ID. The same NPC always gets the same voice.
+7c. If the mod sends no gender, the engine chooses from all voices in the voice list.
+7d. If the voice list is empty or not in the world file, added NPCs have no voice.
+7e. The world file can have a general description (`generic_bio`). Each added NPC gets it. (owner question 5)
+7f. If the world file has no general description, the engine uses "You are an ordinary person. You have no special story." (owner question 5)
+8. The engine does not contain any town, place or NPC. They come from the world file or from the mod (`http-api.md` rule 31).
 
 ### The preset events file (`poc/data/events.json`)
 
@@ -100,4 +100,4 @@ Examples (`harbor_city` is a made-up mod world with `start_day` = `0`):
 | Ticket | Summary |
 |---|---|
 | #7 | A mod sends its own world to the engine. The first mod's world is in the mod's specs. |
-| #8 | NPCs that a mod adds while the game runs, not only NPCs from the world file. |
+| ~~#8~~ | NPCs that a mod adds while the game runs, not only NPCs from the world file. |

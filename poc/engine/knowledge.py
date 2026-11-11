@@ -54,8 +54,13 @@ def witness_memories(event: WorldEvent) -> list[Memory]:
     ]
 
 
-def due_rumors(event: WorldEvent, world: WorldConfig, now: float, already_known: set[str]) -> list[Memory]:
+def due_rumors(
+    event: WorldEvent, world: WorldConfig, now: float, already_known: set[str], npcs: list[NPC] | None = None
+) -> list[Memory]:
     """Rumor memories that should exist by `now` for NPCs who don't already know this event.
+
+    `npcs` is every known NPC: the world-file NPCs plus the added NPCs (default: the world-file NPCs).
+    An event whose town is not in the world file makes no gossip (knowledge.md rules 5a, 5d).
 
     Hop 1: NPCs in the event's settlement, after hop1_delay, facts >= hop1_min_importance.
     Hop 2: NPCs in settlements adjacent to it, after hop2_delay, facts >= hop2_min_importance.
@@ -63,7 +68,11 @@ def due_rumors(event: WorldEvent, world: WorldConfig, now: float, already_known:
     """
     r = world.rules
     home = event_settlement(event, world)
-    adjacent = next((s.adjacent for s in world.settlements if s.id == home), [])
+    town = next((s for s in world.settlements if s.id == home), None)
+    if town is None:
+        return []
+    adjacent = town.adjacent
+    npcs = world.npcs if npcs is None else npcs
     out: list[Memory] = []
 
     def add(npcs: list[NPC], source: str, delay: float, min_imp: int, sal: float):
@@ -82,14 +91,14 @@ def due_rumors(event: WorldEvent, world: WorldConfig, now: float, already_known:
             already_known.add(n.id)
 
     add(
-        [n for n in world.npcs if n.settlement == home],
+        [n for n in npcs if n.settlement == home],
         "hop1",
         r.hop1_delay_days,
         r.hop1_min_importance,
         r.hop1_salience,
     )
     add(
-        [n for n in world.npcs if n.settlement in adjacent],
+        [n for n in npcs if n.settlement in adjacent],
         "hop2",
         r.hop2_delay_days,
         r.hop2_min_importance,
