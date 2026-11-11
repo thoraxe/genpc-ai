@@ -47,6 +47,7 @@ This file covers `what/conversation.md` and the voice rules in `what/http-api.md
 | `api.dialog_open` / `api.dialog_choose` | `DialogEngine.open` / `.choose` | `dialog()` makes a new `DialogEngine` for each request, with the shared `_llm` |
 | `api.npc_prompt` | `DialogEngine.preview_prompt` | No LLM call |
 | `api.audio` | `ElevenLabsTTS.stream` | `StreamingResponse`; gets the line from `store.turn(turn_id)` |
+| `api.audio_slot` | `ElevenLabsTTS.stream` | Joins all parts, then writes the slot file (`what/http-api.md` rules 30a–30n) |
 | `DialogEngine` | `LLMProvider.complete_json` | Protocol call |
 
 ## Implementation Notes
@@ -62,4 +63,12 @@ This file covers `what/conversation.md` and the voice rules in `what/http-api.md
   - `LLM_MODEL`, then `ZAI_MODEL`, then `glm-5.3-flash`.
 - `api.session_start` gives the model name from env if the LLM does not exist yet.
 - The engine does not cache TTS. Each `/api/audio/{turn_id}` call makes the audio again.
+- Slot files (`api.audio_slot`):
+  - `_slot_settings` reads `AUDIO_SLOT_DIR` and `AUDIO_SLOT_COUNT` at import. A count that is not a whole number from 1 to 16 raises `RuntimeError`, so the server does not start.
+  - `_next_slot` is a module counter under `_slot_lock`. Each request takes the next number before the TTS call, so a failed call still uses its slot (rule 30k), and two requests at the same time get different slots (rule 30e). A reload or restart sets it to 0 (rule 30h).
+  - The route does not hold `lock` during the TTS call.
+  - The route joins the full stream, writes it to a temp file with a leading dot (`.genpc_voice_N.<hex>.tmp`) in the slot folder, then calls `os.replace`. The game never sees half a file. An `OSError` gives `503` and removes the temp file (a failed clean-up is ignored, so the answer stays `503`). A TTS error or empty sound gives `502`. In both cases the old slot file stays.
+  - The 404 checks (voice off, unknown turn, no voice, no folder setting, no folder) come before the slot number. They use no slot.
+  - Known limit: rule 30e holds while at most `SLOT_COUNT` requests are in flight. With more, request N+1 gets the same slot as request 1, and the slower one writes last or gets `503`. A mod asks for one voice at a time, so this does not happen in normal play.
+  - `session_start` gives `audio_slots` = `SLOT_COUNT` only if `_slots_ready()` (voice on and the folder is there), else `0`.
 - A change to the prompt, retrieval or validation is high risk. Run the live eval and get a second, independent review (`CLAUDE.md`).

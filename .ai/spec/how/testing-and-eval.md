@@ -7,6 +7,7 @@
 | `poc/tests/test_knowledge.py` | `store` fixture, `embershard()`, `facts_of()` | Fixed scenarios: witnesses, hop1/hop2 timing and thresholds, far town, arrival day, idempotency, decay stages, recall cap, save/load, grounding, news slots. |
 | `poc/tests/test_dialog.py` | `FakeLLM(replies)`, `GOOD`, `SMALLTALK` | Prompt leak check, retry, fallback without recall, provider error without retry, news "told" only when said, session history, setting text. |
 | `poc/tests/test_api.py` | `FakeLLM`, `client` fixture | API flow from start to end, and input checks. |
+| `poc/tests/test_audio_slots.py` | `FakeTTS`, `_load`, `env` fixture | Slot files: rotation, failures keep the old sound, `503` on a locked file, requests at the same time, restart, settings. |
 | `poc/scripts/eval.py` | `CHECKS`, `run_once`, `main` | Live LLM eval: 3 checks × N runs on 4 threads. Results go to `poc/var/eval-*.json`. |
 
 ## Data Flow
@@ -17,6 +18,7 @@
 - `FakeLLM` in `test_dialog.py` gives scripted replies in order. A reply can be a dict (sent as JSON), a raw string, or an `Exception` (raised).
 - `FakeLLM` records each `(system, messages)` in `calls`. Thus tests can check the prompt.
 - `test_api.py` reloads `engine.api` with `POC_VAR_DIR` and `POC_DB` in `tmp_path` and `TTS_ENABLED=0`. Then it sets `api._llm` to its `FakeLLM`.
+- `test_audio_slots.py` reloads `engine.api` with `AUDIO_SLOT_DIR` in `tmp_path`, It replaces `dotenv.load_dotenv` with a no-op, so the developer's `.env` cannot point the tests at a real game folder. Then it sets `api.tts` to a `FakeTTS` that sends the sound in two parts. `FakeTTS.gate` (a `threading.Barrier`) holds calls so that requests arrive at the same time.
 
 **Live eval** (one run)
 1. Make a new store in a temp folder.

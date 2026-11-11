@@ -47,6 +47,8 @@ You set these values in the `.env` file at the top of the repo. Secret keys go o
 | `ELEVENLABS_API_KEY` | The secret key for the voice service. Without it, NPCs have no voice. | — (optional) |
 | `ELEVENLABS_MODEL` | The voice model. | `eleven_flash_v2_5` |
 | `TTS_ENABLED` | Set to `0`, `false` or `no` to stop the voice. | `1` |
+| `AUDIO_SLOT_DIR` | The slot folder: the folder with the slot files for the game. If it is empty, the engine writes no slot files. | empty |
+| `AUDIO_SLOT_COUNT` | The number of slot files. It must be from 1 to 16. It must agree with the list of slot files in the mod. (owner question 1) | `4` |
 | `POC_START_DAY` | The start day of the test world, and of a mod world that gives no `start_day`. | `41` |
 | `POC_VAR_DIR` | The folder for the databases. Each mod world has its own database file there. | `poc/var` |
 | `POC_DB` | The database file of the test world. | `poc/var/poc.db` |
@@ -58,6 +60,7 @@ The world file can change the knowledge numbers (for example, how fast memories 
 - The engine runs on the same computer as the game. It is not a public internet service.
 - The engine has one shared database. It makes changes to knowledge and conversations one at a time.
 - The test web page uses only the HTTP API. It gets no special access.
+- If `AUDIO_SLOT_COUNT` is less than 1 or more than 16, then the engine does not start. It tells you the reason.
 
 ## Planned Changes
 
@@ -66,6 +69,6 @@ The world file can change the knowledge numbers (for example, how fast memories 
 | #7 | A mod sends its own world to the engine. The first mod's world is in the mod's specs. |
 | ~~#8~~ | A mod can add new NPCs while the game runs. |
 | #9 | A mod can set the clock from the game's own day. |
-| #10 | The engine writes each line's voice into a sound file that a game mod can play. |
+| ~~#10~~ | The engine writes each line's voice into a sound file that a game mod can play. |
 | #11 | Saves use a name that the game gives, so a game save and an engine save match. |
 | #20 | The live eval must not count "I don't know about that" as a leak. |

@@ -37,6 +37,8 @@ You do **not** need to install Python yourself. uv installs the right version (3
 
    Leave out the ElevenLabs line if you do not want voices. Keep this file private: it holds your keys.
 
+   For a game mod that plays voices, also set `AUDIO_SLOT_DIR` to the folder where the mod reads its voice files. The engine does not make this folder. If the mod uses a number of voice files other than 4, also set `AUDIO_SLOT_COUNT` to that number (1 to 16).
+
    To use another LLM service, also set `LLM_BASE_URL`, `LLM_MODEL` and `LLM_API_KEY_ENV` (the name of the line that holds your key). See [`poc/README.md`](poc/README.md).
 
 4. **Start the engine.** In the `genpc-ai` folder, run:
