@@ -4,18 +4,19 @@
 
 | File/Directory | Key Symbols | Responsibility |
 |---|---|---|
-| `poc/engine/models.py` | `Fact`, `Rules`, `WorldConfig`, `Settlement`, `Location`, `NPC`, `WorldEvent`, `Memory`, `MemoryView`, `Source`, `Stage` | Pydantic models. Game-neutral. `Rules` holds every knowledge tunable with its default; `WorldConfig.rules` lets the world file override them. |
+| `poc/engine/models.py` | `Fact`, `Rules`, `WorldConfig`, `Calendar`, `VoicePool`, `AddedNPC`, `added_npc_view`, `pick_voice`, `DEFAULT_GENERIC_BIO`, `world_problems`, `Settlement`, `Location`, `NPC`, `WorldEvent`, `Memory`, `MemoryView`, `Source`, `Stage` | Pydantic models. Game-neutral. `Rules` holds every knowledge tunable with its default; `WorldConfig.rules` lets the world file override them. |
 | `poc/engine/knowledge.py` | `strength`, `view`, `event_settlement`, `witness_memories`, `due_rumors`, `retrieve`, `grounded`, `conversation_memory` | Pure, deterministic knowledge rules. No I/O, no LLM. See `knowledge-engine.md`. |
-| `poc/engine/store.py` | `Store` (`advance`, `report_event`, `propagate`, `memories`, `mark_used`, `add_turn`, `turns`, `save`, `load`, `reset`), `load_world`, `load_events`, `STATE_TABLES` | SQLite persistence, the clock, rumor propagation trigger, save slots as whole-state JSON blobs. |
+| `poc/engine/store.py` | `Store` (`advance`, `report_event`, `propagate`, `npc`, `all_npcs`, `added_npcs`, `is_crowd`, `put_npc`, `memories`, `mark_used`, `add_turn`, `turns`, `save`, `load`, `reset`), `load_world`, `load_events`, `STATE_TABLES` | SQLite persistence, the clock, rumor propagation trigger, the added NPCs (table `npcs`), save slots as whole-state JSON blobs. |
 | `poc/engine/dialog.py` | `DialogEngine` (`open`, `choose`, `_turn`, `preview_prompt`), `build_system_prompt`, `_knowledge_block`, `DialogResponse`, `TurnResult`, `SOURCE_FRAMING`, `FALLBACK`, `GREETING` | One dialog turn: retrieve → prompt → LLM → validate/retry/fallback → memory write-back. See `dialog-pipeline.md`. |
 | `poc/engine/providers/llm.py` | `LLMProvider` (Protocol), `OpenAICompatLLM`, `LLMResult`, `from_env` | OpenAI-compatible chat completions in JSON mode. z.ai by default; any provider via env. |
 | `poc/engine/providers/tts.py` | `TTSProvider` (Protocol), `ElevenLabsTTS`, `from_env` | ElevenLabs streaming MP3. `from_env` returns `None` when disabled or keyless. |
-| `poc/engine/api.py` | `app`, `store`, `world`, `presets`, `lock`, `dialog()`, `npc_or_404`, `_mem_json`, request models `Advance`/`EventIn`/`Open`/`Choose`/`SaveIn` | FastAPI routes (`what/http-api.md`). Module-level singletons built at import time from env. |
+| `poc/engine/api.py` | `app`, `store`, `world`, `presets`, `lock`, `set_world`, `put_npc`, `clock_set`, `_db_path`, `_start_day`, `TEST_WORLD_ID`, `dialog()`, `npc_or_404`, `_npc_text`, `_npc_id_field`, `LINE_BREAKS`, `_mem_json`, request models `Advance`/`EventIn`/`Open`/`Choose`/`SaveIn` | FastAPI routes (`what/http-api.md`). Module-level singletons built at import time from env. |
 | `poc/data/world.json`, `poc/data/events.json` | — | The demo world and preset events (`what/world-file.md`). |
 | `poc/ui/index.html` | `api()`, `refresh()`, `showTurn()` | Bare single-file test page. Only calls `/api/*`. Styling is deliberately bare (not worth reviewing). |
-| `poc/tests/` | `test_knowledge.py`, `test_dialog.py`, `test_api.py` | Offline tests with a `FakeLLM`. See `testing-and-eval.md`. |
+| `poc/tests/` | `test_knowledge.py`, `test_dialog.py`, `test_api.py`, `test_worlds.py`, `test_clock_set.py`, `test_added_npcs.py` | Offline tests with a `FakeLLM`. See `testing-and-eval.md`. |
 | `poc/scripts/eval.py` | `CHECKS`, `run_once`, pass bars | Live eval against the real LLM. |
 | `poc/scripts/smoke.py`, `poc/scripts/live_dialog.py` | — | Manual provider smoke test and a live dialog run. |
+| `mods/<game>/` | `.ai/spec/` | One folder for each game mod, with its own specs. A mod talks to the engine only through the HTTP API (decision 0007). |
 | `.omc/plans/` | `npc-engine-plan.md`, `poc-python-ui-plan.md`, `cyberpunk-mod-plan.md` | Approved plans. The Cyberpunk plan maps to issues #1–#15. |
 | `docs/` | — | Research: prior art, save-state feasibility, monetization. |
 | `REVIEW.md` | — | Review priorities (knowledge leaks first). |

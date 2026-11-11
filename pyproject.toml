@@ -19,7 +19,7 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["poc"]
-testpaths = ["poc/tests"]
+testpaths = ["poc/tests", "mods"]
 
 [tool.ruff]
 line-length = 120

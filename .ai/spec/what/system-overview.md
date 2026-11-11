@@ -47,9 +47,9 @@ You set these values in the `.env` file at the top of the repo. Secret keys go o
 | `ELEVENLABS_API_KEY` | The secret key for the voice service. Without it, NPCs have no voice. | — (optional) |
 | `ELEVENLABS_MODEL` | The voice model. | `eleven_flash_v2_5` |
 | `TTS_ENABLED` | Set to `0`, `false` or `no` to stop the voice. | `1` |
-| `POC_START_DAY` | The day on the clock at the start, and after a reset. | `41` |
-| `POC_VAR_DIR` | The folder for the database. | `poc/var` |
-| `POC_DB` | The database file. | `poc/var/poc.db` |
+| `POC_START_DAY` | The start day of the test world, and of a mod world that gives no `start_day`. | `41` |
+| `POC_VAR_DIR` | The folder for the databases. Each mod world has its own database file there. | `poc/var` |
+| `POC_DB` | The database file of the test world. | `poc/var/poc.db` |
 
 The world file can change the knowledge numbers (for example, how fast memories fade). See `world-file.md`.
 
@@ -63,9 +63,9 @@ The world file can change the knowledge numbers (for example, how fast memories 
 
 | Ticket | Summary |
 |---|---|
-| #7 | A world file for Cyberpunk 2077: districts as towns, with a starter cast. |
-| #8 | A mod can add new NPCs while the game runs. |
+| #7 | A mod sends its own world to the engine. The first mod's world is in the mod's specs. |
+| ~~#8~~ | A mod can add new NPCs while the game runs. |
 | #9 | A mod can set the clock from the game's own day. |
-| #10 | The engine writes each line's voice into a sound file that the Cyberpunk mod can play. |
+| #10 | The engine writes each line's voice into a sound file that a game mod can play. |
 | #11 | Saves use a name that the game gives, so a game save and an engine save match. |
 | #20 | The live eval must not count "I don't know about that" as a leak. |

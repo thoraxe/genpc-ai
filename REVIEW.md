@@ -29,14 +29,22 @@ The product's core promise is that an NPC can't say what it doesn't know.
 ## 6. API compatibility with game mods
 - The `/api/*` request and response shapes are a contract with the mods. Adding a field is fine, but renaming or removing one needs a note in the PR and a matching mod change.
 
-## 7. Spec PRs
-A spec PR changes only `.ai/spec/`. Check:
+## 7. Spec PRs (spec stage, then code stage)
+**Spec stage** (the PR changes only `.ai/spec/`). Check:
 - The Summary and the new rules follow "Writing rules for what/" in `.ai/spec/README.md`, and use the glossary words.
 - Each rule is testable, has a real-value example where it has a number, and is marked `[PLANNED: #N]`.
 - The Summary has 3–6 examples, what it will not do, and questions with recommended answers.
 - New rules do not contradict or renumber existing rules, and do not clash with other open spec PRs.
-- The Summary and the commit message have no closing word ("closes", "fixes", "resolves") before an issue number.
+- The Summary and the commit messages have no closing word ("closes", "fixes", "resolves") before an issue number.
 - Nothing in the spec would put another NPC's knowledge, world state, lost facts or faded facts into a prompt (§1).
+
+**Code stage.** Check:
+- The PR has the owner's "OK" comment and a reply with the commit SHA that it covers. If either is missing, stop: the PR cannot merge.
+- No `what/` rule differs from the version the owner said OK to (compare with the recorded OK commit), apart from the removed `[PLANNED: #N]` marks, unless a later OK covers the change.
+- The code does what the approved rules say, and the tests check the Summary's examples.
+- No `[PLANNED: #N]` mark of this issue is left, and `how/` is updated.
+- The approved plain-language part of the Summary is unchanged. The Summary now has "Closes #N".
+- If the owner chose to merge the spec before its code (as for #8), the code PR does these checks against the rules on `main` from the merged spec PR, and writes "Closes #N".
 
 ## Not worth flagging
 - Styling of the test UI in `poc/ui/`. It's deliberately bare.

@@ -157,3 +157,24 @@ def test_retrieval_guarantees_recent_news_and_mention_marking(store):
     again = knowledge.retrieve(store.memories("torvald"), store.day, r)
     assert all(not (v.memory.event_id and not v.memory.mentioned) for v in again)
     assert next(m for m in store.memories("torvald") if m.id == rumor.id).recalls == 1
+
+
+def test_store_refuses_a_non_number_advance(store):
+    with pytest.raises(ValueError):
+        store.advance(float("nan"))
+    assert store.day == 41.0
+
+
+def test_rumors_go_to_the_npcs_given_and_never_from_an_unknown_town(store):
+    """knowledge.md 5a, 5b, 5d: gossip goes to every known NPC by town, but never from a town not in the world."""
+    from engine.models import NPC
+
+    w = store.world
+    bram = NPC(id="npc.bram", name="Bram", role="local", settlement="riverwood", bio="")
+    lost = NPC(id="npc.lost", name="Lost", role="local", settlement="nowhere", bio="")
+    ev = embershard()
+    got = knowledge.due_rumors(ev, w, 42.0, set(), list(w.npcs) + [bram, lost])
+    assert "npc.bram" in {m.npc_id for m in got}
+    assert "npc.lost" not in {m.npc_id for m in got}
+    nowhere = ev.model_copy(update={"location": "nowhere"})
+    assert knowledge.due_rumors(nowhere, w, 50.0, set(), [lost]) == []

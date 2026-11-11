@@ -8,17 +8,18 @@ Each word has one meaning. Use only these words for these things in `what/` file
 |---|---|---|---|
 | **NPC** | A character in the game that the player can talk to. The player does not control it. | character, bot, agent | `NPC`, `npc_id` |
 | **player** | The person who plays the game. | user, hero | `player` |
-| **town** | A place where NPCs live. Gossip moves between towns. In Cyberpunk, a town is a district. | settlement, village, city | `Settlement` |
+| **town** | A place where NPCs live. Gossip moves between towns. A game can call a town something else, for example a district. | settlement, village, city | `Settlement` |
 | **next town** | A town that the world file lists as a neighbour of a different town. | adjacent town, nearby town | `adjacent` |
 | **place** | A location that is not a town, for example a mine. Each place belongs to one town. | site, area | `Location`, `near_settlement` |
 | **world** | All the towns, places and NPCs of one game. | setting (when you mean the world) | `WorldConfig` |
-| **world file** | The file that describes the world (`poc/data/world.json`). | config, map | `world.json` |
+| **test world** | The small fantasy world in the engine (`poc/data/world.json`). The test page and the tests use it. | demo world, Skyrim world | `id` = `test` |
+| **world file** | A file that describes one world. The test world is `poc/data/world.json`. A mod sends its own world to the engine. | config, map | `world.json` |
 | **setting text** | A short text in the world file. It tells every NPC how to speak. | flavour, style | `setting` |
 | **world-file NPC** | An NPC that the world file describes. It has a hand-written description, and it can have a voice. | cast NPC | `world.npcs`, `kind` = `world` |
 | **added NPC** | An NPC that the mod adds while the game runs. The world file does not have it. A named NPC or a crowd NPC. | registered NPC, dynamic NPC | `kind` = `named` or `crowd` |
 | **named NPC** | An added NPC with a record ID. It remembers the player, like a world-file NPC. | unique NPC | `kind` = `named` |
 | **crowd NPC** | An added NPC with only an entity ID. It keeps no facts from the player after a conversation. | generic NPC, random NPC | `kind` = `crowd` |
-| **record ID** | The fixed name of a character in the game data, for example `Character.wilson`. It does not change between games or loads. | TweakDB ID (in what/ files) | `record_id` |
+| **record ID** | The fixed name of a character in the game data, for example `npc.harbor_vendor`. It does not change between games or loads. | game-specific ID names | `record_id` |
 | **entity ID** | A number that the game gives to a crowd NPC. It is good only until the next load. | hash, entity hash | `entity_id` |
 | **faction** | A group that an NPC belongs to, for example a gang or a company. | gang, affiliation | `faction` |
 | **general description** | The description that each added NPC gets. It comes from the world file. | generic bio, default bio | `generic_bio` |
@@ -65,11 +66,13 @@ Each word has one meaning. Use only these words for these things in `what/` file
 |---|---|---|---|
 | **day** | One day in the game. Never a real day. Days can have parts: 41.5 is the middle of day 41. | date, time | `day` |
 | **clock** | The current day in the game. | time, timer | `meta.day` |
+| **hour** | One hour in the game. Never a real hour. The world file says how many hours make one day (default 24). | game time, time | `hours` |
+| **calendar** | The part of a world file that tells how long a day is in that game. | time settings | `calendar`, `hours_per_day` |
 | **save** | A copy of everything that NPCs know, at one moment. | snapshot, checkpoint | `saves` table |
 | **save name** | A name that the mod gives a save, for example `cp-1042`. The game keeps the same name in its own save file. | token, key, save slot | `token` |
 | **save number** | The number that the engine gives each save, for example `7`. | save ID | `id`, `save_id` |
 | **load** | Use a save again. Everything after the save stops existing. | restore, revert | `Store.load` |
-| **start day** | The day on the clock at the start, and after a reset. It is 41 now. | first day | `POC_START_DAY` |
+| **start day** | The day on the clock when a world starts, and after a reset. The world file can give it. Else it is `POC_START_DAY` (41). | first day | `start_day`, `POC_START_DAY` |
 | **reset** | Remove all events, memories and turns, and set the clock to the start day. Saves stay. | wipe, clear | `Store.reset` |
 
 ## Project
@@ -81,7 +84,9 @@ Each word has one meaning. Use only these words for these things in `what/` file
 | **owner** | The person who decides what the product does. The owner reads specs, not code. | user, boss | — |
 | **issue** | A page on GitHub for one goal or problem, with a number, for example #9. | ticket, task | — |
 | **spec** | The rules for one change in behaviour, in plain English, with examples. | requirements, design | — |
-| **spec PR** | A PR that adds planned rules to the `what/` files. The owner approves it before the code work starts. | spec comment | `spec/` branch |
+| **spec PR** | A PR for one change in behaviour. First it has only the new rules (the spec stage). After the owner's OK, it also gets the code (the code stage). | spec comment, behaviour PR | `spec/` branch |
+| **spec stage** | The first part of a spec PR. It has only the new rules and the Summary. It ends with the owner's OK. Not the same as the `stage` of a memory in the code. | draft | — |
+| **code stage** | The second part of a spec PR. We add the code and the tests to the same PR. | build phase | — |
 | **merge** | Put the changes of a PR into the project. | land, ship | — |
 | **live eval** | A test that uses the real AI model many times. It counts how often NPCs say wrong things. | benchmark | `poc/scripts/eval.py` |
 | **preset** | An event that is ready in a file, for tests and demos. | template, sample event | `poc/data/events.json` |

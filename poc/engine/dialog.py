@@ -85,9 +85,25 @@ def _knowledge_block(views: list[MemoryView], now: float, rules) -> str:
     return "\n".join(lines)
 
 
+REMEMBER_RULE = """
+- remember: facts the PLAYER revealed about themselves in their latest line that you'd remember (empty list if none),
+  each with importance 1-5."""
+REPLY_FORMAT = '{"npc_line": "...", "choices": ["...", "...", "..."], "remember": [{"fact": "...", "importance": 3}]}'
+CROWD_REPLY_FORMAT = '{"npc_line": "...", "choices": ["...", "...", "..."]}'
+
+
 def build_system_prompt(
-    npc: NPC, settlement_name: str, views: list[MemoryView], day: float, rules, setting: str = ""
+    npc: NPC,
+    settlement_name: str,
+    views: list[MemoryView],
+    day: float,
+    rules,
+    setting: str = "",
+    crowd: bool = False,
 ) -> str:
+    """A crowd NPC's prompt does not ask for facts about the player (conversation.md rule 14b)."""
+    remember = "" if crowd else REMEMBER_RULE
+    reply_format = CROWD_REPLY_FORMAT if crowd else REPLY_FORMAT
     return f"""You are {npc.name}, a {npc.role} in {settlement_name}. {npc.bio}
 
 It is in-game day {day:g}. Stay in character.{" " + setting if setting else ""}
@@ -100,11 +116,9 @@ RULES:
 - If the player asks about something not listed, you don't know about it; say so in character.
 - Secondhand or vague knowledge must sound uncertain ("they say", "I heard"). Don't add details that aren't listed.
 - npc_line: 1-2 short spoken sentences, no stage directions or narration.
-- choices: exactly 3 short things the player could say next (under 12 words each); make one of them a way to leave.
-- remember: facts the PLAYER revealed about themselves in their latest line that you'd remember (empty list if none),
-  each with importance 1-5.
+- choices: exactly 3 short things the player could say next (under 12 words each); make one of them a way to leave.{remember}
 
-Reply with JSON only: {{"npc_line": "...", "choices": ["...", "...", "..."], "remember": [{{"fact": "...", "importance": 3}}]}}"""
+Reply with JSON only: {reply_format}"""
 
 
 GREETING = "(The player walks up to you and you greet them.)"
@@ -124,16 +138,21 @@ class DialogEngine:
         self.llm = llm
 
     def npc(self, npc_id: str) -> NPC:
-        for n in self.store.world.npcs:
-            if n.id == npc_id:
-                return n
-        raise KeyError(npc_id)
+        n = self.store.npc(npc_id)
+        if n is None:
+            raise KeyError(npc_id)
+        return n
+
+    def _prompt(self, npc: NPC, views: list[MemoryView]) -> str:
+        world = self.store.world
+        return build_system_prompt(
+            npc, self._settlement(npc), views, self.store.day, world.rules, world.setting, self.store.is_crowd(npc.id)
+        )
 
     def preview_prompt(self, npc_id: str) -> str:
         npc = self.npc(npc_id)
         views = knowledge.retrieve(self.store.memories(npc_id), self.store.day, self.store.world.rules)
-        world = self.store.world
-        return build_system_prompt(npc, self._settlement(npc), views, self.store.day, world.rules, world.setting)
+        return self._prompt(npc, views)
 
     def _settlement(self, npc: NPC) -> str:
         return next((s.name for s in self.store.world.settlements if s.id == npc.settlement), npc.settlement)
@@ -148,7 +167,7 @@ class DialogEngine:
         store, rules = self.store, self.store.world.rules
         npc = self.npc(npc_id)
         views = knowledge.retrieve(store.memories(npc_id), store.day, rules)
-        system = build_system_prompt(npc, self._settlement(npc), views, store.day, rules, store.world.setting)
+        system = self._prompt(npc, views)
         session = [t for t in store.turns(npc_id) if session_id is not None and t.get("session_id") == session_id]
         messages = _history_messages(session)
         messages.append({"role": "user", "content": player_text or GREETING})
@@ -180,7 +199,9 @@ class DialogEngine:
         # memory write-back: only facts grounded in what the player actually said this session
         remembered: list[Fact] = []
         rejected: list[str] = []
-        if player_text and resp.remember:
+        if store.is_crowd(npc_id):  # a crowd NPC keeps no facts from the player (rule 22a)
+            rejected = [i.fact for i in resp.remember]
+        elif player_text and resp.remember:
             player_lines = " ".join([t["player"] for t in session if t.get("player")] + [player_text])
             mem = knowledge.conversation_memory(
                 npc_id, [Fact(text=i.fact, importance=i.importance) for i in resp.remember], store.day, player_lines

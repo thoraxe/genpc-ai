@@ -105,3 +105,4 @@ The full decisions are in [`.ai/spec/decisions/`](.ai/spec/decisions).
 - **The owner approves behaviour, an AI review checks the code** ([0003](.ai/spec/decisions/0003-owner-reviews-behaviour-ai-reviews-code.md)).
 - **Behaviour specs use plain English and ASD-STE100** ([0004](.ai/spec/decisions/0004-plain-english-ste-for-specs.md)), so human reviewers can understand them.
 - **Each spec is a PR** ([0005](.ai/spec/decisions/0005-specs-are-prs.md)). The owner approves the exact rules before the code work starts.
+- **The spec and its code go into `main` together** ([0006](.ai/spec/decisions/0006-spec-and-code-in-one-pr.md)). Thus the rules on `main` always tell what the engine does now.

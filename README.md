@@ -20,6 +20,10 @@ Game mods are thin clients that report events and request dialog over a small HT
 | **Cyberpunk 2077 mod** | **Planned.** See the [milestone](https://github.com/thoraxe/genpc-ai/milestone/1) and the [plan](.omc/plans/cyberpunk-mod-plan.md) |
 | Skyrim SE/AE mod (SKSE) | Designed ([plan](.omc/plans/npc-engine-plan.md)), not started |
 
+## Install
+- The engine: [`INSTALL.md`](INSTALL.md).
+- The Cyberpunk 2077 mod: [`mods/cyberpunk/INSTALL.md`](mods/cyberpunk/INSTALL.md).
+
 ## Try the PoC
 You need [uv](https://docs.astral.sh/uv/) and a `.env` file at the repo root with `ZAI_API_KEY` (any OpenAI-compatible LLM works, see [`poc/README.md`](poc/README.md)). `ELEVENLABS_API_KEY` is optional and adds voice.
 
