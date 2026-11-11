@@ -57,7 +57,7 @@ public class SpikeSystem extends ScriptableSystem {
     let game = this.GetGameInstance();
     let player = GetPlayer(game);
     let target = GameInstance.GetTargetingSystem(game).GetLookAtObject(player, false, false);
-    if !IsDefined(target) {
+    if !IsDefined(target as NPCPuppet) {
       this.Show("genpc: look at an NPC first");
       return;
     }
@@ -66,6 +66,10 @@ public class SpikeSystem extends ScriptableSystem {
     if !audio.IsRegisteredEmitter(id, n"genpc") {
       let ok = audio.RegisterEmitter(id, n"genpc");
       FTLog(s"[genpc] RegisterEmitter: \(ok)");
+      if !ok {
+        this.Show("genpc: could not add a sound source to this NPC");
+        return;
+      }
     }
     audio.PlayOnEmitter(n"genpc_slot_0", id, n"genpc");
     FTLog("[genpc] F8: played genpc_slot_0");
