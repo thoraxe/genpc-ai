@@ -132,3 +132,17 @@ def test_a_new_day_length_applies_to_the_next_hours(client):
 def test_missing_or_wrong_hours_is_422(client):
     assert client.post("/api/clock/set", json={}).status_code == 422
     assert client.post("/api/clock/set", json={"hours": "soon"}).status_code == 422
+
+
+# ---------- review fixes: non-numbers and the 365-day edge ----------
+@pytest.mark.parametrize("raw", ["NaN", "Infinity", "-Infinity", "1e400"])
+def test_hours_that_are_not_a_real_number_are_400_with_the_day(client, raw):
+    r = client.post("/api/clock/set", content=f'{{"hours": {raw}}}', headers={"content-type": "application/json"})
+    assert r.status_code == 400
+    assert r.json()["detail"]["day"] == 41
+    assert day(client) == 41
+
+
+def test_exactly_365_days_from_an_uneven_clock_is_accepted(client):
+    set_hours(client, 41.1 * 24)
+    assert set_hours(client, (41.1 + 365) * 24).status_code == 200

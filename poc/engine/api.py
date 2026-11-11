@@ -6,6 +6,7 @@ Run: uv run uvicorn engine.api:app --app-dir poc --port 8000
 from __future__ import annotations
 
 import hashlib
+import math
 import os
 import threading
 from pathlib import Path
@@ -15,7 +16,7 @@ from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from . import knowledge
 from .dialog import DialogEngine
@@ -71,7 +72,7 @@ class Advance(BaseModel):
 
 
 class ClockSet(BaseModel):
-    hours: float = Field(allow_inf_nan=False)  # hours since the game started
+    hours: float  # hours since the game started; checked in clock_set
 
 
 class EventIn(BaseModel):
@@ -214,14 +215,14 @@ def clock_set(c: ClockSet):
         def refuse(reason: str):
             raise HTTPException(400, {"error": reason, "day": day})
 
-        if c.hours < 0:
-            refuse("hours must be 0 or more")
+        if not math.isfinite(c.hours) or c.hours < 0:
+            refuse("hours must be a number, 0 or more")
         delta = c.hours / world.calendar.hours_per_day - day
         if abs(delta) < 1e-9:  # the same hours again: nothing changes
             return {"day": day, "new_memories": []}
         if delta < 0:
             refuse("the game's hours went back: load the save with the same name first")
-        if delta > 365:
+        if delta > 365 + 1e-9:
             refuse("a clock move can be a maximum of 365 days")
         new = store.advance(delta)
         return {"day": store.day, "new_memories": [_mem_json(m) for m in new]}
