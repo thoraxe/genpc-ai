@@ -183,6 +183,9 @@ def test_sending_again_changes_the_details(env):
         {**PASSER, "entity_id": -5},
         {**PASSER, "entity_id": "1" * 21},
         {**PASSER, "entity_id": 10**20},
+        {**PASSER, "entity_id": True},
+        {**PASSER, "entity_id": 5.0},
+        {**PASSER, "entity_id": "²"},  # a Unicode digit is not 0-9
     ],
 )
 def test_bad_request_is_400(env, body):
@@ -206,6 +209,7 @@ def test_limits_are_inclusive(env):
     add(client, {**KENJI, "record_id": "r" * 100})  # rule 35b: 100 characters is correct
     add(client, {**PASSER, "entity_id": "9" * 20})  # rule 35c: 20 digits is correct
     add(client, {**PASSER, "entity_id": "0042"})
+    add(client, {**KENJI, "record_id": 5})  # a whole-number record_id is correct (was a 500 error)
 
 
 # ---------- rules 40-41, saves-and-clock.md 7a: an added NPC is a known NPC ----------

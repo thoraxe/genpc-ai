@@ -257,7 +257,7 @@ def put_npc(body: object = Body(None)):
         len(record_id) > 100
         or record_id.startswith("crowd-")
         or "/" in record_id
-        or any(c in raw_record for c in LINE_BREAKS)
+        or (isinstance(raw_record, str) and any(c in raw_record for c in LINE_BREAKS))
     ):
         raise HTTPException(  # rule 35b
             400, "npc is not correct: record_id needs 1 to 100 characters, no line break or /, and no crowd- start"
