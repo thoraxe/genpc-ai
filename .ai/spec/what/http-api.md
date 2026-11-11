@@ -97,34 +97,36 @@ The engine runs at `http://localhost:8000` by default.
    - the turn is unknown;
    - the NPC has no voice.
 29. The engine makes the voice again for each request. It does not keep old sound files.
-30. A world-file NPC has its own voice, from `voice_id` in the world file. An added NPC gets a voice from the voice list (rule 42). `[PLANNED: #8]`
+30. A world-file NPC has its own voice, from `voice_id` in the world file. An added NPC gets a voice from the voice list (rule 42).
 
 ### NPCs
 
-31. Send `POST /api/npcs` before each greeting. It tells the engine which NPC the player talks to. `[PLANNED: #8]`
-32. The request has these fields: `[PLANNED: #8]`
+31. Send `POST /api/npcs` before each greeting. It tells the engine which NPC the player talks to.
+32. The request has these fields:
 
 | Field | What it is | Required | Example |
 |---|---|---|---|
-| `record_id` | The record ID of a named or world-file NPC. | one of the two | `npc.harbor_vendor` |
-| `entity_id` | The entity ID of a crowd NPC. | one of the two | `1874320956` |
+| `record_id` | The record ID of a named or world-file NPC. 1 to 100 characters. | one of the two | `npc.harbor_vendor` |
+| `entity_id` | The entity ID of a crowd NPC. Only digits, 1 to 20 of them. | one of the two | `1874320956` |
 | `name` | The name that the player sees. 1 to 60 characters. | yes | `Bram` |
-| `settlement` | The town `id` from the world file. | yes | `riverwood` |
+| `settlement` | The town `id` from the world file. 1 to 60 characters. | yes | `riverwood` |
 | `role` | The job. Optional. A maximum of 40 characters. | no | `noodle vendor` |
 | `faction` | The faction. Optional. A maximum of 40 characters. | no | `Harbor Guild` |
 | `gender` | `female` or `male`. Optional. | no | `male` |
 
-33. Send `record_id` for a named NPC. Send `entity_id` for a crowd NPC. `[PLANNED: #8]`
-34. If the request has both `record_id` and `entity_id`, or has neither, the engine answers with `400`. This is also true for a missing `name` or `settlement`. Rules 34–35a use `400`, not `422`. `[PLANNED: #8]`
-35. If `name`, `role`, `faction` or `gender` is not in its range in rule 32, the engine answers with `400`. `[PLANNED: #8]`
-35a. If `name`, `role` or `faction` has a line break, the engine answers with `400`. `[PLANNED: #8]`
-36. If `record_id` is the `id` of a world-file NPC, the engine uses that NPC. It changes nothing. `[PLANNED: #8]`
-37. Else, the engine adds the NPC. If the engine added this NPC before, it changes the details to the new ones. `[PLANNED: #8]`
-38. The answer gives `npc_id`. Use it in later requests. Example: `npc.harbor_vendor` or `crowd-1874320956`. `[PLANNED: #8]`
-39. The answer gives `kind`: `world`, `named` or `crowd`. `[PLANNED: #8]`
-40. After the mod sends `POST /api/npcs`, the NPC is a known NPC. Events, conversations, voice and the inspector accept its `npc_id`. `[PLANNED: #8]`
-41. `GET /api/world` also lists the added NPCs. Each NPC in the list has its `kind`. `[PLANNED: #8]`
-42. An added NPC gets its voice from the voice list (see `world-file.md` rules 7a–7d). `[PLANNED: #8]`
+33. Send `record_id` for a named NPC. Send `entity_id` for a crowd NPC.
+34. If the request has both `record_id` and `entity_id`, or has neither, the engine answers with `400`. This is also true for a missing `name` or `settlement`. Rules 34–35c use `400`, not `422`.
+35. If `name`, `settlement`, `role`, `faction` or `gender` is not in its range in rule 32, the engine answers with `400`.
+35a. If `name`, `settlement`, `role` or `faction` has a line break, the engine answers with `400`.
+35b. If `record_id` is empty or has more than 100 characters, the engine answers with `400`. This is also true if it starts with `crowd-`, or has a `/` or a line break.
+35c. If `entity_id` is not a whole number with 1 to 20 digits, the engine answers with `400`. Example: `"5/6"` is not correct.
+36. If `record_id` is the `id` of a world-file NPC, the engine uses that NPC. It changes nothing.
+37. Else, the engine adds the NPC. If the engine added this NPC before, it changes the details to the new ones.
+38. The answer gives `npc_id`. Use it in later requests. Example: `npc.harbor_vendor` or `crowd-1874320956`.
+39. The answer gives `kind`: `world`, `named` or `crowd`.
+40. After the mod sends `POST /api/npcs`, the NPC is a known NPC. Events, conversations, voice and the inspector accept its `npc_id`.
+41. `GET /api/world` also lists the added NPCs. Each NPC in the list has its `kind`.
+42. An added NPC gets its voice from the voice list (see `world-file.md` rules 7a–7d).
 
 Examples:
 - If a mod sends `POST /api/clock/advance` with `days` = `-2`, then the engine answers with `400`.
@@ -145,7 +147,7 @@ Examples:
 | Ticket | Summary |
 |---|---|
 | #7 | `POST /api/world`: a mod sends its world to the engine. |
-| #8 | A route to add NPCs while the game runs. |
+| ~~#8~~ | A route to add NPCs while the game runs. |
 | #9 | `POST /api/clock/set`: set the clock from the game's own day. |
 | #10 | The voice goes into a sound file that a game mod can play, not only as a stream. |
 | #11 | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |

@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 from . import knowledge
-from .models import Memory, WorldConfig, WorldEvent
+from .models import NPC, AddedNPC, Memory, WorldConfig, WorldEvent, added_npc_view
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL);
@@ -19,10 +19,12 @@ CREATE TABLE IF NOT EXISTS memories (
 CREATE INDEX IF NOT EXISTS mem_npc ON memories(npc_id);
 CREATE TABLE IF NOT EXISTS turns (
   id INTEGER PRIMARY KEY AUTOINCREMENT, npc_id TEXT NOT NULL, day REAL NOT NULL, body TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS npcs (id TEXT PRIMARY KEY, kind TEXT NOT NULL, body TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS saves (
   id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT, day REAL, created REAL, blob TEXT NOT NULL);
 """
 STATE_TABLES = ("meta", "events", "memories", "turns")
+# The added NPCs (table `npcs`) are not in a save (saves-and-clock.md rule 14a).
 
 
 class Store:
@@ -75,14 +77,67 @@ class Store:
 
     def propagate(self) -> list[Memory]:
         new: list[Memory] = []
+        npcs = self.all_npcs()
         for ev in self.events():
-            for m in knowledge.due_rumors(ev, self.world, self.day, self._knowers(ev.id)):
+            for m in knowledge.due_rumors(ev, self.world, self.day, self._knowers(ev.id), npcs):
                 self._add_memory(m)
                 new.append(m)
         return new
 
     def _knowers(self, event_id: str) -> set[str]:
         return {r["npc_id"] for r in self.db.execute("SELECT npc_id FROM memories WHERE event_id=?", (event_id,))}
+
+    # ----- NPCs -----
+    def added_npcs(self) -> list[AddedNPC]:
+        return [
+            AddedNPC.model_validate_json(r["body"]) for r in self.db.execute("SELECT body FROM npcs ORDER BY rowid")
+        ]
+
+    def added_npc(self, npc_id: str) -> AddedNPC | None:
+        r = self.db.execute("SELECT body FROM npcs WHERE id=?", (npc_id,)).fetchone()
+        return AddedNPC.model_validate_json(r["body"]) if r else None
+
+    def npc(self, npc_id: str) -> NPC | None:
+        """A known NPC: a world-file NPC, or an NPC that the mod added (saves-and-clock.md rule 7a)."""
+        n = next((n for n in self.world.npcs if n.id == npc_id), None)
+        if n:
+            return n
+        a = self.added_npc(npc_id)
+        return added_npc_view(self.world, a) if a else None
+
+    def all_npcs(self) -> list[NPC]:
+        world_ids = {n.id for n in self.world.npcs}
+        added = [added_npc_view(self.world, a) for a in self.added_npcs() if a.id not in world_ids]
+        return list(self.world.npcs) + added
+
+    def is_crowd(self, npc_id: str) -> bool:
+        a = self.added_npc(npc_id)
+        return a is not None and a.kind == "crowd" and not any(n.id == npc_id for n in self.world.npcs)
+
+    def put_npc(self, a: AddedNPC) -> list[Memory]:
+        """Add an NPC, or change its details. Gossip that is already due arrives (knowledge.md rules 5c, 5f)."""
+        self.db.execute(
+            "INSERT OR REPLACE INTO npcs(id, kind, body) VALUES(?,?,?)", (a.id, a.kind, a.model_dump_json())
+        )
+        new = self.propagate()
+        self.db.commit()
+        return new
+
+    def _remove_crowd(self) -> None:
+        """No crowd NPC exists after a load or a reset (saves-and-clock.md rules 13a, 16a)."""
+        keep = {n.id for n in self.world.npcs} | {
+            r["id"] for r in self.db.execute("SELECT id FROM npcs WHERE kind='named'")
+        }
+        crowd = {r["id"] for r in self.db.execute("SELECT id FROM npcs WHERE kind='crowd'")}
+        for t in ("memories", "turns"):  # also crowd NPCs that the save knew but this game no longer has
+            crowd |= {
+                r["npc_id"] for r in self.db.execute(f"SELECT DISTINCT npc_id FROM {t} WHERE npc_id LIKE 'crowd-%'")
+            }
+        crowd -= keep
+        self.db.execute("DELETE FROM npcs WHERE kind='crowd'")
+        for npc_id in crowd:
+            self.db.execute("DELETE FROM memories WHERE npc_id=?", (npc_id,))
+            self.db.execute("DELETE FROM turns WHERE npc_id=?", (npc_id,))
 
     # ----- memories -----
     def _add_memory(self, m: Memory) -> Memory:
@@ -134,6 +189,7 @@ class Store:
         """Wipe world state (keeps save slots, like deleting progress but not the save folder)."""
         for t in STATE_TABLES:
             self.db.execute(f"DELETE FROM {t}")
+        self._remove_crowd()
         self._set_meta("day", start_day)
         self.db.commit()
 
@@ -163,6 +219,7 @@ class Store:
             for r in blob[t]:
                 cols = ",".join(r)
                 self.db.execute(f"INSERT INTO {t}({cols}) VALUES({','.join('?' * len(r))})", tuple(r.values()))
+        self._remove_crowd()
         self.db.commit()
 
     def saves(self) -> list[dict]:

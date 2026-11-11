@@ -18,13 +18,13 @@ This file covers `what/conversation.md` and the voice rules in `what/http-api.md
 
 `_turn(npc_id, session_id, player_text)` does these steps:
 1. It gets `views` from `knowledge.retrieve(store.memories(npc_id), store.day, rules)`.
-2. It builds the prompt with `build_system_prompt(npc, settlement name, views, day, rules, world.setting)`.
+2. It builds the prompt with `build_system_prompt(npc, settlement name, views, day, rules, world.setting, crowd)`. `npc` comes from `Store.npc`, so an added NPC works the same way. For a crowd NPC, the prompt has no `remember` rule and a reply format without `remember`.
 3. It gets the last 20 turns with `store.turns(npc_id)` and keeps those of this `session_id`. It adds the player text, or `GREETING` if there is none.
 4. It tries a maximum of 2 times: `llm.complete_json`, then `json.loads`, then `DialogResponse.model_validate`.
    - On `JSONDecodeError` or `ValidationError`, it adds a "not valid JSON" user message and tries again.
    - On any other exception, it stops immediately.
 5. If no reply is valid, it uses `FALLBACK` and sets `fallback=True`.
-6. If there is `player_text` and `resp.remember` is not empty, it checks the facts with `knowledge.conversation_memory`. The check uses all player lines of this session and the current text. It stores the kept facts with `store.add_memory`. It puts the other facts in `rejected`.
+6. For a crowd NPC, it stores no fact and puts all `resp.remember` facts in `rejected` (`what/conversation.md` rule 22a). Else, if there is `player_text` and `resp.remember` is not empty, it checks the facts with `knowledge.conversation_memory`. The check uses all player lines of this session and the current text. It stores the kept facts with `store.add_memory`. It puts the other facts in `rejected`.
 7. If it did not use the fallback, it finds `news_ids`. These are news views with a kept fact that is `grounded` in `resp.npc_line`. Then it calls `store.mark_used(views, news_ids)`.
 8. It stores the turn with `store.add_turn`. On the first turn, the row id becomes the `session_id`, and `_turn` writes the body again.
 9. It returns a `TurnResult`. The result includes `sent` (the system prompt and messages of the last try) and `raw_reply`.

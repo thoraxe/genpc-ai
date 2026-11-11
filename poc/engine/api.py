@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import math
 import os
+import re
 import threading
 from pathlib import Path
 
@@ -20,7 +21,7 @@ from pydantic import BaseModel, ValidationError
 
 from . import knowledge
 from .dialog import DialogEngine
-from .models import Fact, WorldConfig, WorldEvent, world_problems
+from .models import AddedNPC, Fact, WorldConfig, WorldEvent, world_problems
 from .providers import llm as llm_mod
 from .providers import tts as tts_mod
 from .store import Store, load_events, load_world
@@ -98,12 +99,45 @@ class SaveIn(BaseModel):
     label: str = ""
 
 
+LINE_BREAKS = "\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029"
+
+
 # ---------- helpers ----------
 def npc_or_404(npc_id: str):
-    n = next((n for n in world.npcs if n.id == npc_id), None)
+    """A known NPC: a world-file NPC or an added NPC (http-api.md rule 40)."""
+    n = store.npc(npc_id)
     if not n:
         raise HTTPException(404, f"unknown npc {npc_id}")
     return n
+
+
+def _npc_text(body: dict, key: str, required: bool, max_len: int | None = None, one_line: bool = True) -> str | None:
+    """Check one text field of POST /api/npcs (http-api.md rules 32-35a). Empty text counts as not sent."""
+    v = body.get(key)
+    if v is not None and not isinstance(v, str):
+        raise HTTPException(400, f"npc is not correct: {key} must be text")
+    if v is None or not v.strip():
+        if required:
+            raise HTTPException(400, f"npc is not correct: {key} is missing")
+        return None
+    if one_line and any(c in v for c in LINE_BREAKS):
+        raise HTTPException(400, f"npc is not correct: {key} has a line break")
+    v = v.strip()
+    if max_len is not None and len(v) > max_len:
+        raise HTTPException(400, f"npc is not correct: {key} has more than {max_len} characters")
+    return v
+
+
+def _npc_id_field(body: dict, key: str) -> str | None:
+    """`record_id` or `entity_id`: text or a whole number. Empty counts as not sent."""
+    v = body.get(key)
+    if v is None:
+        return None
+    if isinstance(v, int) and not isinstance(v, bool):
+        return str(v)
+    if not isinstance(v, str):
+        raise HTTPException(400, f"npc is not correct: {key} must be text or a whole number")
+    return v.strip() or None
 
 
 def _mem_json(m):
@@ -137,6 +171,8 @@ def session_start():
 @app.get("/api/world")
 def get_world():
     with lock:
+        added = {a.id: a for a in store.added_npcs()}
+        npcs = store.all_npcs()
         counts = {
             n.id: len(
                 [
@@ -145,14 +181,21 @@ def get_world():
                     if v.stage != "forgotten"
                 ]
             )
-            for n in world.npcs
+            for n in npcs
         }
         return {
             "world": world.id,
             "day": store.day,
             "settlements": [s.model_dump() for s in world.settlements],
             "locations": [loc.model_dump() for loc in world.locations],
-            "npcs": [{**n.model_dump(exclude={"bio"}), "known": counts[n.id]} for n in world.npcs],
+            "npcs": [
+                {
+                    **n.model_dump(exclude={"bio"}),
+                    "kind": added[n.id].kind if n.id in added else "world",
+                    "known": counts[n.id],
+                }
+                for n in npcs
+            ],
             "events": [e.model_dump() for e in store.events()],
             "presets": {
                 k: {"label": v["label"], "default_witnesses": v["default_witnesses"]} for k, v in presets.items()
@@ -191,10 +234,57 @@ def set_world(body: object = Body(None)):
 
 @app.exception_handler(RequestValidationError)
 async def _bad_request_body(request: Request, exc: RequestValidationError):
-    """A body that is not JSON: `/api/world` answers 400, not 422 (http-api.md rule 8d)."""
+    """A body that is not JSON: `/api/world` and `/api/npcs` answer 400, not 422 (http-api.md rules 8d, 34)."""
     if request.url.path == "/api/world":
         return JSONResponse(status_code=400, content={"detail": "world is not correct: the body is not valid JSON"})
+    if request.url.path == "/api/npcs":
+        return JSONResponse(status_code=400, content={"detail": "npc is not correct: the body is not valid JSON"})
     return await request_validation_exception_handler(request, exc)
+
+
+@app.post("/api/npcs")
+def put_npc(body: object = Body(None)):
+    """The mod tells the engine which NPC the player talks to (http-api.md rules 31-42)."""
+    if not isinstance(body, dict):
+        raise HTTPException(400, "npc is not correct: the body must be a JSON object")
+    raw_record = body.get("record_id")
+    if isinstance(raw_record, str) and not raw_record.strip():
+        raise HTTPException(400, "npc is not correct: record_id is empty")  # rule 35b
+    record_id, entity_id = _npc_id_field(body, "record_id"), _npc_id_field(body, "entity_id")
+    if (record_id is None) == (entity_id is None):
+        raise HTTPException(400, "npc is not correct: send record_id or entity_id, not both and not neither")
+    if record_id is not None and (
+        len(record_id) > 100
+        or record_id.startswith("crowd-")
+        or "/" in record_id
+        or (isinstance(raw_record, str) and any(c in raw_record for c in LINE_BREAKS))
+    ):
+        raise HTTPException(  # rule 35b
+            400, "npc is not correct: record_id needs 1 to 100 characters, no line break or /, and no crowd- start"
+        )
+    if entity_id is not None and not re.fullmatch(r"[0-9]{1,20}", entity_id):
+        raise HTTPException(400, "npc is not correct: entity_id must be a whole number with 1 to 20 digits")  # 35c
+    name = _npc_text(body, "name", required=True, max_len=60)
+    settlement = _npc_text(body, "settlement", required=True, max_len=60)  # rules 35, 35a
+    role = _npc_text(body, "role", required=False, max_len=40)
+    faction = _npc_text(body, "faction", required=False, max_len=40)
+    gender = body.get("gender")
+    if gender is not None and gender not in ("female", "male"):
+        raise HTTPException(400, "npc is not correct: gender must be female or male")
+    with lock:
+        if record_id is not None and any(n.id == record_id for n in world.npcs):
+            return {"npc_id": record_id, "kind": "world"}  # a world-file NPC: nothing changes (rule 36)
+        a = AddedNPC(
+            id=record_id if record_id is not None else f"crowd-{entity_id}",
+            kind="named" if record_id is not None else "crowd",
+            name=name,
+            settlement=settlement,
+            role=role,
+            faction=faction,
+            gender=gender,
+        )
+        store.put_npc(a)
+        return {"npc_id": a.id, "kind": a.kind}
 
 
 @app.post("/api/clock/advance")
