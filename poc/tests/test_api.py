@@ -62,3 +62,11 @@ def test_validation(client):
     assert client.post("/api/dialog/open", json={"npc_id": "nobody"}).status_code == 404
     assert client.post("/api/events", json={"preset": "nope"}).status_code == 404
     assert client.get("/api/audio/1").status_code == 404  # TTS disabled
+
+
+@pytest.mark.parametrize("raw", ["NaN", "Infinity", "1e400"])
+def test_clock_advance_with_a_non_number_is_400_and_the_clock_stays(client, raw):
+    """Regression: days = NaN passed the range check and set the clock to NaN."""
+    r = client.post("/api/clock/advance", content=f'{{"days": {raw}}}', headers={"content-type": "application/json"})
+    assert r.status_code == 400
+    assert client.get("/api/world").json()["day"] == 41

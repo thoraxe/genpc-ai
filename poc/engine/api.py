@@ -199,7 +199,7 @@ async def _bad_request_body(request: Request, exc: RequestValidationError):
 
 @app.post("/api/clock/advance")
 def advance(a: Advance):
-    if a.days <= 0 or a.days > 365:
+    if not math.isfinite(a.days) or a.days <= 0 or a.days > 365:
         raise HTTPException(400, "days must be in (0, 365]")
     with lock:
         new = store.advance(a.days)
