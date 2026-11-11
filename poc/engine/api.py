@@ -15,7 +15,7 @@ from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from . import knowledge
 from .dialog import DialogEngine
@@ -68,6 +68,10 @@ app = FastAPI(title="NPC Knowledge Engine PoC")
 # ---------- schemas ----------
 class Advance(BaseModel):
     days: float
+
+
+class ClockSet(BaseModel):
+    hours: float = Field(allow_inf_nan=False)  # hours since the game started
 
 
 class EventIn(BaseModel):
@@ -198,6 +202,28 @@ def advance(a: Advance):
         raise HTTPException(400, "days must be in (0, 365]")
     with lock:
         new = store.advance(a.days)
+        return {"day": store.day, "new_memories": [_mem_json(m) for m in new]}
+
+
+@app.post("/api/clock/set")
+def clock_set(c: ClockSet):
+    """The game sets the clock from its hours (saves-and-clock.md rules 5a-5g, http-api.md rules 10a-10e)."""
+    with lock:
+        day = store.day
+
+        def refuse(reason: str):
+            raise HTTPException(400, {"error": reason, "day": day})
+
+        if c.hours < 0:
+            refuse("hours must be 0 or more")
+        delta = c.hours / world.calendar.hours_per_day - day
+        if abs(delta) < 1e-9:  # the same hours again: nothing changes
+            return {"day": day, "new_memories": []}
+        if delta < 0:
+            refuse("the game's hours went back: load the save with the same name first")
+        if delta > 365:
+            refuse("a clock move can be a maximum of 365 days")
+        new = store.advance(delta)
         return {"day": store.day, "new_memories": [_mem_json(m) for m in new]}
 
 

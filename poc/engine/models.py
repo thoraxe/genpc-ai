@@ -56,10 +56,17 @@ class NPC(BaseModel):
     voice_id: str | None = None
 
 
+class Calendar(BaseModel):
+    """How time works in a game (world-file.md rules 1a-1b)."""
+
+    hours_per_day: float = Field(24.0, gt=0, allow_inf_nan=False)
+
+
 class WorldConfig(BaseModel):
     id: str  # world name; each world keeps its own knowledge
     start_day: float | None = Field(None, allow_inf_nan=False)  # None = POC_START_DAY
     setting: str = ""  # world flavour and speech style for every NPC prompt
+    calendar: Calendar = Calendar()
     rules: Rules = Rules()
     settlements: list[Settlement]
     locations: list[Location] = []

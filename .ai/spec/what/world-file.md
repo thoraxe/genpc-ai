@@ -13,10 +13,10 @@ The world file describes one game world: its towns, places and NPCs. Each game g
    - `settlements`: the towns.
    - `locations`: the places. This part is optional.
    - `npcs`: the NPCs.
-   - `calendar`: how long a day is in the game. This part is optional. `[PLANNED: #9]`
+   - `calendar`: how long a day is in the game. This part is optional.
    - `rules`: the knowledge settings. This part is optional. See `knowledge.md` for each setting and its default.
-1a. `calendar` has `hours_per_day`: the number of hours in one day of the game. The default is `24`. `[PLANNED: #9]`
-1b. `hours_per_day` must be more than 0. Else the world is not correct. `[PLANNED: #9]`
+1a. `calendar` has `hours_per_day`: the number of hours in one day of the game. The default is `24`.
+1b. `hours_per_day` must be more than 0. Else the world is not correct.
 2. If `setting` is empty, the prompt has no setting text.
 3. Each town has an `id`, a `name`, and a list of next towns (`adjacent`).
 4. Gossip goes only from a town to the towns in its own `adjacent` list. List the neighbour in both towns if you want gossip to go both ways.
@@ -71,14 +71,14 @@ Examples:
    - An NPC that is not in the new world is unknown. Its memories stay, but requests for it get `404`.
    - New next towns apply to gossip that has not arrived yet.
    - New knowledge settings apply to all memories from then on.
-   - A new day length applies to the next `hours` from the mod. The clock and the memories keep their days. `[PLANNED: #9]` (owner question 4)
+   - A new day length applies to the next `hours` from the mod. The clock and the memories keep their days. (owner question 4)
 16l. Do not use an NPC `id` again for a different character. The new character gets the memories of the old one.
 16m. If the world is not correct, the engine refuses it. It keeps the world in use, and the answer tells why.
 16n. A world is not correct if one of these is true:
    - It has no `id`, no `settlements` or no `npcs`.
    - Two towns, two places or two NPCs have the same `id`.
    - An `adjacent` list, a place or an NPC names a town that is not in the world.
-   - `hours_per_day` is 0 or less. `[PLANNED: #9]`
+   - `hours_per_day` is 0 or less.
 16o. After a switch, a request for an NPC of a different world gets `404`.
 16p. Conversation, turn and save numbers belong to one world. Do not use them in a different world.
 16q. The engine does not keep the mod's world after it stops. After a restart, it uses the test world again.
