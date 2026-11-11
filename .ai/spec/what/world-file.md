@@ -28,6 +28,7 @@ The world file describes one game world: its towns, places and NPCs. Each game g
 7a. The world file can have a voice list (`voice_pool`). It has a list for `female` and a list for `male`.
 7b. The engine chooses a voice from the voice list by the NPC's ID. The same NPC always gets the same voice.
 7c. If the mod sends no gender, the engine chooses from all voices in the voice list.
+7ca. If the list for the NPC's gender is empty, the engine also chooses from all voices in the voice list. `[PLANNED: #8]`
 7d. If the voice list is empty or not in the world file, added NPCs have no voice.
 7e. The world file can have a general description (`generic_bio`). Each added NPC gets it. (owner question 5)
 7f. If the world file has no general description, the engine uses "You are an ordinary person. You have no special story." (owner question 5)
