@@ -106,8 +106,8 @@ The engine runs at `http://localhost:8000` by default.
 
 | Field | What it is | Required | Example |
 |---|---|---|---|
-| `record_id` | The record ID of a named or world-file NPC. | one of the two | `npc.harbor_vendor` |
-| `entity_id` | The entity ID of a crowd NPC. | one of the two | `1874320956` |
+| `record_id` | The record ID of a named or world-file NPC. 1 to 100 characters. `[PLANNED: #8]` | one of the two | `npc.harbor_vendor` |
+| `entity_id` | The entity ID of a crowd NPC. Only digits, 1 to 20 of them. `[PLANNED: #8]` | one of the two | `1874320956` |
 | `name` | The name that the player sees. 1 to 60 characters. | yes | `Bram` |
 | `settlement` | The town `id` from the world file. 1 to 60 characters. | yes | `riverwood` |
 | `role` | The job. Optional. A maximum of 40 characters. | no | `noodle vendor` |
@@ -115,10 +115,11 @@ The engine runs at `http://localhost:8000` by default.
 | `gender` | `female` or `male`. Optional. | no | `male` |
 
 33. Send `record_id` for a named NPC. Send `entity_id` for a crowd NPC.
-34. If the request has both `record_id` and `entity_id`, or has neither, the engine answers with `400`. This is also true for a missing `name` or `settlement`. Rules 34–35b use `400`, not `422`.
+34. If the request has both `record_id` and `entity_id`, or has neither, the engine answers with `400`. This is also true for a missing `name` or `settlement`. Rules 34–35c use `400`, not `422`. `[PLANNED: #8]`
 35. If `name`, `settlement`, `role`, `faction` or `gender` is not in its range in rule 32, the engine answers with `400`.
 35a. If `name`, `settlement`, `role` or `faction` has a line break, the engine answers with `400`.
-35b. If `record_id` is empty, starts with `crowd-`, or has a `/`, the engine answers with `400`.
+35b. If `record_id` is empty or has more than 100 characters, the engine answers with `400`. This is also true if it starts with `crowd-`, or has a `/` or a line break. `[PLANNED: #8]`
+35c. If `entity_id` is not a whole number with 1 to 20 digits, the engine answers with `400`. Example: `"5/6"` is not correct. `[PLANNED: #8]`
 36. If `record_id` is the `id` of a world-file NPC, the engine uses that NPC. It changes nothing.
 37. Else, the engine adds the NPC. If the engine added this NPC before, it changes the details to the new ones.
 38. The answer gives `npc_id`. Use it in later requests. Example: `npc.harbor_vendor` or `crowd-1874320956`.
