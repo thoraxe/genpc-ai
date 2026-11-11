@@ -67,7 +67,7 @@ The world file can change the knowledge numbers (for example, how fast memories 
 | Ticket | Summary |
 |---|---|
 | #7 | A mod sends its own world to the engine. The first mod's world is in the mod's specs. |
-| #8 | A mod can add new NPCs while the game runs. |
+| ~~#8~~ | A mod can add new NPCs while the game runs. |
 | #9 | A mod can set the clock from the game's own day. |
 | #10 | The engine writes each line's voice into a sound file that a game mod can play. |
 | #11 | Saves use a name that the game gives, so a game save and an engine save match. |
