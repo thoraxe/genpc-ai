@@ -49,10 +49,25 @@ Example: an event in Kabuki counts as an event in Watson. Gossip goes to City Ce
 | Dakota Smith | fixer | Badlands (Rocky Ridge) | A practical fixer who runs a garage in the desert. She speaks plainly and trusts actions more than words. | Exists. |
 
 7. Each Cyberpunk NPC `id` will be the game's record ID: the fixed name of the character in the game data. The mod uses this ID to find the NPC. We must still confirm the IDs in the game.
-8. Each NPC in the starter cast has a `voice_id`. The table in rule 8c gives the voices. [PLANNED: #12]
-8a. Each voice is a premade voice: a voice that the voice service itself gives. Every account can use premade voices. This includes the tester's account. [PLANNED: #12]
-8b. The world file has a voice list for added NPCs: 3 female and 3 male premade voices. (owner question 5) [PLANNED: #12]
-8c. The code stage adds a table with the name and `voice_id` of each voice. The owner listens to them and can change them before the merge. [PLANNED: #12]
+8. Each NPC in the starter cast has a `voice_id`. The table in rule 8c gives the voices.
+8a. Each voice is a premade voice: a voice that the voice service itself gives. Every account can use premade voices. This includes the tester's account.
+8b. The world file has a voice list for added NPCs: 3 female and 3 male premade voices.
+8c. These are the voices. The owner can change them.
+
+| NPC | Voice (name in the voice service) | `voice_id` |
+|---|---|---|
+| Regina Jones | Sarah | `EXAVITQu4vr4xnSDxMaL` |
+| Robert Wilson | Bill | `pqHfZKP75CvOlQylNhV4` |
+| Cassius Ryder | Callum | `N2lVS1w4EtoT3dr4eOWO` |
+| Wakako Okada | Lily | `pFZP5JQG7iQjIQuC4Bku` |
+| Dino Dinovic | Eric | `cjVigY5qzO86Huf0OWal` |
+| Sebastian "Padre" Ibarra | Brian | `nPczCjzI2devNBz1zQrb` |
+| Muamar "El Capitan" Reyes | Charlie | `IKne3meq5aSn9XLyUdCD` |
+| Mr. Hands | George | `JBFqnCBsd6RMkjVDRZzb` |
+| Dakota Smith | Matilda | `XrExE9yKIg1WjnnlVkGX` |
+| Voice list, female | Bella, Laura, Jessica | `hpp4J3VqNfWAUOO0d1Us`, `FGY2WhTYpPnrIDTdsKH5`, `cgSgspJ2msm6clMCkdW9` |
+| Voice list, male | Roger, Chris, Will | `CwhRBWXzGAHq8TQ4Fs17`, `iP95p4xoKVk53GoZ742B`, `bIHbv24MWmeRgasZH58o` |
+
 9. The Cyberpunk setting text is this:
 
 > Speak like a person who lives in Night City in the year 2077. Night City is a hard, dangerous city. Corporations and gangs control it. Use some street words, but keep your meaning clear.
@@ -127,4 +142,4 @@ Examples for preset 3, with the event on day 41:
 | Ticket | Summary |
 |---|---|
 | #7 | The first version of the Cyberpunk world. |
-| #12 | Voices for the starter cast, and a voice list for added NPCs. |
+| ~~#12~~ | Voices for the starter cast, and a voice list for added NPCs. |

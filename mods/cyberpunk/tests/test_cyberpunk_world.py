@@ -26,6 +26,22 @@ NEXT_TOWNS = {
     "pacifica": {"heywood", "santo_domingo"},
     "badlands": {"westbrook", "santo_domingo"},
 }
+# The voices of mod spec what/world.md rule 8c. All are premade voices of the voice service (rule 8a).
+VOICES = {
+    "regina_jones": "EXAVITQu4vr4xnSDxMaL",
+    "robert_wilson": "pqHfZKP75CvOlQylNhV4",
+    "cassius_ryder": "N2lVS1w4EtoT3dr4eOWO",
+    "wakako_okada": "pFZP5JQG7iQjIQuC4Bku",
+    "dino_dinovic": "cjVigY5qzO86Huf0OWal",
+    "padre": "nPczCjzI2devNBz1zQrb",
+    "el_capitan": "IKne3meq5aSn9XLyUdCD",
+    "mr_hands": "JBFqnCBsd6RMkjVDRZzb",
+    "dakota_smith": "XrExE9yKIg1WjnnlVkGX",
+}
+VOICE_POOL = {
+    "female": ["hpp4J3VqNfWAUOO0d1Us", "FGY2WhTYpPnrIDTdsKH5", "cgSgspJ2msm6clMCkdW9"],
+    "male": ["CwhRBWXzGAHq8TQ4Fs17", "iP95p4xoKVk53GoZ742B", "bIHbv24MWmeRgasZH58o"],
+}
 PLACES = {
     "little_china": "watson",
     "kabuki": "watson",
@@ -114,7 +130,9 @@ def test_world_file_matches_the_approved_tables():
     assert {t["id"]: set(t["adjacent"]) for t in WORLD["settlements"]} == NEXT_TOWNS
     assert {p["id"]: p["near_settlement"] for p in WORLD["locations"]} == PLACES
     assert {n["id"]: (n["name"], n["role"], n["settlement"]) for n in WORLD["npcs"]} == CAST
-    assert all("voice_id" not in n and n["bio"] for n in WORLD["npcs"])
+    assert {n["id"]: n["voice_id"] for n in WORLD["npcs"]} == VOICES
+    assert all(n["bio"] for n in WORLD["npcs"])
+    assert WORLD["voice_pool"] == VOICE_POOL
     assert "dogtown" not in NEXT_TOWNS
 
 
