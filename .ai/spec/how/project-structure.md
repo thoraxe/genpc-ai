@@ -10,10 +10,10 @@
 | `poc/engine/dialog.py` | `DialogEngine` (`open`, `choose`, `_turn`, `preview_prompt`), `build_system_prompt`, `_knowledge_block`, `DialogResponse`, `TurnResult`, `SOURCE_FRAMING`, `FALLBACK`, `GREETING` | One dialog turn: retrieve → prompt → LLM → validate/retry/fallback → memory write-back. See `dialog-pipeline.md`. |
 | `poc/engine/providers/llm.py` | `LLMProvider` (Protocol), `OpenAICompatLLM`, `LLMResult`, `from_env` | OpenAI-compatible chat completions in JSON mode. z.ai by default; any provider via env. |
 | `poc/engine/providers/tts.py` | `TTSProvider` (Protocol), `ElevenLabsTTS`, `from_env` | ElevenLabs streaming MP3. `from_env` returns `None` when disabled or keyless. |
-| `poc/engine/api.py` | `app`, `store`, `world`, `presets`, `lock`, `set_world`, `put_npc`, `save`, `load`, `SAVE_NAME`, `_save_name_ok`, `clock_set`, `_db_path`, `_start_day`, `TEST_WORLD_ID`, `dialog()`, `npc_or_404`, `_npc_text`, `_npc_id_field`, `LINE_BREAKS`, `_mem_json`, request models `Advance`/`EventIn`/`Open`/`Choose`/`SaveIn` | FastAPI routes (`what/http-api.md`). Module-level singletons built at import time from env. |
+| `poc/engine/api.py` | `app`, `store`, `world`, `presets`, `lock`, `set_world`, `put_npc`, `save`, `load`, `SAVE_NAME`, `_save_name_ok`, `clock_set`, `audio_slot`, `_slot_settings`, `_slots_ready`, `_slot_lock`, `_next_slot`, `SLOT_DIR`, `SLOT_COUNT`, `_db_path`, `_start_day`, `TEST_WORLD_ID`, `dialog()`, `npc_or_404`, `_npc_text`, `_npc_id_field`, `LINE_BREAKS`, `_mem_json`, request models `Advance`/`EventIn`/`Open`/`Choose`/`SaveIn` | FastAPI routes (`what/http-api.md`). Module-level singletons built at import time from env. |
 | `poc/data/world.json`, `poc/data/events.json` | — | The demo world and preset events (`what/world-file.md`). |
 | `poc/ui/index.html` | `api()`, `refresh()`, `showTurn()` | Bare single-file test page. Only calls `/api/*`. Styling is deliberately bare (not worth reviewing). |
-| `poc/tests/` | `test_knowledge.py`, `test_dialog.py`, `test_api.py`, `test_worlds.py`, `test_clock_set.py`, `test_added_npcs.py`, `test_save_names.py` | Offline tests with a `FakeLLM`. See `testing-and-eval.md`. |
+| `poc/tests/` | `test_knowledge.py`, `test_dialog.py`, `test_api.py`, `test_worlds.py`, `test_clock_set.py`, `test_added_npcs.py`, `test_audio_slots.py`, `test_save_names.py` | Offline tests with a `FakeLLM`. See `testing-and-eval.md`. |
 | `poc/scripts/eval.py` | `CHECKS`, `run_once`, pass bars | Live eval against the real LLM. |
 | `poc/scripts/smoke.py`, `poc/scripts/live_dialog.py` | — | Manual provider smoke test and a live dialog run. |
 | `mods/<game>/` | `.ai/spec/` | One folder for each game mod, with its own specs. A mod talks to the engine only through the HTTP API (decision 0007). |
@@ -28,6 +28,7 @@
 1. It loads `.env`, the world file and the presets.
 2. It opens the SQLite store. It makes `poc/var/` if necessary.
 3. It builds the TTS provider.
+4. It reads the slot file settings. A bad `AUDIO_SLOT_COUNT` stops the start.
 
 The engine builds the LLM provider at the first dialog call (`dialog()`). Thus the server starts without an LLM key.
 

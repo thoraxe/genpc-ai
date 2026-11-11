@@ -5,11 +5,13 @@ Run: uv run uvicorn engine.api:app --app-dir poc --port 8000
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import math
 import os
 import re
 import threading
+import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -55,6 +57,30 @@ store = Store(_db_path(world.id), world, start_day=_start_day(world))
 lock = threading.Lock()  # one sqlite connection shared across request threads
 _llm = None
 tts = tts_mod.from_env()
+
+
+def _slot_settings() -> tuple[Path | None, int]:
+    """AUDIO_SLOT_DIR and AUDIO_SLOT_COUNT (system-overview.md settings; http-api.md rules 30a-30n).
+
+    A count that is not a whole number from 1 to 16 stops the engine at start."""
+    raw = os.getenv("AUDIO_SLOT_COUNT", "4").strip()
+    try:
+        count = int(raw)
+    except ValueError:
+        count = 0
+    if not 1 <= count <= 16:
+        raise RuntimeError(f"AUDIO_SLOT_COUNT must be a whole number from 1 to 16, not {raw!r}")
+    folder = os.getenv("AUDIO_SLOT_DIR", "").strip()
+    return (Path(folder) if folder else None), count
+
+
+SLOT_DIR, SLOT_COUNT = _slot_settings()
+_slot_lock = threading.Lock()
+_next_slot = 0  # index of the next slot file; slot file 1 first after a start (rule 30h)
+
+
+def _slots_ready() -> bool:
+    return bool(tts) and SLOT_DIR is not None and SLOT_DIR.is_dir()
 
 
 def dialog() -> DialogEngine:
@@ -170,7 +196,12 @@ def index():
 def session_start():
     return {
         "protocol": 1,
-        "capabilities": {"max_choices": 3, "free_text": True, "audio": tts.media_type if tts else None},
+        "capabilities": {
+            "max_choices": 3,
+            "free_text": True,
+            "audio": tts.media_type if tts else None,
+            "audio_slots": SLOT_COUNT if _slots_ready() else 0,
+        },
         "llm": _llm.name if _llm else os.getenv("LLM_MODEL", os.getenv("ZAI_MODEL", "glm-5.3-flash")),
         "tts": tts.name if tts else None,
         "world": world.id,
@@ -382,6 +413,45 @@ def audio(turn_id: int):
     if not npc.voice_id:
         raise HTTPException(404, "npc has no voice")
     return StreamingResponse(tts.stream(t["npc_line"], npc.voice_id), media_type=tts.media_type)
+
+
+@app.post("/api/audio/{turn_id}/slot")
+def audio_slot(turn_id: int):
+    """Write the voice of a turn into the next slot file (http-api.md rules 30a-30n)."""
+    global _next_slot
+    if not tts:
+        raise HTTPException(404, "TTS disabled (set ELEVENLABS_API_KEY, TTS_ENABLED=1)")
+    with lock:
+        t = store.turn(turn_id)
+        if not t:
+            raise HTTPException(404, "unknown turn")
+        npc = npc_or_404(t["npc_id"])
+    if not npc.voice_id:
+        raise HTTPException(404, "npc has no voice")
+    if SLOT_DIR is None:
+        raise HTTPException(404, "no slot folder (set AUDIO_SLOT_DIR)")
+    if not SLOT_DIR.is_dir():
+        raise HTTPException(404, "the slot folder is not there")
+    with _slot_lock:  # two requests never get the same slot file (rule 30e)
+        n = _next_slot % SLOT_COUNT + 1
+        _next_slot += 1
+    name = f"genpc_voice_{n}"
+    path = SLOT_DIR / f"{name}.mp3"
+    try:
+        data = b"".join(tts.stream(t["npc_line"], npc.voice_id))  # the full voice first (rule 30f)
+    except Exception as e:  # the slot keeps its old sound (rules 30j-30k)
+        raise HTTPException(502, f"voice service failed: {str(e)[:200]}") from None
+    if not data:
+        raise HTTPException(502, "voice service sent no sound")
+    tmp = SLOT_DIR / f".{name}.{uuid.uuid4().hex}.tmp"
+    try:
+        tmp.write_bytes(data)
+        os.replace(tmp, path)  # one step: the game never reads half a file
+    except OSError as e:  # the old file stays (rule 30m)
+        with contextlib.suppress(OSError):  # a failed clean-up must not hide the 503
+            tmp.unlink(missing_ok=True)
+        raise HTTPException(503, f"cannot write {path.name}: {e.strerror or e}") from None
+    return {"turn_id": turn_id, "slot": name, "file": str(path.resolve())}
 
 
 @app.get("/api/npc/{npc_id}/knowledge")
