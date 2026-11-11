@@ -176,6 +176,13 @@ def test_sending_again_changes_the_details(env):
         {**KENJI, "record_id": "npc/harbor_vendor"},  # rule 35b: no /
         {**KENJI, "record_id": "", "entity_id": 5},  # rule 35b: an empty record_id is not correct
         {**KENJI, "record_id": "   ", "entity_id": 5},
+        {**KENJI, "record_id": "x" * 101},  # rule 35b: at most 100 characters
+        {**KENJI, "record_id": "npc.a\nb"},  # rule 35b: no line break
+        {**PASSER, "entity_id": "5/6"},  # rule 35c
+        {**PASSER, "entity_id": "12a"},
+        {**PASSER, "entity_id": -5},
+        {**PASSER, "entity_id": "1" * 21},
+        {**PASSER, "entity_id": 10**20},
     ],
 )
 def test_bad_request_is_400(env, body):
@@ -196,6 +203,9 @@ def test_limits_are_inclusive(env):
     """Rule 32: a name of 60 characters and a job or faction of 40 characters are correct."""
     _, client = env
     add(client, {**KENJI, "name": "x" * 60, "role": "y" * 40, "faction": "z" * 40, "settlement": "t" * 60})
+    add(client, {**KENJI, "record_id": "r" * 100})  # rule 35b: 100 characters is correct
+    add(client, {**PASSER, "entity_id": "9" * 20})  # rule 35c: 20 digits is correct
+    add(client, {**PASSER, "entity_id": "0042"})
 
 
 # ---------- rules 40-41, saves-and-clock.md 7a: an added NPC is a known NPC ----------

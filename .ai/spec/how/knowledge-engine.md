@@ -71,7 +71,7 @@ This file covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-
 3. `Store.put_npc` then calls `propagate()`. Thus the NPC gets gossip that is already due, and gossip of its new town after a move. Its old memories stay.
 4. `Store.npc(id)` finds a world-file NPC first, then an added NPC. `added_npc_view` gives the prompt details: job `local` if none, the general description plus "You belong to the X." for a faction, and a voice from `pick_voice`. `_faction_sentence` removes a leading "The " from the faction, so "The Guild" does not give "the The Guild".
 5. `pick_voice` hashes the NPC id with SHA-256 and takes that index in the gender's list. With no gender, or an empty list for that gender, it uses both lists.
-6. `put_npc` refuses an empty `record_id`, one that starts with `crowd-` (so it never clashes with a crowd `npc_id`), and one with `/` (the inspector routes use the id in the path). `settlement` has the same one-line and length checks as `name`, because an unknown town id goes into the prompt.
+6. `put_npc` refuses a `record_id` that is empty, longer than 100 characters, starts with `crowd-` (so it never clashes with a crowd `npc_id`), or has `/` or a line break (the inspector routes use the id in the path). An `entity_id` must match `[0-9]{1,20}`. `settlement` has the same one-line and length checks as `name`, because an unknown town id goes into the prompt.
 
 **Save, load and reset** (`what/saves-and-clock.md` rules 10–17)
 - `Store.save` writes every row of `STATE_TABLES` (`meta`, `events`, `memories`, `turns`) as JSON into `saves.blob`.

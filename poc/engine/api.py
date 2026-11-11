@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import math
 import os
+import re
 import threading
 from pathlib import Path
 
@@ -252,8 +253,17 @@ def put_npc(body: object = Body(None)):
     record_id, entity_id = _npc_id_field(body, "record_id"), _npc_id_field(body, "entity_id")
     if (record_id is None) == (entity_id is None):
         raise HTTPException(400, "npc is not correct: send record_id or entity_id, not both and not neither")
-    if record_id is not None and (record_id.startswith("crowd-") or "/" in record_id):
-        raise HTTPException(400, "npc is not correct: record_id must not start with crowd- or have a /")  # 35b
+    if record_id is not None and (
+        len(record_id) > 100
+        or record_id.startswith("crowd-")
+        or "/" in record_id
+        or any(c in raw_record for c in LINE_BREAKS)
+    ):
+        raise HTTPException(  # rule 35b
+            400, "npc is not correct: record_id needs 1 to 100 characters, no line break or /, and no crowd- start"
+        )
+    if entity_id is not None and not re.fullmatch(r"[0-9]{1,20}", entity_id):
+        raise HTTPException(400, "npc is not correct: entity_id must be a whole number with 1 to 20 digits")  # 35c
     name = _npc_text(body, "name", required=True, max_len=60)
     settlement = _npc_text(body, "settlement", required=True, max_len=60)  # rules 35, 35a
     role = _npc_text(body, "role", required=False, max_len=40)
