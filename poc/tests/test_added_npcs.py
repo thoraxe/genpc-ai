@@ -292,8 +292,8 @@ def test_named_npc_moves(env):
     client.post("/api/clock/advance", json={"days": 1})
     assert [m["source"] for m in memories(client, "npc.noodle_vendor")] == ["conversation"]
     add(client, {**KENJI, "settlement": "cliffs"})
-    sources = sorted(m["source"] for m in memories(client, "npc.noodle_vendor"))
-    assert sources == ["conversation", "hop1"]
+    got = sorted((m["source"], m["created_day"]) for m in memories(client, "npc.noodle_vendor"))
+    assert got == [("conversation", 41.0), ("hop1", 41.5)]  # the gossip has its arrival day
     assert prompt(client, "npc.noodle_vendor").startswith("You are Kenji, a noodle vendor in The Cliffs.")
 
 
@@ -354,6 +354,29 @@ def test_load_removes_crowd_npcs_and_keeps_named_ones(env):
     assert memories(client, "npc.noodle_vendor") == []  # no memory from after the save
     kenji = next(n for n in client.get("/api/world").json()["npcs"] if n["id"] == "npc.noodle_vendor")
     assert kenji["settlement"] == "market"  # 14a: the last town that the mod sent
+
+
+def test_load_gives_a_named_npc_its_memories_from_the_save(env):
+    """13b, 14a: memories from before the save come back; memories from after it are gone."""
+    _, client = env
+    add(client, KENJI)
+    talk(client, "npc.noodle_vendor", "My name is Vexley.")
+    save_id = client.post("/api/saves", json={}).json()["id"]
+    client.post("/api/events", json={**FIGHT, "witnesses": ["npc.noodle_vendor"]})
+    assert len(memories(client, "npc.noodle_vendor")) == 2
+    client.post(f"/api/saves/{save_id}/load")
+    assert [m["source"] for m in memories(client, "npc.noodle_vendor")] == ["conversation"]
+
+
+def test_added_npc_in_the_next_town_gets_next_town_gossip(env):
+    """5b and the summary's example 4: next-town gossip after 3 days, only facts of importance 4 or more."""
+    _, client = env
+    add(client, {**PASSER, "settlement": "market"})
+    client.post("/api/events", json={**FIGHT, "witnesses": []})
+    client.post("/api/clock/advance", json={"days": 2})
+    assert memories(client, CROWD_ID) == []
+    client.post("/api/clock/advance", json={"days": 1})
+    assert [(m["source"], m["created_day"]) for m in memories(client, CROWD_ID)] == [("hop2", 44.0)]
 
 
 def test_load_removes_crowd_memories_that_the_save_has(env):

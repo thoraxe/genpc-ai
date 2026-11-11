@@ -69,7 +69,7 @@ This file covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-
 1. `api.put_npc` checks the body by hand, so every failure is `400`. A `record_id` of a world-file NPC returns `kind` = `world` and changes nothing.
 2. Else it builds an `AddedNPC`: `id` = `record_id` (named) or `crowd-<entity_id>` (crowd). `Store.put_npc` writes it with `INSERT OR REPLACE`, so a second request changes the details, also the town.
 3. `Store.put_npc` then calls `propagate()`. Thus the NPC gets gossip that is already due, and gossip of its new town after a move. Its old memories stay.
-4. `Store.npc(id)` finds a world-file NPC first, then an added NPC. `added_npc_view` gives the prompt details: job `local` if none, the general description plus "You belong to the X." for a faction, and a voice from `pick_voice`.
+4. `Store.npc(id)` finds a world-file NPC first, then an added NPC. `added_npc_view` gives the prompt details: job `local` if none, the general description plus "You belong to the X." for a faction, and a voice from `pick_voice`. `_faction_sentence` removes a leading "The " from the faction, so "The Guild" does not give "the The Guild".
 5. `pick_voice` hashes the NPC id with SHA-256 and takes that index in the gender's list, or in both lists if there is no gender.
 
 **Save, load and reset** (`what/saves-and-clock.md` rules 10–17)
