@@ -82,14 +82,14 @@ The engine runs at `http://localhost:8000` by default.
 ### Saves
 
 23. `POST /api/saves` with an optional `label` makes a save. The answer gives the new save number and the list of all saves.
-23a. `POST /api/saves` can also have `token`: the save name (see `saves-and-clock.md` rules 12a–12f). `[PLANNED: #11]`
-23b. If a save with that `token` exists, the engine replaces it. The answer gives the old save number. `[PLANNED: #11]`
-23c. If `token` breaks `saves-and-clock.md` rule 12b or 12c, the engine answers `400`. It makes no save. `[PLANNED: #11]`
-23d. The list of saves gives the `token` of each save. A save without a save name has an empty `token` (`null`). `[PLANNED: #11]`
+23a. `POST /api/saves` can also have `token`: the save name (see `saves-and-clock.md` rules 12a–12f).
+23b. If a save with that `token` exists, the engine replaces it. The answer gives the old save number.
+23c. If `token` breaks `saves-and-clock.md` rule 12b or 12c, the engine answers `400`. It makes no save.
+23d. The list of saves gives the `token` of each save. A save without a save name has an empty `token` (`null`).
 24. `POST /api/saves/{save_id}/load` loads a save. The answer gives the day of the save.
-24a. `POST /api/saves/{token}/load` loads the save with that save name. The answer gives the day of the save. `[PLANNED: #11]`
-24b. If the value has only digits, the engine uses it as a save number. Example: `/api/saves/7/load` loads save `7`. `[PLANNED: #11]`
-24c. If the value breaks `saves-and-clock.md` rule 12b, the engine answers `400`. Example: `cp*1042`. `[PLANNED: #11]`
+24a. `POST /api/saves/{token}/load` loads the save with that save name. The answer gives the day of the save.
+24b. If the value has only digits, the engine uses it as a save number. Example: `/api/saves/7/load` loads save `7`.
+24c. If the value breaks `saves-and-clock.md` rule 12b, the engine answers `400`. Example: `cp*1042`.
 25. `POST /api/reset` resets the world. The answer gives the start day.
 
 ### Test page
@@ -143,7 +143,7 @@ Examples:
 - If a mod sends `POST /api/npcs` with `record_id` = `torvald`, then the answer gives `kind` = `world`.
 - If a mod sends `POST /api/npcs` with no `record_id` and no `entity_id`, then the engine answers with `400`.
 - If a mod sends `POST /api/dialog/open` for `crowd-1874320956` before the mod sends `POST /api/npcs`, then the engine answers with `404`.
-- If a mod sends `POST /api/saves/cp-0007/load` and no save has that name, then the engine answers `404`. `[PLANNED: #11]`
+- If a mod sends `POST /api/saves/cp-0007/load` and no save has that name, then the engine answers `404`.
 
 ## Constraints
 
@@ -158,4 +158,4 @@ Examples:
 | ~~#8~~ | A route to add NPCs while the game runs. |
 | #9 | `POST /api/clock/set`: set the clock from the game's own day. |
 | #10 | The voice goes into a sound file that a game mod can play, not only as a stream. |
-| #11 | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |
+| ~~#11~~ | Saves and loads by a name that the game gives (`/api/saves/{token}/load`). |

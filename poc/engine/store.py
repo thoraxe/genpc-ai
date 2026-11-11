@@ -33,6 +33,9 @@ class Store:
         self.db = sqlite3.connect(str(path), check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
+        if "token" not in {r["name"] for r in self.db.execute("PRAGMA table_info(saves)")}:
+            self.db.execute("ALTER TABLE saves ADD COLUMN token TEXT")  # a database from before save names
+        self.db.execute("CREATE UNIQUE INDEX IF NOT EXISTS saves_token ON saves(token)")
         if self._meta("day") is None:
             self._set_meta("day", start_day)
             self.db.commit()
@@ -200,14 +203,23 @@ class Store:
         return [{"id": r["id"], "day": r["day"], **json.loads(r["body"])} for r in reversed(rows)]
 
     # ----- save slots -----
-    def save(self, label: str = "") -> int:
+    def save(self, label: str = "", token: str | None = None) -> int:
+        """A new save, or, with a save name that exists, a replaced save with the same number (rules 12d-12f)."""
         blob = {t: [dict(r) for r in self.db.execute(f"SELECT * FROM {t}")] for t in STATE_TABLES}
-        cur = self.db.execute(
-            "INSERT INTO saves(label, day, created, blob) VALUES(?,?,?,?)",
-            (label or f"Day {self.day:g}", self.day, time.time(), json.dumps(blob)),
-        )
+        row = (label or f"Day {self.day:g}", self.day, time.time(), json.dumps(blob))
+        old = self.save_id(token) if token is not None else None
+        if old is not None:
+            self.db.execute("UPDATE saves SET label=?, day=?, created=?, blob=? WHERE id=?", (*row, old))
+            self.db.commit()
+            return old
+        cur = self.db.execute("INSERT INTO saves(label, day, created, blob, token) VALUES(?,?,?,?,?)", (*row, token))
         self.db.commit()
         return cur.lastrowid
+
+    def save_id(self, token: str) -> int | None:
+        """The save number of the save with this save name, or None."""
+        row = self.db.execute("SELECT id FROM saves WHERE token=?", (token,)).fetchone()
+        return row["id"] if row else None
 
     def load(self, save_id: int) -> None:
         row = self.db.execute("SELECT blob FROM saves WHERE id=?", (save_id,)).fetchone()
@@ -223,7 +235,7 @@ class Store:
         self.db.commit()
 
     def saves(self) -> list[dict]:
-        return [dict(r) for r in self.db.execute("SELECT id, label, day, created FROM saves ORDER BY id")]
+        return [dict(r) for r in self.db.execute("SELECT id, label, day, created, token FROM saves ORDER BY id")]
 
 
 def load_world(path: str | Path) -> WorldConfig:
