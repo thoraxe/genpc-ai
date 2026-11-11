@@ -1,0 +1,5 @@
+version: 1.0.0
+sfx:
+  genpc_slot_0:
+    file: slot_0.mp3
+    usage: on-demand
