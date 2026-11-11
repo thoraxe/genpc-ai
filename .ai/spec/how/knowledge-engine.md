@@ -28,6 +28,11 @@ This file covers `what/knowledge.md`, `what/saves-and-clock.md` and `what/world-
 5. It calls `Store.propagate()` and commits.
 6. It returns all the new memories.
 
+**Clock set from the game's hours** (`what/saves-and-clock.md` rules 5a–5g)
+- `api.clock_set` divides `hours` by `world.calendar.hours_per_day` and calls `Store.advance(delta)`.
+- The same day (within `1e-9`) changes nothing. An earlier day, negative hours, or more than 365 days is `400`, and the detail carries the current `day`.
+- A changed `hours_per_day` needs no extra code: the next call divides by the new value.
+
 **Clock advance** (`what/saves-and-clock.md` rules 1–5)
 1. `Store.advance(days)` raises `ValueError` if `days` is negative.
 2. It adds `days` to `meta.day`.

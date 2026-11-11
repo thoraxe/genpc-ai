@@ -13,8 +13,18 @@ The engine sends the result of each change to the mod. For the exact fields, see
 3. One clock move is more than 0 days and a maximum of 365 days.
 4. When the clock moves, gossip that is due arrives (see `knowledge.md` rule 16). The engine sends the new memories to the mod.
 5. Memories fade by the clock, not by the real clock of the computer.
+5a. A mod can set the clock from the game's hours. `hours` is the number of hours since the game started.
+5b. The engine divides `hours` by the length of a day (`world-file.md` rule 1a) to get the day.
+Example: with 24-hour days, `hours` = `996` is day 41.5. With 30-hour days, `hours` = `900` is day 30.
+5c. If the day is later than the clock, the clock moves to that day. Rules 3 and 4 apply.
+5d. If the day is the same as the clock, nothing changes. The engine does not send an error.
+5e. If the day is earlier than the clock, the engine refuses. The clock does not change.
+5f. If the game's hours go back, the player loaded a game save. Load the save with the same name first. Then set the clock (see #11).
+5g. For a game that sets the clock from its hours, the start day is 0. Its world file gives `start_day` = `0`. (owner question 2)
 
 Example: the clock is at day 41. The mod moves it by 0.5 days. The clock is now at day 41.5, and Torvald gets the gossip.
+
+Example, in a world with 24-hour days: the clock is at day 41. The mod sends `hours` = `996`. The clock is at day 41.5, and Torvald gets the gossip. Then the mod sends `hours` = `984`. The engine refuses, and the clock stays at day 41.5.
 
 ### Events
 
@@ -48,6 +58,8 @@ Examples:
 - If the player tries to move the clock back by 2 days, then the engine refuses.
 - If the player resets, then the saves are still in the list.
 - The player saves on day 42, talks to a crowd NPC, and loads the save. Then the crowd NPC does not exist.
+- If the game sends the same `hours` two times, then the second one changes nothing.
+- If the start day is 0 and a new game sends `hours` = `5`, then the clock moves to about day 0.21.
 
 ## Constraints
 

@@ -12,7 +12,7 @@ The engine runs at `http://localhost:8000` by default.
 2. The routes and the fields in their answers are an agreement with the mods. You can add a new field.
 2a. Do not rename or remove a field without a note in the PR and a change in the mod.
 3. If a request names an unknown NPC, save, turn or preset, the engine answers with error `404` ("not found").
-4. If a value is outside its permitted range, the engine answers with error `400` ("bad request"). Rules 9, 14 and 19 give the ranges.
+4. If a value is outside its permitted range, the engine answers with error `400` ("bad request"). Rules 9, 10b, 14 and 19 give the ranges.
 4a. If a field is missing or has the wrong type, the engine answers with error `422`. Example: an `importance` of 9.
 
 ### Start
@@ -42,6 +42,11 @@ The engine runs at `http://localhost:8000` by default.
 
 9. `POST /api/clock/advance` with `days` moves the clock forward. `days` must be more than 0 and a maximum of 365.
 10. The answer gives the new day and the memories that arrived (`new_memories`).
+10a. `POST /api/clock/set` with `hours` sets the clock from the game's hours (see `saves-and-clock.md` rules 5a–5g).
+10b. `hours` must be 0 or more. The new day must be a maximum of 365 days after the clock. (owner question 3)
+10c. If the new day is earlier than the clock, the engine answers with error `400`.
+10d. The answer gives the day of the clock and the memories that arrived (`new_memories`).
+10e. If nothing changes, `new_memories` is empty. If the engine refuses, the answer still gives the day of the clock.
 
 ### Events
 
@@ -123,6 +128,7 @@ The engine runs at `http://localhost:8000` by default.
 
 Examples:
 - If a mod sends `POST /api/clock/advance` with `days` = `-2`, then the engine answers with `400`.
+- In a world with 24-hour days: if the clock is at day 41.5 and a mod sends `POST /api/clock/set` with `hours` = `984`, then the engine answers with `400`.
 - If a mod sends `POST /api/dialog/open` for an NPC that is not in the world file, then the engine answers with `404`.
 - If there is no `ELEVENLABS_API_KEY`, then `GET /api/audio/7` answers with `404`, and `/api/session/start` gives an empty `tts`.
 - If a mod sends `POST /api/npcs` with `record_id` = `torvald`, then the answer gives `kind` = `world`.
