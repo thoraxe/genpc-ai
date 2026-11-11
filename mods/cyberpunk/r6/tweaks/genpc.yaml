@@ -1,0 +1,5 @@
+# The mod's own weapon block (mod spec what/talk.md rule 19a). TweakXL loads it.
+# It is a copy of the game's NoWeapons restriction with its own name. Thus the mod can always remove
+# it after a load, and it never removes the game's own NoWeapons (for example in a vehicle).
+Genpc.NoWeapons:
+  $base: GameplayRestriction.NoWeapons

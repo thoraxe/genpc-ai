@@ -9,7 +9,7 @@ The structure and the writing rules are the same as for the engine specs. See `.
 | Layer | Path | Purpose |
 |---|---|---|
 | **what/** | `mods/cyberpunk/.ai/spec/what/` | What the mod must do, and the game content that it sends to the engine. |
-| **how/** | `mods/cyberpunk/.ai/spec/how/` | Where the mod's code and files are. It comes with the first mod code. |
+| **how/** | `mods/cyberpunk/.ai/spec/how/` | Where the mod's code and files are. |
 
 Use the words in the engine glossary (`.ai/spec/glossary.md`).
 
@@ -31,6 +31,8 @@ These specs are authoritative for the mod and its game content. For the engine a
 ## Status
 
 - `what/world.md`: the Cyberpunk world that the mod sends to the engine.
-- `what/talk.md`: how the player talks to an NPC in the game. [PLANNED: #12]
+- `what/talk.md`: how the player talks to an NPC in the game.
 
-The in-game tests #3 to #5 passed (`mods/cyberpunk/spike/`). No real mod code exists yet.
+- `how/talk-mod.md`: where the mod's code is.
+
+The in-game tests #3 to #5 passed (`mods/cyberpunk/spike/`). The mod's code is in `mods/cyberpunk/r6/`.

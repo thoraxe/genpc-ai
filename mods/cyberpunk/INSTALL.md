@@ -65,11 +65,24 @@ The engine runs on your own PC at `http://localhost:8000`. RedHttpClient normall
 
 ## 3. Install the mod's files
 
-The mod is not released yet. When it is, its zip has an `r6` folder: extract it into the game folder, the same as the tools.
+The mod is not released yet. Until it is, copy the `mods\cyberpunk\r6` folder from this repo into the game folder. Its files are:
+- `r6\scripts\genpc\`: the scripts.
+- `r6\tweaks\genpc.yaml`: the mod's weapon block while you talk.
+- `r6\audioware\genpc\`: the sound list and its 4 slot files (`genpc_voice_1.mp3` to `genpc_voice_4.mp3`). Do not delete these sound files while the game runs: Audioware stops the game if a sound file is missing.
 
-The mod's files are:
-- `r6\scripts\<mod name>\`: the scripts.
-- `r6\audioware\<mod name>\`: the sound list and its sound files. Do not delete these sound files while the game runs: Audioware stops the game if a sound file is missing.
+Then tell the engine where the slot files are. Add this line to the engine's `.env`, with your game folder:
+```
+AUDIO_SLOT_DIR=C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\r6\audioware\genpc
+```
+The mod uses 4 slot files, so leave `AUDIO_SLOT_COUNT` out (the default is 4). Start the engine again after you change `.env`.
+
+## How to talk
+
+- Look at an NPC. If you can talk to them, the hint **[G] Talk** shows.
+- Press **G**. The panel shows their line and 3 choices.
+- Press **1**, **2** or **3** for a choice. Or press **Enter**, type, and press **Enter** again. **Esc** closes the text box.
+- Press **G** again, or walk away, to close the panel.
+- To change the key or turn the voice off: **Esc**, then **Mod Settings**, then **genpc**.
 
 ## 4. Check that everything loaded
 
