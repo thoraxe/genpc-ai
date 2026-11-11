@@ -18,7 +18,7 @@
 - `FakeLLM` in `test_dialog.py` gives scripted replies in order. A reply can be a dict (sent as JSON), a raw string, or an `Exception` (raised).
 - `FakeLLM` records each `(system, messages)` in `calls`. Thus tests can check the prompt.
 - `test_api.py` reloads `engine.api` with `POC_VAR_DIR` and `POC_DB` in `tmp_path` and `TTS_ENABLED=0`. Then it sets `api._llm` to its `FakeLLM`.
-- `test_audio_slots.py` reloads `engine.api` with `AUDIO_SLOT_DIR` in `tmp_path`, then sets `api.tts` to a `FakeTTS` that sends the sound in two parts. `FakeTTS.gate` (a `threading.Barrier`) holds calls so that requests arrive at the same time.
+- `test_audio_slots.py` reloads `engine.api` with `AUDIO_SLOT_DIR` in `tmp_path`, It replaces `dotenv.load_dotenv` with a no-op, so the developer's `.env` cannot point the tests at a real game folder. Then it sets `api.tts` to a `FakeTTS` that sends the sound in two parts. `FakeTTS.gate` (a `threading.Barrier`) holds calls so that requests arrive at the same time.
 
 **Live eval** (one run)
 1. Make a new store in a temp folder.

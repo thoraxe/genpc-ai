@@ -5,6 +5,7 @@ Run: uv run uvicorn engine.api:app --app-dir poc --port 8000
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import math
 import os
@@ -438,7 +439,8 @@ def audio_slot(turn_id: int):
         tmp.write_bytes(data)
         os.replace(tmp, path)  # one step: the game never reads half a file
     except OSError as e:  # the old file stays (rule 30m)
-        tmp.unlink(missing_ok=True)
+        with contextlib.suppress(OSError):  # a failed clean-up must not hide the 503
+            tmp.unlink(missing_ok=True)
         raise HTTPException(503, f"cannot write {path.name}: {e.strerror or e}") from None
     return {"turn_id": turn_id, "slot": name, "file": str(path.resolve())}
 

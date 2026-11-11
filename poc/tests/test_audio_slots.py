@@ -44,21 +44,20 @@ class FakeTTS:
         yield f"{text}|{voice_id}|{self.calls}".encode()
 
 
-def _load(tmp_path, monkeypatch, slot_dir="slots", count=None, make_dir=True):
+def _load(tmp_path, monkeypatch, slot_dir="slots", count="4", make_dir=True):
+    """Reload the engine with these settings only. The developer's `.env` is not read."""
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
     monkeypatch.setenv("POC_VAR_DIR", str(tmp_path))
     monkeypatch.setenv("POC_DB", str(tmp_path / "api.db"))
     monkeypatch.setenv("TTS_ENABLED", "0")
     if slot_dir is None:
-        monkeypatch.delenv("AUDIO_SLOT_DIR", raising=False)
+        monkeypatch.setenv("AUDIO_SLOT_DIR", "")
     else:
         folder = tmp_path / slot_dir
         if make_dir:
             folder.mkdir(exist_ok=True)
         monkeypatch.setenv("AUDIO_SLOT_DIR", str(folder))
-    if count is None:
-        monkeypatch.delenv("AUDIO_SLOT_COUNT", raising=False)
-    else:
-        monkeypatch.setenv("AUDIO_SLOT_COUNT", count)
+    monkeypatch.setenv("AUDIO_SLOT_COUNT", count)
     import engine.api as api
 
     return importlib.reload(api)
@@ -162,7 +161,8 @@ def test_cannot_write_gives_503_and_keeps_old_file(env, monkeypatch):
 
 
 def test_requests_at_the_same_time_get_different_slots(env):
-    """Rule 30e: two requests that arrive at the same time get different slot files."""
+    """Rule 30e: requests run at the same time (the route holds no lock during the voice call) and get
+    different slot files. The voice calls wait for each other, so all three are in flight together."""
     api, client, folder = env
     ids = _turns(client, 3)
     api.tts.gate = threading.Barrier(3)
@@ -177,6 +177,24 @@ def test_requests_at_the_same_time_get_different_slots(env):
     for th in threads:
         th.join(timeout=10)
     assert sorted(out) == ["genpc_voice_1", "genpc_voice_2", "genpc_voice_3"]
+
+
+def test_slot_number_is_taken_under_its_lock(env, monkeypatch):
+    """Rule 30e: each request takes its slot number while it holds `_slot_lock`."""
+    api, client, folder = env
+    seen = []
+
+    class Recording:
+        def __enter__(self):
+            seen.append(("in", api._next_slot))
+
+        def __exit__(self, *exc):
+            seen.append(("out", api._next_slot))
+
+    monkeypatch.setattr(api, "_slot_lock", Recording())
+    for t in _turns(client, 2):
+        _slot(client, t)
+    assert seen == [("in", 0), ("out", 1), ("in", 1), ("out", 2)]
 
 
 def test_start_again_uses_slot_1_first(env, tmp_path, monkeypatch):
@@ -231,11 +249,20 @@ def test_session_start_audio_slots(env, tmp_path, monkeypatch):
     assert TestClient(api.app).post("/api/session/start").json()["capabilities"]["audio_slots"] == 16
 
 
-@pytest.mark.parametrize("count", ["0", "17", "-1", "four", "2.5"])
-def test_bad_slot_count_stops_the_engine(tmp_path, monkeypatch, count):
+@pytest.mark.parametrize("count", ["0", "17", "-1", "four", "2.5", ""])
+def test_bad_slot_count_stops_the_engine(env, monkeypatch, count):
     """System overview: if AUDIO_SLOT_COUNT is not from 1 to 16, the engine does not start and tells why."""
+    api, client, folder = env
+    monkeypatch.setenv("AUDIO_SLOT_COUNT", count)
     with pytest.raises(RuntimeError, match="AUDIO_SLOT_COUNT"):
-        _load(tmp_path, monkeypatch, count=count)
+        api._slot_settings()
+
+
+def test_tests_do_not_read_the_env_file(env, monkeypatch):
+    """Regression: the tests must not read AUDIO_SLOT_DIR from the developer's `.env` (a real game folder)."""
+    import dotenv
+
+    assert dotenv.load_dotenv() is False
 
 
 def test_stream_route_is_unchanged(env):
