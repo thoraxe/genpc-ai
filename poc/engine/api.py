@@ -246,11 +246,16 @@ def put_npc(body: object = Body(None)):
     """The mod tells the engine which NPC the player talks to (http-api.md rules 31-42)."""
     if not isinstance(body, dict):
         raise HTTPException(400, "npc is not correct: the body must be a JSON object")
+    raw_record = body.get("record_id")
+    if isinstance(raw_record, str) and not raw_record.strip():
+        raise HTTPException(400, "npc is not correct: record_id is empty")  # rule 35b
     record_id, entity_id = _npc_id_field(body, "record_id"), _npc_id_field(body, "entity_id")
     if (record_id is None) == (entity_id is None):
         raise HTTPException(400, "npc is not correct: send record_id or entity_id, not both and not neither")
+    if record_id is not None and (record_id.startswith("crowd-") or "/" in record_id):
+        raise HTTPException(400, "npc is not correct: record_id must not start with crowd- or have a /")  # 35b
     name = _npc_text(body, "name", required=True, max_len=60)
-    settlement = _npc_text(body, "settlement", required=True, one_line=False)
+    settlement = _npc_text(body, "settlement", required=True, max_len=60)  # rules 35, 35a
     role = _npc_text(body, "role", required=False, max_len=40)
     faction = _npc_text(body, "faction", required=False, max_len=40)
     gender = body.get("gender")

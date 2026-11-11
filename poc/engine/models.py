@@ -81,7 +81,8 @@ class AddedNPC(BaseModel):
 
 def pick_voice(pool: VoicePool, npc_id: str, gender: str | None) -> str | None:
     """The same NPC always gets the same voice (world-file.md rules 7b-7d)."""
-    voices = pool.female if gender == "female" else pool.male if gender == "male" else pool.female + pool.male
+    voices = pool.female if gender == "female" else pool.male if gender == "male" else []
+    voices = voices or pool.female + pool.male  # no gender, or no voice for it: all voices (rules 7c, 7ca)
     if not voices:
         return None
     return voices[int(hashlib.sha256(npc_id.encode()).hexdigest(), 16) % len(voices)]
