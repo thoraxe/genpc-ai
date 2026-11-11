@@ -24,13 +24,17 @@ You do **not** need to install Python yourself. uv installs the right version (3
    git clone https://github.com/thoraxe/genpc-ai
    cd genpc-ai
    ```
-   or download the zip from https://github.com/thoraxe/genpc-ai (green **Code** button, **Download ZIP**), extract it, and `cd` into the folder.
+   or download the zip from https://github.com/thoraxe/genpc-ai (green **Code** button, **Download ZIP**) and extract it. The zip's folder is named `genpc-ai-main`. That is the `genpc-ai` folder in the steps below.
+
+   To open PowerShell in that folder: open the folder in File Explorer, type `powershell` in the address bar, and press Enter.
 
 3. **Add your keys.** In the `genpc-ai` folder, make a file named `.env` with these lines:
    ```
    ZAI_API_KEY=your-llm-key
    ELEVENLABS_API_KEY=your-elevenlabs-key
    ```
+   In Notepad, choose **File**, **Save as**, set **Save as type** to **All files**, and type the name `.env`. Otherwise Notepad saves it as `.env.txt`, and the engine does not find it.
+
    Leave out the ElevenLabs line if you do not want voices. Keep this file private: it holds your keys.
 
    To use another LLM service, also set `LLM_BASE_URL`, `LLM_MODEL` and `LLM_API_KEY_ENV` (the name of the line that holds your key). See [`poc/README.md`](poc/README.md).
@@ -48,11 +52,11 @@ You do **not** need to install Python yourself. uv installs the right version (3
 - Start the engine **before** you start the game, and leave its window open.
 - To stop the engine, click its window and press **Ctrl+C**.
 - The engine only accepts connections from your own PC. Other computers cannot reach it.
-- What the NPCs know is kept in the `poc/var/` folder, one file for each game world. To start every world again from nothing, stop the engine and empty that folder.
+- What the NPCs know is kept in the `poc/var/` folder, one file for each game world and one for the test world. To start every world again from nothing, stop the engine and empty that folder.
 
 ## Update
 
-If you used Git, run `git pull` in the `genpc-ai` folder. If you used the zip, download it again and copy your `.env` file into the new folder.
+If you used Git, run `git pull` in the `genpc-ai` folder. If you used the zip, download it again, extract it, and copy your `.env` file into the new folder.
 
 ## Game mods
 

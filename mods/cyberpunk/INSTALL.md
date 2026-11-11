@@ -76,16 +76,16 @@ The mod's files are:
 1. Start the engine (see [`INSTALL.md`](../../INSTALL.md)).
 2. Start the game from Steam. Load a save, or start a new game, and play for a minute.
 3. Press **Esc**. The pause menu has a **Mod Settings** entry.
-4. Quit the game, and open these files in the game folder with Notepad:
+4. Quit the game, and open these files in the game folder with Notepad. Each start makes new log files with the date in the name. To find the newest one, sort the folder by **Date modified**.
 
 | Tool | File | Good |
 |------|------|------|
 | RED4ext | `red4ext\logs\red4ext-<date>.log` (the newest) | `8 plugin(s) loaded` (9 with RedHotTools), and no `error` lines |
-| redscript | `r6\logs\redscript_rCURRENT.log` | Ends with `Compilation complete` |
+| redscript | `r6\logs\redscript_rCURRENT.log` | Has the line `Compilation complete` |
 | CET | `bin\x64\plugins\cyber_engine_tweaks\cyber_engine_tweaks.log` | `CET version v1.38.1` and no errors |
 | RedHttpClient | `red4ext\logs\redhttpclient-<date>.log` | `TLS is disabled` (this shows that `-no-tls` works) |
 | Audioware | `red4ext\logs\audioware-<date>.log` | `no error reported!` |
-| Mod Settings, RedFileSystem | `red4ext\logs\mod_settings-<date>.log`, `redfilesystem-<date>.log` | No errors |
+| Mod Settings, RedFileSystem | `red4ext\logs\mod_settings-<date>.log`, `red4ext\logs\redfilesystem-<date>.log` | No errors |
 | ArchiveXL, TweakXL, Codeware | `red4ext\plugins\<tool>\<tool>-<date>.log` | No errors |
 
 The mod's own log lines start with `[genpc]`. To see them while you play, open the CET overlay and look in its **Game Log** window.
@@ -94,7 +94,7 @@ The mod's own log lines start with `[genpc]`. To see them while you play, open t
 
 - **The game shows a message that script compilation failed.** Read `r6\logs\redscript_rCURRENT.log`. The message names the mod that caused it. When one script mod fails, the game loads **no** script mods, so other mods can seem broken too.
 - **The mod says there is no reply from the engine.** Check that the engine window is open and shows `Uvicorn running`. Check that the launch options have `-no-tls`. Then read the newest `red4ext\logs\redhttpclient-<date>.log`: it lists each request and each reply.
-- **A tool is missing from the RED4ext log.** Its folder probably went one level too deep. See "How to extract into the game folder" above.
+- **A tool is missing from the RED4ext log.** Its folder probably went one level too deep. See 'How to "extract into the game folder"' above.
 - **The game was updated.** Check each tool's download page for a version that supports the new patch before you play.
 
 ## Remove the mod
@@ -102,3 +102,5 @@ The mod's own log lines start with `[genpc]`. To see them while you play, open t
 - Delete the mod's folders `r6\scripts\<mod name>\` and `r6\audioware\<mod name>\`.
 - Remove `-no-tls` from the launch options.
 - To remove all the tools as well, delete the folders `red4ext`, `r6\scripts`, `r6\audioware` and `bin\x64\plugins`, and the files `bin\x64\winmm.dll`, `bin\x64\version.dll` and `bin\x64\global.ini`. Then use Steam's **Verify integrity of game files** to repair anything else.
+  - **This also removes every other script mod you have**, because they use the same folders.
+  - Some small files from the tools stay behind, for example in `r6\config` and `r6\cache`. They do no harm.
