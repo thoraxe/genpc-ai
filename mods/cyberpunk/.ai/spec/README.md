@@ -30,4 +30,7 @@ These specs are authoritative for the mod and its game content. For the engine a
 
 ## Status
 
-No mod code exists yet. The in-game tests #2 to #5 come first. The world content comes in a spec PR for #7.
+- `what/world.md`: the Cyberpunk world that the mod sends to the engine.
+- `what/talk.md`: how the player talks to an NPC in the game. [PLANNED: #12]
+
+The in-game tests #3 to #5 passed (`mods/cyberpunk/spike/`). No real mod code exists yet.

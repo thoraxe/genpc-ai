@@ -49,7 +49,10 @@ Example: an event in Kabuki counts as an event in Watson. Gossip goes to City Ce
 | Dakota Smith | fixer | Badlands (Rocky Ridge) | A practical fixer who runs a garage in the desert. She speaks plainly and trusts actions more than words. | Exists. |
 
 7. Each Cyberpunk NPC `id` will be the game's record ID: the fixed name of the character in the game data. The mod uses this ID to find the NPC. We must still confirm the IDs in the game.
-8. Each NPC in the starter cast has no `voice_id` now. The owner will choose the voices later (#1).
+8. Each NPC in the starter cast has a `voice_id`. The table in rule 8c gives the voices. [PLANNED: #12]
+8a. Each voice is a premade voice: a voice that the voice service itself gives. Every account can use premade voices. This includes the tester's account. [PLANNED: #12]
+8b. The world file has a voice list for added NPCs: 3 female and 3 male premade voices. (owner question 5) [PLANNED: #12]
+8c. The code stage adds a table with the name and `voice_id` of each voice. The owner listens to them and can change them before the merge. [PLANNED: #12]
 9. The Cyberpunk setting text is this:
 
 > Speak like a person who lives in Night City in the year 2077. Night City is a hard, dangerous city. Corporations and gangs control it. Use some street words, but keep your meaning clear.
@@ -124,3 +127,4 @@ Examples for preset 3, with the event on day 41:
 | Ticket | Summary |
 |---|---|
 | #7 | The first version of the Cyberpunk world. |
+| #12 | Voices for the starter cast, and a voice list for added NPCs. |
