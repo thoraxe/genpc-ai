@@ -123,3 +123,51 @@ def test_setting_text_comes_from_the_world_file(store):
     assert "Talk like a sailor from a harbor town." in p and "medieval" not in p
     store.world.setting = ""
     assert "Stay in character.\n" in d.preview_prompt("torvald")
+
+
+def test_talk_log_full_shows_prompt_reply_and_choices(store, caplog, monkeypatch):
+    # The engine console shows each turn: the prompt, the raw reply, the line and the 3 choices.
+    monkeypatch.delenv("TALK_LOG", raising=False)
+    monkeypatch.setenv("ZAI_API_KEY", "secret-test-key")
+    with caplog.at_level("INFO", logger="dialog"):
+        DialogEngine(store, FakeLLM([GOOD])).open("hrolf")
+    text = caplog.text
+    assert "--- talk: " in text and "(hrolf)" in text
+    assert "prompt:" in text and "Embershard" in text
+    assert "reply (raw): " in text
+    assert "line: " + GOOD["npc_line"] in text
+    assert "  1. Yes." in text and "  3. Goodbye." in text
+    assert "secret-test-key" not in text
+
+
+def test_talk_log_short_and_off(store, caplog, monkeypatch):
+    monkeypatch.setenv("TALK_LOG", "short")
+    with caplog.at_level("INFO", logger="dialog"):
+        DialogEngine(store, FakeLLM([SMALLTALK])).open("eirik")
+    assert "line: Halt." in caplog.text and "prompt:" not in caplog.text and "reply (raw)" not in caplog.text
+    caplog.clear()
+    monkeypatch.setenv("TALK_LOG", "off")
+    with caplog.at_level("INFO", logger="dialog"):
+        DialogEngine(store, FakeLLM([SMALLTALK])).open("eirik")
+    assert "--- talk" not in caplog.text
+
+
+def test_talk_log_fallback_is_marked(store, caplog, monkeypatch):
+    monkeypatch.delenv("TALK_LOG", raising=False)
+    with caplog.at_level("INFO", logger="dialog"):
+        DialogEngine(store, FakeLLM([RuntimeError("down")])).open("eirik")
+    assert "FALLBACK" in caplog.text and "reply (raw): (none)" in caplog.text
+
+
+def test_console_stream_survives_a_narrow_console(monkeypatch):
+    # conversation.md: text the console cannot show must not stop the engine.
+    import io
+    import sys
+
+    from engine.api import _ConsoleStream
+
+    buf = io.BytesIO()
+    monkeypatch.setattr(sys, "stderr", io.TextIOWrapper(buf, encoding="cp1252"))
+    _ConsoleStream().write("line: 你好 …\n")
+    sys.stderr.flush()
+    assert b"line: " in buf.getvalue()

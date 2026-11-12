@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -132,6 +133,34 @@ def _history_messages(turns: list[dict]) -> list[dict]:
     return msgs
 
 
+def talk_log_mode() -> str:
+    """TALK_LOG: full (the default), short (no prompt and no raw reply) or off."""
+    mode = os.getenv("TALK_LOG", "full").strip().lower()
+    return mode if mode in ("full", "short", "off") else "full"
+
+
+def talk_log_text(npc: NPC, turn_id: int, player_text: str | None, result: dict, full: bool) -> str:
+    """One turn as text for the engine console. It has no keys: only the prompt, the reply and the result."""
+    head = f"--- talk: {npc.name} ({npc.id}), turn {turn_id}, {result['ms']:.0f} ms, {result['attempts']} tries"
+    lines = [head + (", FALLBACK" if result["fallback"] else "")]
+    lines.append(f"player: {player_text or '(greeting)'}")
+    sent = result["sent"]
+    if full and sent:
+        lines.append("prompt:")
+        lines += ["  " + s for s in sent["system"].splitlines()]
+        lines += [f"  [{m['role']}] {m['content']}" for m in sent["messages"]]
+    if full:
+        raw = result["raw"]
+        lines.append(f"reply (raw): {raw if raw is not None else '(none)'}")
+    lines.append(f"line: {result['line']}")
+    lines += [f"  {i}. {c}" for i, c in enumerate(result["choices"], 1)]
+    if result["remembered"]:
+        lines.append("remembered: " + " | ".join(result["remembered"]))
+    if result["rejected"]:
+        lines.append("rejected: " + " | ".join(result["rejected"]))
+    return "\n".join(lines)
+
+
 class DialogEngine:
     def __init__(self, store: Store, llm: LLMProvider):
         self.store = store
@@ -229,6 +258,21 @@ class DialogEngine:
             body["session_id"] = session_id
             store.db.execute("UPDATE turns SET body=? WHERE id=?", (json.dumps(body), turn_id))
             store.db.commit()
+
+        mode = talk_log_mode()
+        if mode != "off":
+            result = {
+                "ms": total_ms,
+                "attempts": attempts,
+                "fallback": fallback,
+                "sent": sent,
+                "raw": raw,
+                "line": resp.npc_line,
+                "choices": resp.choices,
+                "remembered": [f.text for f in remembered],
+                "rejected": rejected,
+            }
+            log.info(talk_log_text(npc, turn_id, player_text, result, mode == "full"))
 
         return TurnResult(
             turn_id=turn_id,

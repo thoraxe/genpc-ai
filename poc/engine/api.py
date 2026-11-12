@@ -7,9 +7,11 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+import logging
 import math
 import os
 import re
+import sys
 import threading
 import uuid
 from pathlib import Path
@@ -51,6 +53,29 @@ def _db_path(world_id: str) -> Path:
     return VAR / f"world-{hashlib.sha256(world_id.encode()).hexdigest()[:16]}.db"
 
 
+class _ConsoleStream:
+    """Writes to the console. A character the console cannot show becomes an escape, so the engine never stops."""
+
+    def write(self, s: str) -> None:
+        enc = getattr(sys.stderr, "encoding", None) or "utf-8"
+        sys.stderr.write(s.encode(enc, "backslashreplace").decode(enc))
+
+    def flush(self) -> None:
+        sys.stderr.flush()
+
+
+def _talk_console() -> None:
+    """Show each talk turn in the engine console. Uvicorn shows only its own logs."""
+    log = logging.getLogger("dialog")
+    if not log.handlers:
+        h = logging.StreamHandler(_ConsoleStream())
+        h.setFormatter(logging.Formatter("%(message)s"))
+        log.addHandler(h)
+        log.setLevel(logging.INFO)
+        log.propagate = False
+
+
+_talk_console()
 world = load_world(POC / "data" / "world.json")
 presets = load_events(POC / "data" / "events.json")  # presets belong only to the test world
 store = Store(_db_path(world.id), world, start_day=_start_day(world))
