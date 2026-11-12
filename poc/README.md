@@ -9,6 +9,7 @@ A Python engine plus a bare test page. NPCs know what they saw or heard, gossip 
 - **Optional settings:**
   - `LLM_BASE_URL`, `LLM_MODEL` (default `glm-5.3-flash`) and `LLM_API_KEY_ENV`, to point at any OpenAI-compatible provider.
   - `TTS_ENABLED=0`, to turn voice off.
+  - `TALK_LOG`: the engine console shows each talk turn. `full` (the default) shows the prompt, the raw reply, the line and the choices; `short` shows only the line and the choices; `off` shows nothing.
 
 ```
 uv run python poc/scripts/smoke.py      # check both providers + timings
