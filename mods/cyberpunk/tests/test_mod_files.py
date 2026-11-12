@@ -109,3 +109,18 @@ def test_no_secret_in_mod():
     for f in SCRIPTS.glob("*.reds"):
         text = f.read_text(encoding="utf-8")
         assert ".env" not in text and "API_KEY" not in text
+
+
+def test_refusal_reason_is_logged():
+    # PR #43 test: the janitor said "Not now." with no way to see why. The log now names the exact reason.
+    system = (SCRIPTS / "System.reds").read_text(encoding="utf-8")
+    for why in ("down", "far", "hostile", "combat", "vehicle", "scene", "dialogue", "story"):
+        assert f'return "{why}";' in system
+    assert "[genpc] cannot talk to " in system
+
+
+def test_text_key_is_not_a_name():
+    # PR #43 test: a crowd NPC showed "NCResident". Rule 12: the shown text if the game has one, else "Stranger".
+    npc = (SCRIPTS / "Npc.reds").read_text(encoding="utf-8")
+    assert "GetLocalizedTextByKey(StringToName(name))" in npc
+    assert "GenpcNpc.IsKey(name)" in npc

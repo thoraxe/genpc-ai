@@ -47,6 +47,8 @@ The redscript mod that builds `what/talk.md`. It runs in the game and talks to t
 ## Implementation Notes
 
 - **Starter cast by name.** `GenpcNpc.CastId` maps the shown name to the world-file `id`, because the record IDs are not known yet (`what/world.md` rule 7). `SendNpc` logs the record ID and the entity ID (rule 14). When the IDs are known, put them in `world.json` and match by record ID.
+- **Refusal reasons.** `RefusalWhy` gives a short code (`down`, `far`, `hostile`, `combat`, `vehicle`, `scene`, `dialogue`, `story`); `Refusal` turns it into the note of rule 7. `LogRefusal` logs the code once for each NPC that has no hint, except `far`.
+- **Text keys.** A crowd NPC can give a text key such as `NCResident` instead of a name. `Name` asks `GetLocalizedTextByKey` for its text; if there is none and `IsKey` says it is one word with a capital letter inside, the name is "Stranger" (rule 12a).
 - **Story characters by name.** `IsStoryCharacter` compares English names. A game in another language shows other names. Record IDs will fix this too.
 - **The callback signature.** With `HttpCallback.Create(this, fn, [ToVariant(id)])`, the callback must take `(response, data: array<Variant>)`. Without data, only `(response)` (spike README).
 - **Text box.** `typing` becomes true only in the popup's `OnShown` (`OnTypingOpened`), so a popup that does not open cannot lock the keys. `HubTextInput` ignores `Enter`; `OnKey` catches it. The popup is modal, so the game keys stop while the player types. Its `SetTimeDilation` is empty, so the game does not slow down. `Esc` closes the popup (its `cancel` action); `OnHide` calls `OnTypingClosed`.

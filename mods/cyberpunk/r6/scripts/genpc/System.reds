@@ -63,6 +63,7 @@ public class GenpcSystem extends ScriptableSystem {
   private let hubsHidden: Bool;
   private let weaponsBlocked: Bool;
   private let menuListener: ref<CallbackHandle>;
+  private let lastRefused: EntityID;
 
   private func OnAttach() -> Void {
     this.settings = new GenpcSettings();
@@ -273,25 +274,54 @@ public class GenpcSystem extends ScriptableSystem {
 
   // Rule 7: "-" = the panel can open, "" = no note, else the note.
   private func Refusal(npc: ref<NPCPuppet>, player: ref<PlayerPuppet>, name: String) -> String {
+    switch this.RefusalWhy(npc, player, name) {
+      case "-": return "-";
+      case "down": return "";
+      case "far": return "Move closer.";
+      case "story": return "This person does not want to talk.";
+      default: return "Not now.";
+    }
+  }
+
+  // The exact reason for rule 7, for the log. "-" if the player can talk.
+  private func RefusalWhy(npc: ref<NPCPuppet>, player: ref<PlayerPuppet>, name: String) -> String {
+    let game = this.GetGameInstance();
     if GenpcNpc.IsDown(npc) {
-      return "";
+      return "down";
     }
     if GenpcNpc.Distance(npc, player) > 4.0 {
-      return "Move closer.";
+      return "far";
     }
-    if npc.IsHostile() || player.IsInCombat() {
-      return "Not now.";
+    if npc.IsHostile() {
+      return "hostile";
     }
-    if VehicleComponent.IsMountedToVehicle(this.GetGameInstance(), player) {
-      return "Not now.";
+    if player.IsInCombat() {
+      return "combat";
     }
-    if GenpcNpc.InScene(this.GetGameInstance(), npc) {
-      return "Not now.";
+    if VehicleComponent.IsMountedToVehicle(game, player) {
+      return "vehicle";
+    }
+    let scenes = GameInstance.GetSceneSystem(game).GetScriptInterface();
+    if scenes.IsEntityInScene(npc.GetEntityID()) {
+      return "scene";
+    }
+    if scenes.IsEntityInDialogue(npc.GetEntityID()) {
+      return "dialogue";
     }
     if GenpcNpc.IsStoryCharacter(name) {
-      return "This person does not want to talk.";
+      return "story";
     }
     return "-";
+  }
+
+  // Log why an NPC near the player cannot talk, once for each NPC (so a test shows the cause).
+  private func LogRefusal(npc: ref<NPCPuppet>, player: ref<PlayerPuppet>, name: String) -> Void {
+    let why = this.RefusalWhy(npc, player, name);
+    if Equals(why, "-") || Equals(why, "far") || Equals(npc.GetEntityID(), this.lastRefused) {
+      return;
+    }
+    this.lastRefused = npc.GetEntityID();
+    FTLog(s"[genpc] cannot talk to \(name) (record \(GenpcNpc.RecordId(npc)), shown name \"\(npc.GetDisplayName())\"): \(why)");
   }
 
   private cb func OnTalkStart(response: ref<HttpResponse>, data: array<Variant>) {
@@ -566,6 +596,9 @@ public class GenpcSystem extends ScriptableSystem {
     if IsDefined(npc) && Equals(this.Refusal(npc, player, GenpcNpc.Name(npc)), "-") {
       this.panel.ShowHint(this.settings.KeyLabel());
     } else {
+      if IsDefined(npc) {
+        this.LogRefusal(npc, player, GenpcNpc.Name(npc));
+      }
       this.panel.HideHint();
     }
   }

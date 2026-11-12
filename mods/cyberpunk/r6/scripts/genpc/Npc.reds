@@ -7,15 +7,46 @@ public abstract class GenpcNpc {
     let name = npc.GetDisplayName();
     if StrBeginsWith(name, "LocKey#") {
       name = GetLocalizedText(name);
+    } else {
+      // A crowd NPC can give a text key such as "NCResident" (PR #43 test). Show its text if the game has one.
+      let text = GetLocalizedTextByKey(StringToName(name));
+      if StrLen(text) > 0 {
+        name = text;
+      }
     }
     name = StrReplaceAll(StrReplaceAll(StrReplaceAll(name, "\n", " "), "\r", " "), "\t", " ");
-    if StrLen(StrReplaceAll(name, " ", "")) == 0 || StrBeginsWith(name, "LocKey#") {
+    if StrLen(StrReplaceAll(name, " ", "")) == 0 || StrBeginsWith(name, "LocKey#") || GenpcNpc.IsKey(name) {
       return "Stranger";
     }
     if StrLen(name) > 60 {
       return StrLeft(name, 60);
     }
     return name;
+  }
+
+  // A game text key, not a name: one word with a capital letter inside it, such as "NCResident".
+  public static func IsKey(name: String) -> Bool {
+    if StrContains(name, " ") || StrLen(name) < 3 {
+      return false;
+    }
+    let i = 1;
+    while i < StrLen(name) {
+      let c = StrMid(name, i, 1);
+      let prev = StrMid(name, i - 1, 1);
+      if GenpcNpc.IsUpper(c) && (GenpcNpc.IsLower(prev) || (GenpcNpc.IsUpper(prev) && i + 1 < StrLen(name) && GenpcNpc.IsLower(StrMid(name, i + 1, 1)))) {
+        return true;
+      }
+      i += 1;
+    }
+    return false;
+  }
+
+  private static func IsUpper(c: String) -> Bool {
+    return NotEquals(StrUpper(c), StrLower(c)) && Equals(c, StrUpper(c));
+  }
+
+  private static func IsLower(c: String) -> Bool {
+    return NotEquals(StrUpper(c), StrLower(c)) && Equals(c, StrLower(c));
   }
 
   public static func RecordId(npc: ref<NPCPuppet>) -> String {
@@ -81,11 +112,6 @@ public abstract class GenpcNpc {
 
   public static func Distance(npc: ref<NPCPuppet>, player: ref<PlayerPuppet>) -> Float {
     return Vector4.Distance(npc.GetWorldPosition(), player.GetWorldPosition());
-  }
-
-  public static func InScene(game: GameInstance, npc: ref<NPCPuppet>) -> Bool {
-    let scenes = GameInstance.GetSceneSystem(game).GetScriptInterface();
-    return scenes.IsEntityInScene(npc.GetEntityID()) || scenes.IsEntityInDialogue(npc.GetEntityID());
   }
 
   // talk.md rules 13, 13a: the town of the district where the player is, or "" if not known.
