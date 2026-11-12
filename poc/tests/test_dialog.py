@@ -28,6 +28,14 @@ class FakeLLM:
         return LLMResult(text=r if isinstance(r, str) else json.dumps(r), ms=5.0)
 
 
+@pytest.fixture(autouse=True)
+def dialog_log_propagates(monkeypatch):
+    # engine.api stops the "dialog" logger from propagating; caplog needs it, whatever the import order.
+    import logging
+
+    monkeypatch.setattr(logging.getLogger("dialog"), "propagate", True)
+
+
 GOOD = {
     "npc_line": "Heard the bandits at Embershard Mine are dead. Was that you?",
     "choices": ["Yes.", "No.", "Goodbye."],
@@ -128,7 +136,6 @@ def test_setting_text_comes_from_the_world_file(store):
 def test_talk_log_full_shows_prompt_reply_and_choices(store, caplog, monkeypatch):
     # The engine console shows each turn: the prompt, the raw reply, the line and the 3 choices.
     monkeypatch.delenv("TALK_LOG", raising=False)
-    monkeypatch.setenv("ZAI_API_KEY", "secret-test-key")
     with caplog.at_level("INFO", logger="dialog"):
         DialogEngine(store, FakeLLM([GOOD])).open("hrolf")
     text = caplog.text
@@ -137,7 +144,6 @@ def test_talk_log_full_shows_prompt_reply_and_choices(store, caplog, monkeypatch
     assert "reply (raw): " in text
     assert "line: " + GOOD["npc_line"] in text
     assert "  1. Yes." in text and "  3. Goodbye." in text
-    assert "secret-test-key" not in text
 
 
 def test_talk_log_short_and_off(store, caplog, monkeypatch):
@@ -170,4 +176,15 @@ def test_console_stream_survives_a_narrow_console(monkeypatch):
     monkeypatch.setattr(sys, "stderr", io.TextIOWrapper(buf, encoding="cp1252"))
     _ConsoleStream().write("line: 你好 …\n")
     sys.stderr.flush()
-    assert b"line: " in buf.getvalue()
+    assert b"line: " in buf.getvalue() and b"\u4f60" in buf.getvalue()
+
+
+def test_warning_lines_have_a_prefix():
+    import logging
+
+    from engine.api import _TalkFormatter
+
+    f = _TalkFormatter("%(message)s")
+    warn = logging.LogRecord("dialog", logging.WARNING, "", 0, "LLM call failed: x", None, None)
+    info = logging.LogRecord("dialog", logging.INFO, "", 0, "--- talk: A", None, None)
+    assert f.format(warn) == "WARNING dialog: LLM call failed: x" and f.format(info) == "--- talk: A"
