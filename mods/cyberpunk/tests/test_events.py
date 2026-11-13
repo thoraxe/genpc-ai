@@ -210,10 +210,26 @@ def test_clock_rules_in_script():
     assert "this.playSeconds % 60 == 0" in EVENTS  # rule 2
     system = (SCRIPTS / "System.reds").read_text(encoding="utf-8")
     assert 'this.SendClock("load");  // events.md rule 1' in system
-    assert 'this.SendClock("greeting");  // events.md rule 2' in system
+    # Code review M2: the greeting waits for the clock.
+    assert 'n"OnGreetClock"' in system and "events.ReadClock(response);" in system
     assert '"/api/clock/set", this.ClockBody(), n"OnEventClock"' in EVENTS  # before each event
 
 
 def test_send_events_setting():
     settings = (SCRIPTS / "Settings.reds").read_text(encoding="utf-8")
     assert '"Send game events")' in settings and "public let eventsOn: Bool = true;" in settings  # rule 24
+
+
+def test_review_fixes_in_script():
+    # M1: police, ordinary and unknown people are one group each, whatever their affiliation record.
+    assert 'if v.kind != 0 {\n        v.faction = "";' in EVENTS
+    # M4: one engine NPC is one witness.
+    assert "if !ArrayContains(this.current.ids, id) {" in EVENTS
+    # L1: only a non-lethal knock-out is "knocked out".
+    assert "let killed = !Equals(type, ENeutralizeType.Unconscious);" in EVENTS
+    # M5: only a gig that the game announces.
+    assert "Equals(notifyOption, JournalNotifyOption.Notify)" in EVENTS
+    # L9: the witness fact only with an accepted witness.
+    assert 'if ArraySize(e.ids) > 0 && !Equals(e.type, "gig") {' in EVENTS
+    # L2: a dropped chase does not start again before the stars were 0.
+    assert "this.waitForZero = true;" in EVENTS

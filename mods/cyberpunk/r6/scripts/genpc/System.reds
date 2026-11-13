@@ -405,7 +405,27 @@ public class GenpcSystem extends ScriptableSystem {
     }
     this.npcId = answer.GetKeyString("npc_id");
     FTLog(s"[genpc] npc_id \(this.npcId), kind \(answer.GetKeyString("kind"))");
-    this.SendClock("greeting");  // events.md rule 2
+    // events.md rule 2: the clock before each greeting, so gossip that is due arrives first.
+    let events = GenpcEvents.Get(this.GetGameInstance());
+    if IsDefined(events) {
+      this.Post("/api/clock/set", events.ClockBody(), n"OnGreetClock", this.Expect());
+    } else {
+      this.Greet();
+    }
+  }
+
+  private cb func OnGreetClock(response: ref<HttpResponse>, data: array<Variant>) {
+    if !this.IsCurrent(data, GenpcState.Waiting) {
+      return;
+    }
+    let events = GenpcEvents.Get(this.GetGameInstance());
+    if IsDefined(events) {
+      events.ReadClock(response);  // events.md rule 4: a refused clock does not stop the greeting
+    }
+    this.Greet();
+  }
+
+  private func Greet() -> Void {
     let body = new JsonObject();
     body.SetKeyString("npc_id", this.npcId);
     this.Post("/api/dialog/open", body, n"OnLine", this.Expect());

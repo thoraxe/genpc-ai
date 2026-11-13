@@ -81,6 +81,7 @@ public class GenpcEvents extends ScriptableSystem {
   private let chasePlace: String;
   private let chaseWitnesses: array<ref<GenpcWitness>>;
   private let starsListener: ref<CallbackHandle>;
+  private let waitForZero: Bool;
 
   // Gigs (rules 10-13).
   private let journalOn: Bool;
@@ -116,10 +117,10 @@ public class GenpcEvents extends ScriptableSystem {
     ArrayClear(this.gigsSent);
     this.lastTown = "";
     this.lastPlace = "";
-    this.clockRefused = false;
     this.readyAt = this.playSeconds;
     this.ListenToStars();
     this.ListenToJournal();
+    FTLog(s"[genpc] game hours at load: \(this.GameHours()), hour of the day \(this.Hour())");
     this.tickGen += 1;
     this.StartTick();
   }
@@ -154,6 +155,9 @@ public class GenpcEvents extends ScriptableSystem {
     this.fightOn = false;
     ArrayClear(this.victims);
     ArrayClear(this.fightWitnesses);
+    if this.chaseOn {
+      this.waitForZero = true;  // the same chase must not start again (rule 14a)
+    }
     this.chaseOn = false;
     this.chaseStars = 0;
     ArrayClear(this.chaseWitnesses);
@@ -165,7 +169,7 @@ public class GenpcEvents extends ScriptableSystem {
     return GameInstance.GetTimeSystem(this.GetGameInstance()).GetGameTimeStamp() / 3600.0;
   }
 
-  private func ClockBody() -> ref<JsonObject> {
+  public func ClockBody() -> ref<JsonObject> {
     let body = new JsonObject();
     body.SetKeyDouble("hours", Cast<Double>(this.GameHours()));
     return body;
@@ -180,7 +184,7 @@ public class GenpcEvents extends ScriptableSystem {
   }
 
   // Rule 4: a refused clock is not an error. Rule 26: write it one time.
-  private func ReadClock(response: ref<HttpResponse>) -> Void {
+  public func ReadClock(response: ref<HttpResponse>) -> Void {
     if !IsDefined(response) {
       FTLog("[genpc] clock: no answer");
       return;
@@ -193,8 +197,12 @@ public class GenpcEvents extends ScriptableSystem {
       this.clockRefused = false;
       return;
     }
+    if code != 400 {
+      FTLog(s"[genpc] clock: error \(code)");
+      return;
+    }
     if !this.clockRefused {
-      FTLog(s"[genpc] clock: refused (\(code)), game hours \(this.GameHours()). The engine's clock is later (an older save).");
+      FTLog(s"[genpc] clock: refused, game hours \(this.GameHours()): \(response.GetText())");
     }
     this.clockRefused = true;
   }
@@ -290,7 +298,8 @@ public class GenpcEvents extends ScriptableSystem {
     if !IsDefined(npc) || GenpcNpc.IsStoryCharacter(GenpcNpc.Name(npc)) {
       return;  // rule 9
     }
-    let killed = Equals(type, ENeutralizeType.Killed);
+    // Unconscious is a non-lethal knock-out. Killed and Defeated (lethal damage) count as killed.
+    let killed = !Equals(type, ENeutralizeType.Unconscious);
     if !this.fightOn {
       this.fightOn = true;
       this.fightPlace = this.Place();  // rule 8
@@ -313,6 +322,9 @@ public class GenpcEvents extends ScriptableSystem {
       v.faction = GenpcNpc.FactionName(npc);
       if v.kind == 0 && StrLen(v.faction) == 0 {
         v.kind = 3;  // rule 7c
+      }
+      if v.kind != 0 {
+        v.faction = "";  // police, ordinary and unknown people are one group each (rule 7)
       }
       v.killed = killed;
       ArrayPush(this.victims, v);
@@ -413,7 +425,10 @@ public class GenpcEvents extends ScriptableSystem {
   }
 
   protected cb func OnStars(stars: Int32) -> Bool {
-    if !this.EventsOn() {
+    if stars == 0 {
+      this.waitForZero = false;
+    }
+    if !this.EventsOn() || this.waitForZero {
       return true;
     }
     if stars > 0 && !this.chaseOn {
@@ -465,7 +480,8 @@ public class GenpcEvents extends ScriptableSystem {
   }
 
   protected cb func OnJournalState(hash: Uint32, className: CName, notifyOption: JournalNotifyOption, changeType: JournalChangeType) -> Bool {
-    if !Equals(className, n"gameJournalQuest") || !this.EventsOn() {
+    // Only a change that the game announces to the player (the "completed" message), not an old state again.
+    if !Equals(className, n"gameJournalQuest") || !Equals(notifyOption, JournalNotifyOption.Notify) || !this.EventsOn() {
       return false;
     }
     // The journal can tell old states again just after a load. Those are not new.
@@ -481,9 +497,10 @@ public class GenpcEvents extends ScriptableSystem {
       return false;  // rule 11
     }
     ArrayPush(this.gigsSent, hash);
-    let title = quest.GetTitle(journal);
-    if StrBeginsWith(title, "LocKey#") {
-      title = GetLocalizedText(title);
+    let key = quest.GetTitle(journal);
+    let title = GetLocalizedText(key);
+    if StrLen(title) == 0 {
+      title = key;
     }
     let e = new GenpcOutEvent();
     e.type = "gig";  // rule 10
@@ -593,10 +610,6 @@ public class GenpcEvents extends ScriptableSystem {
   // ---- Sending (rules 21, 21a, 23, 25) ----
 
   private func Queue(e: ref<GenpcOutEvent>) -> Void {
-    if ArraySize(e.witnesses) > 0 && !Equals(e.type, "gig") {
-      ArrayPush(e.facts, "The merc was the person who is talking to you now.");  // rule 21b
-      ArrayPush(e.importance, 1);
-    }
     ArrayPush(this.queue, e);
     this.SendNext();
   }
@@ -605,20 +618,31 @@ public class GenpcEvents extends ScriptableSystem {
     if IsDefined(this.current) || ArraySize(this.queue) == 0 {
       return;
     }
+    if !this.EventsOn() {
+      FTLog(s"[genpc] \(ArraySize(this.queue)) waiting events dropped: setting off");  // rule 24
+      ArrayClear(this.queue);
+      return;
+    }
     this.current = this.queue[0];
     ArrayErase(this.queue, 0);
     this.current.token = this.NewId();
+    this.current.next = 0;
+    this.AddNextWitness();
+  }
+
+  // Rule 23: the engine must answer each request of the event in 10 seconds.
+  private func Wait() -> Void {
+    GameInstance.GetDelaySystem(this.GetGameInstance()).CancelCallback(this.timeout);
     let cb = new GenpcEventTimeout();
     cb.owner = this;
     cb.token = this.current.token;
     this.timeout = GameInstance.GetDelaySystem(this.GetGameInstance()).DelayCallback(cb, 10.0, false);  // rule 23
-    this.current.next = 0;
-    this.AddNextWitness();
   }
 
   // Rule 21: add each witness to the engine first.
   private func AddNextWitness() -> Void {
     let e = this.current;
+    this.Wait();
     if e.next < ArraySize(e.witnesses) {
       this.Post("/api/npcs", e.witnesses[e.next].body, n"OnWitness", e.token);
       return;
@@ -633,7 +657,10 @@ public class GenpcEvents extends ScriptableSystem {
     }
     let answer = this.Answer(response);
     if IsDefined(answer) && StrLen(answer.GetKeyString("npc_id")) > 0 {
-      ArrayPush(this.current.ids, answer.GetKeyString("npc_id"));
+      let id = answer.GetKeyString("npc_id");
+      if !ArrayContains(this.current.ids, id) {
+        ArrayPush(this.current.ids, id);  // two NPCs of one record are one engine NPC
+      }
     } else {
       FTLog(s"[genpc] event: a witness was refused (\(GenpcEvents.Code(response))), left out");  // rule 21a
     }
@@ -647,6 +674,10 @@ public class GenpcEvents extends ScriptableSystem {
     }
     this.ReadClock(response);
     let e = this.current;
+    if ArraySize(e.ids) > 0 && !Equals(e.type, "gig") {
+      ArrayPush(e.facts, "The merc was the person who is talking to you now.");  // rule 21b
+      ArrayPush(e.importance, 1);
+    }
     let body = new JsonObject();
     body.SetKeyString("type", e.type);
     body.SetKeyString("location", e.place);
@@ -665,6 +696,7 @@ public class GenpcEvents extends ScriptableSystem {
       witnesses.AddItemString(id);
     }
     body.SetKey("witnesses", witnesses);
+    this.Wait();
     this.Post("/api/events", body, n"OnEventSent", e.token);
   }
 
@@ -688,7 +720,7 @@ public class GenpcEvents extends ScriptableSystem {
     if !IsDefined(this.current) || this.current.token != token {
       return;
     }
-    FTLog(s"[genpc] event \(this.current.type) lost: no answer in 10 seconds");  // rule 23
+    FTLog(s"[genpc] event \(this.current.type) lost: no answer in 10 seconds (step \(this.current.next))");  // rule 23
     this.Finish();
   }
 
