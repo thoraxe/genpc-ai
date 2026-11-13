@@ -1,0 +1,16 @@
+version: 1.0.0
+# The 4 slot files (engine http-api.md rules 30a-30n, mod talk.md rule 17b).
+# The engine overwrites these files. Never delete them while the game runs.
+sfx:
+  genpc_voice_1:
+    file: genpc_voice_1.mp3
+    usage: on-demand
+  genpc_voice_2:
+    file: genpc_voice_2.mp3
+    usage: on-demand
+  genpc_voice_3:
+    file: genpc_voice_3.mp3
+    usage: on-demand
+  genpc_voice_4:
+    file: genpc_voice_4.mp3
+    usage: on-demand
