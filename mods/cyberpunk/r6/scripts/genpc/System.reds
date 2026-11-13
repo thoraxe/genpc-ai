@@ -153,7 +153,20 @@ public class GenpcSystem extends ScriptableSystem {
   }
 
   private cb func OnLoadWorld(response: ref<HttpResponse>, data: array<Variant>) {
-    this.Answer(response, "world (load)");
+    if IsDefined(this.Answer(response, "world (load)")) {
+      this.SendClock("load");  // events.md rule 1
+    }
+  }
+
+  private func SendClock(why: String) -> Void {
+    let events = GenpcEvents.Get(this.GetGameInstance());
+    if IsDefined(events) {
+      events.SendClock(why);
+    }
+  }
+
+  public func Settings() -> ref<GenpcSettings> {
+    return this.settings;
   }
 
   private func ReadStart(answer: ref<JsonObject>) -> Void {
@@ -371,31 +384,14 @@ public class GenpcSystem extends ScriptableSystem {
       this.Close("NPC gone");
       return;
     }
-    let body = new JsonObject();
-    let cast = GenpcNpc.CastId(this.npcName);
     let record = GenpcNpc.RecordId(npc);
     let entity = GenpcNpc.EntityDecimal(npc);
     FTLog(s"[genpc] NPC \(this.npcName): record \(record), entity \(entity), crowd \(npc.IsCrowd())");  // rule 14
-    if StrLen(cast) > 0 {
-      body.SetKeyString("record_id", cast);
-    } else {
-      if npc.IsCrowd() || StrLen(record) == 0 {
-        body.SetKeyString("entity_id", entity);
-      } else {
-        body.SetKeyString("record_id", record);
-      }
-    }
-    body.SetKeyString("name", this.npcName);
     let town = GenpcNpc.Town(this.GetGameInstance());
     if StrLen(town) > 0 {
       this.lastTown = town;
     }
-    body.SetKeyString("settlement", this.lastTown);
-    let gender = GenpcNpc.Gender(npc);
-    if StrLen(gender) > 0 {
-      body.SetKeyString("gender", gender);
-    }
-    this.Post("/api/npcs", body, n"OnNpc", this.Expect());
+    this.Post("/api/npcs", GenpcNpc.NpcBody(npc, this.npcName, this.lastTown), n"OnNpc", this.Expect());
   }
 
   private cb func OnNpc(response: ref<HttpResponse>, data: array<Variant>) {
@@ -409,6 +405,7 @@ public class GenpcSystem extends ScriptableSystem {
     }
     this.npcId = answer.GetKeyString("npc_id");
     FTLog(s"[genpc] npc_id \(this.npcId), kind \(answer.GetKeyString("kind"))");
+    this.SendClock("greeting");  // events.md rule 2
     let body = new JsonObject();
     body.SetKeyString("npc_id", this.npcId);
     this.Post("/api/dialog/open", body, n"OnLine", this.Expect());

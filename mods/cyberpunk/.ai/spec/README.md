@@ -32,8 +32,9 @@ These specs are authoritative for the mod and its game content. For the engine a
 
 - `what/world.md`: the Cyberpunk world that the mod sends to the engine.
 - `what/talk.md`: how the player talks to an NPC in the game.
-- `what/events.md`: fights, gigs and police chases that the mod sends to the engine, and the clock. [PLANNED: #13]
+- `what/events.md`: fights, gigs and police chases that the mod sends to the engine, and the clock.
 
 - `how/talk-mod.md`: where the mod's code is.
+- `how/events-mod.md`: where the code for events and the clock is.
 
 The in-game tests #3 to #5 passed (`mods/cyberpunk/spike/`). The mod's code is in `mods/cyberpunk/r6/`.
