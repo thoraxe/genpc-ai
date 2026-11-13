@@ -124,3 +124,5 @@ def test_text_key_is_not_a_name():
     npc = (SCRIPTS / "Npc.reds").read_text(encoding="utf-8")
     assert "GetLocalizedTextByKey(StringToName(name))" in npc
     assert "GenpcNpc.IsKey(name)" in npc
+    # 2nd test: "Sandra Dorsett" became "Stranger". Only a key is looked up.
+    assert npc.index("if GenpcNpc.IsKey(name) {") < npc.index("GetLocalizedTextByKey")

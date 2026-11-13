@@ -317,7 +317,8 @@ public class GenpcSystem extends ScriptableSystem {
   // Log why an NPC near the player cannot talk, once for each NPC (so a test shows the cause).
   private func LogRefusal(npc: ref<NPCPuppet>, player: ref<PlayerPuppet>, name: String) -> Void {
     let why = this.RefusalWhy(npc, player, name);
-    if Equals(why, "-") || Equals(why, "far") || Equals(npc.GetEntityID(), this.lastRefused) {
+    // "far" and "down" are normal (bodies after a fight filled the 2nd test log).
+    if Equals(why, "-") || Equals(why, "far") || Equals(why, "down") || Equals(npc.GetEntityID(), this.lastRefused) {
       return;
     }
     this.lastRefused = npc.GetEntityID();

@@ -8,10 +8,13 @@ public abstract class GenpcNpc {
     if StrBeginsWith(name, "LocKey#") {
       name = GetLocalizedText(name);
     } else {
-      // A crowd NPC can give a text key such as "NCResident" (PR #43 test). Show its text if the game has one.
-      let text = GetLocalizedTextByKey(StringToName(name));
-      if StrLen(text) > 0 {
-        name = text;
+      if GenpcNpc.IsKey(name) {
+        // A crowd NPC can give a text key such as "NCResident" (PR #43 test). Show its text if the game has one.
+        // Only for a key: a real name such as "Sandra Dorsett" became "Stranger" when it was looked up (2nd test).
+        let text = GetLocalizedTextByKey(StringToName(name));
+        if StrLen(text) > 0 && !StrBeginsWith(text, "LocKey#") {
+          name = text;
+        }
       }
     }
     name = StrReplaceAll(StrReplaceAll(StrReplaceAll(name, "\n", " "), "\r", " "), "\t", " ");
