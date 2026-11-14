@@ -1,6 +1,8 @@
 // Facts about the NPC and the player (mod spec what/talk.md rules 7-14).
 module Genpc
 
+import RedData.Json.*
+
 public abstract class GenpcNpc {
   // talk.md rule 12, 12a, 12b: the name that the game shows, "Stranger" if none, a maximum of 60 characters.
   public static func Name(npc: ref<NPCPuppet>) -> String {
@@ -115,6 +117,178 @@ public abstract class GenpcNpc {
 
   public static func Distance(npc: ref<NPCPuppet>, player: ref<PlayerPuppet>) -> Float {
     return Vector4.Distance(npc.GetWorldPosition(), player.GetWorldPosition());
+  }
+
+  // The body of POST /api/npcs (talk.md rules 9-14). Also for a witness (events.md rule 21).
+  public static func NpcBody(npc: ref<NPCPuppet>, name: String, town: String) -> ref<JsonObject> {
+    let body = new JsonObject();
+    let cast = GenpcNpc.CastId(name);
+    let record = GenpcNpc.RecordId(npc);
+    if StrLen(cast) > 0 {
+      body.SetKeyString("record_id", cast);
+    } else {
+      if npc.IsCrowd() || StrLen(record) == 0 {
+        body.SetKeyString("entity_id", GenpcNpc.EntityDecimal(npc));
+      } else {
+        body.SetKeyString("record_id", record);
+      }
+    }
+    body.SetKeyString("name", name);
+    body.SetKeyString("settlement", town);
+    let gender = GenpcNpc.Gender(npc);
+    if StrLen(gender) > 0 {
+      body.SetKeyString("gender", gender);
+    }
+    return body;
+  }
+
+  // events.md rules 5-5c: the place id of the part of the district where the player is, else of the
+  // district, or "dogtown" (not in the world file), or "" if the game gives no district.
+  public static func PlaceId(game: GameInstance) -> String {
+    let rec = GenpcNpc.DistrictRecord(game);
+    let up = rec;
+    while IsDefined(up) {
+      if Equals(up.Type(), gamedataDistrict.Dogtown) {
+        return "dogtown";
+      }
+      up = up.ParentDistrictHandle();
+    }
+    // Walk up from the smallest area (for example LittleChina_Afterlife) to the first one in the world file.
+    let r = rec;
+    while IsDefined(r) {
+      let id = GenpcNpc.PartId(r.Type());
+      if StrLen(id) > 0 {
+        return id;
+      }
+      r = r.ParentDistrictHandle();
+    }
+    return "";
+  }
+
+  private static func DistrictRecord(game: GameInstance) -> ref<District_Record> {
+    let prevention = GameInstance.GetScriptableSystemsContainer(game).Get(n"PreventionSystem") as PreventionSystem;
+    if !IsDefined(prevention) {
+      return null;
+    }
+    let district = prevention.GetCurrentDistrict();
+    if !IsDefined(district) {
+      return null;
+    }
+    return district.GetDistrictRecord();
+  }
+
+  // The parts of the districts and the districts in the world file (world.md). Each area of the Badlands is "badlands".
+  private static func PartId(t: gamedataDistrict) -> String {
+    switch t {
+      case gamedataDistrict.LittleChina: return "little_china";
+      case gamedataDistrict.Kabuki: return "kabuki";
+      case gamedataDistrict.Northside: return "northside";
+      case gamedataDistrict.ArasakaWaterfront: return "arasaka_waterfront";
+      case gamedataDistrict.JapanTown: return "japantown";
+      case gamedataDistrict.CharterHill: return "charter_hill";
+      case gamedataDistrict.NorthOaks: return "north_oak";
+      case gamedataDistrict.CorpoPlaza: return "corpo_plaza";
+      case gamedataDistrict.Downtown: return "downtown";
+      case gamedataDistrict.Glen: return "the_glen";
+      case gamedataDistrict.Wellsprings: return "wellsprings";
+      case gamedataDistrict.VistaDelRey: return "vista_del_rey";
+      case gamedataDistrict.Arroyo: return "arroyo";
+      case gamedataDistrict.RanchoCoronado: return "rancho_coronado";
+      case gamedataDistrict.Coastview: return "coastview";
+      case gamedataDistrict.WestWindEstate: return "west_wind_estate";
+      case gamedataDistrict.Watson: return "watson";
+      case gamedataDistrict.Westbrook: return "westbrook";
+      case gamedataDistrict.CityCenter: return "city_center";
+      case gamedataDistrict.Heywood: return "heywood";
+      case gamedataDistrict.SantoDomingo: return "santo_domingo";
+      case gamedataDistrict.Pacifica: return "pacifica";
+      case gamedataDistrict.Badlands: return "badlands";
+      case gamedataDistrict.NorthBadlands: return "badlands";
+      case gamedataDistrict.SouthBadlands: return "badlands";
+      case gamedataDistrict.MorroRock: return "badlands";
+      default: return "";
+    }
+  }
+
+  // The name of a place id in a fact. Example: "A merc killed 4 Maelstrom members in Northside."
+  public static func PlaceName(id: String) -> String {
+    switch id {
+      case "little_china": return "Little China";
+      case "kabuki": return "Kabuki";
+      case "northside": return "Northside";
+      case "arasaka_waterfront": return "Arasaka Waterfront";
+      case "japantown": return "Japantown";
+      case "charter_hill": return "Charter Hill";
+      case "north_oak": return "North Oak";
+      case "corpo_plaza": return "Corpo Plaza";
+      case "downtown": return "Downtown";
+      case "the_glen": return "The Glen";
+      case "wellsprings": return "Wellsprings";
+      case "vista_del_rey": return "Vista del Rey";
+      case "arroyo": return "Arroyo";
+      case "rancho_coronado": return "Rancho Coronado";
+      case "coastview": return "Coastview";
+      case "west_wind_estate": return "West Wind Estate";
+      case "watson": return "Watson";
+      case "westbrook": return "Westbrook";
+      case "city_center": return "City Center";
+      case "heywood": return "Heywood";
+      case "santo_domingo": return "Santo Domingo";
+      case "pacifica": return "Pacifica";
+      case "badlands": return "the Badlands";
+      case "dogtown": return "Dogtown";
+      default: return id;
+    }
+  }
+
+  // events.md rule 7: the kind of a killed NPC. 0 = a faction, 1 = police, 2 = ordinary people, 3 = not known.
+  public static func Kind(npc: ref<NPCPuppet>) -> Int32 {
+    let t = GenpcNpc.Affiliation(npc);
+    if npc.IsCharacterPolice() || Equals(t, gamedataAffiliation.NCPD) {
+      return 1;
+    }
+    if GenpcNpc.IsFaction(t) {
+      return 0;
+    }
+    if npc.IsCharacterCivilian() || npc.IsCrowd() || Equals(t, gamedataAffiliation.Civilian) || Equals(t, gamedataAffiliation.Unaffiliated) {
+      return 2;
+    }
+    return 3;
+  }
+
+  // The faction name in a fact. Example: "Maelstrom".
+  public static func FactionName(npc: ref<NPCPuppet>) -> String {
+    let rec = TweakDBInterface.GetCharacterRecord(npc.GetRecordID());
+    if !IsDefined(rec) || !IsDefined(rec.Affiliation()) {
+      return "";
+    }
+    let aff = rec.Affiliation();
+    let text = GetLocalizedTextByKey(aff.LocalizedName());
+    if StrLen(text) == 0 || StrBeginsWith(text, "LocKey#") {
+      text = NameToString(aff.EnumName());
+    }
+    return text;
+  }
+
+  private static func Affiliation(npc: ref<NPCPuppet>) -> gamedataAffiliation {
+    let rec = TweakDBInterface.GetCharacterRecord(npc.GetRecordID());
+    if !IsDefined(rec) || !IsDefined(rec.Affiliation()) {
+      return gamedataAffiliation.Invalid;
+    }
+    return rec.Affiliation().Type();
+  }
+
+  private static func IsFaction(t: gamedataAffiliation) -> Bool {
+    switch t {
+      case gamedataAffiliation.Civilian: return false;
+      case gamedataAffiliation.Unaffiliated: return false;
+      case gamedataAffiliation.UnaffiliatedCorpo: return false;
+      case gamedataAffiliation.Unknown: return false;
+      case gamedataAffiliation.Invalid: return false;
+      case gamedataAffiliation.Count: return false;
+      case gamedataAffiliation.NCPD: return false;
+      default: return true;
+    }
   }
 
   // talk.md rules 13, 13a: the town of the district where the player is, or "" if not known.
