@@ -13,7 +13,7 @@ import os
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from . import knowledge
-from .models import NPC, Fact, MemoryView
+from .models import NPC, Fact, MemoryView, WorldEvent
 from .providers.llm import LLMProvider
 from .store import Store
 
@@ -158,6 +158,21 @@ def talk_log_text(npc: NPC, turn_id: int, player_text: str | None, result: dict,
         lines.append("remembered: " + " | ".join(result["remembered"]))
     if result["rejected"]:
         lines.append("rejected: " + " | ".join(result["rejected"]))
+    return "\n".join(lines)
+
+
+def event_log_text(event: WorldEvent, witness_names: list[str], new_memories: int) -> str:
+    """One reported event as text for the engine console: type, place, day, facts and witnesses.
+
+    `new_memories` is every memory made by the request, also gossip of earlier events that became due."""
+
+    def one_line(s: str) -> str:  # a newline from the mod must not make a fake console line
+        return s.replace("\r", "\\r").replace("\n", "\\n")
+
+    lines = [f"--- event: {one_line(event.type)} at {one_line(event.location)}, day {event.day:.2f} ({event.id})"]
+    lines += [f"  [{f.importance}] {one_line(f.text)}" for f in event.facts]
+    lines.append("witnesses: " + (", ".join(witness_names) if witness_names else "(none)"))
+    lines.append(f"new memories now: {new_memories}")
     return "\n".join(lines)
 
 

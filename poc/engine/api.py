@@ -24,7 +24,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, ValidationError
 
 from . import knowledge
-from .dialog import DialogEngine
+from .dialog import DialogEngine, event_log_text, talk_log_mode
 from .models import AddedNPC, Fact, WorldConfig, WorldEvent, world_problems
 from .providers import llm as llm_mod
 from .providers import tts as tts_mod
@@ -418,6 +418,12 @@ def report_event(e: EventIn):
             witnesses=witnesses,
         )
         new = store.report_event(ev)
+        if talk_log_mode() != "off":
+            try:  # the event is stored already: a log error must not fail the request
+                names = [f"{store.npc(w).name} ({w})" for w in witnesses]
+                logging.getLogger("dialog").info(event_log_text(ev, names, len(new)))
+            except Exception:
+                logging.getLogger("dialog").exception("event log failed")
         return {"event": ev.model_dump(), "new_memories": [_mem_json(m) for m in new]}
 
 

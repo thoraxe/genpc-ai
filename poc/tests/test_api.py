@@ -2,6 +2,7 @@
 
 import importlib
 import json
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -70,3 +71,47 @@ def test_clock_advance_with_a_non_number_is_400_and_the_clock_stays(client, raw)
     r = client.post("/api/clock/advance", content=f'{{"days": {raw}}}', headers={"content-type": "application/json"})
     assert r.status_code == 400
     assert client.get("/api/world").json()["day"] == 41
+
+
+def test_event_shows_in_the_engine_console(client, caplog, monkeypatch):
+    # Each reported event shows in the console with the talk log (TALK_LOG full or short); off hides it.
+    import logging
+
+    log = logging.getLogger("dialog")
+    log.addHandler(caplog.handler)
+    try:
+        for mode in ("full", "short"):
+            caplog.clear()
+            monkeypatch.setenv("TALK_LOG", mode)
+            client.post("/api/events", json={"preset": "embershard_cleared"})
+            text = caplog.text
+            assert "--- event: " in text and ", day 41.00 (" in text and "witnesses: " in text and "(hrolf)" in text
+            assert re.search(r"^  \[\d\] \S", text, re.M)
+            assert "new memories now: 1" in text
+        caplog.clear()
+        monkeypatch.setenv("TALK_LOG", "off")
+        client.post("/api/events", json={"preset": "embershard_cleared"})
+        assert "--- event" not in caplog.text
+    finally:
+        log.removeHandler(caplog.handler)
+
+
+def test_event_log_error_does_not_fail_the_event(client, monkeypatch):
+    # Code review: the event is stored before the log; a log error must not give 500 (a retry would duplicate it).
+    import engine.api as api
+
+    def boom(*a):
+        raise RuntimeError("log")
+
+    monkeypatch.setattr(api, "event_log_text", boom)
+    assert client.post("/api/events", json={"preset": "embershard_cleared"}).status_code == 200
+
+
+def test_event_log_keeps_one_fact_on_one_line():
+    from engine.dialog import event_log_text
+    from engine.models import Fact, WorldEvent
+
+    ev = WorldEvent(
+        id="x#1", type="fight", location="town", day=1.0, facts=[Fact(text="a\nb", importance=2)], witnesses=[]
+    )
+    assert "  [2] a\\nb" in event_log_text(ev, [], 0)
