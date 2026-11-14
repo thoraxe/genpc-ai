@@ -184,7 +184,7 @@ def test_fight_rules_in_script():
         and "hour >= 12 && hour < 18" in EVENTS
         and "hour >= 18 && hour < 22" in EVENTS
     )
-    assert '"unknown people"' in EVENTS and '"ordinary person"' in EVENTS  # rule 7c, singular forms
+    assert '"unknown person" : "unknown people"' in EVENTS and '"ordinary person"' in EVENTS  # rule 7c, singular forms
     assert "GenpcNpc.IsStoryCharacter(GenpcNpc.Name(npc))" in EVENTS  # rule 9
 
 

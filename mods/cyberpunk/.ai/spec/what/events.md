@@ -61,7 +61,7 @@ Words in this file:
 | 18:00 to 21:59 | "It happened in the evening." |
 | 22:00 to 05:59 | "It happened at night." |
 
-7c. If the mod does not know the faction of an NPC, the fact says "unknown people". The importance is the same as for a faction with that number of NPCs.
+7c. If the mod does not know the faction of an NPC, the fact says "unknown person" (1 NPC) or "unknown people" (2 or more). The importance is the same as for a faction with that number of NPCs.
 7d. The place in each fact is the place of the fight (rule 8).
 8. The place of a fight is the place of the first kill or knock-out (rules 5–5c).
 9. The mod does not count a kill or knock-out of a story character (`talk.md` rule 11).
