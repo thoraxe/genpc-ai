@@ -11,7 +11,7 @@ This file covers `what/conversation.md` and the voice rules in `what/http-api.md
 | `poc/engine/dialog.py` | `DialogResponse`, `RememberItem` | Checks the LLM JSON. `three_choices` removes blanks, needs 3 or more, keeps 3. |
 | `poc/engine/dialog.py` | `_history_messages`, `GREETING` | History of this session as user and assistant messages. |
 | `poc/engine/dialog.py` | `FALLBACK`, `TurnResult` | The fallback reply; the turn that the API returns. |
-| `poc/engine/dialog.py` | `talk_log_text`, `talk_log_mode` | The talk log: one text block per turn for the engine console. `TALK_LOG` is `full` (the default), `short` or `off`. |
+| `poc/engine/dialog.py` | `talk_log_text`, `talk_log_mode`, `event_log_text` | The talk log: one text block per turn for the engine console, and one per reported event. `TALK_LOG` is `full` (the default), `short` or `off`. |
 | `poc/engine/api.py` | `_talk_console`, `_ConsoleStream` | Sends the `dialog` logger at INFO to the console, because uvicorn shows only its own loggers. |
 | `poc/engine/providers/llm.py` | `OpenAICompatLLM.complete_json` | `response_format=json_object`, `max_tokens=500`, `timeout=20`, `max_retries=0`, optional `reasoning_effort`. |
 | `poc/engine/providers/tts.py` | `ElevenLabsTTS.stream` | `POST /v1/text-to-speech/{voice_id}/stream`, `mp3_44100_128`, yields bytes. |
@@ -76,3 +76,5 @@ This file covers `what/conversation.md` and the voice rules in `what/http-api.md
   - Known limit: rule 30e holds while at most `SLOT_COUNT` requests are in flight. With more, request N+1 gets the same slot as request 1, and the slower one writes last or gets `503`. A mod asks for one voice at a time, so this does not happen in normal play.
   - `session_start` gives `audio_slots` = `SLOT_COUNT` only if `_slots_ready()` (voice on and the folder is there), else `0`.
 - A change to the prompt, retrieval or validation is high risk. Run the live eval and get a second, independent review (`CLAUDE.md`).
+- **Events in the talk log.** `POST /api/events` logs `event_log_text` through the same `dialog` logger, unless `TALK_LOG=off`: the type, the place, the day, each fact with its importance, the witnesses (name and id), and the number of memories that the request made (this also counts gossip of earlier events that became due). `full` and `short` show the same event text. A newline in a text shows as `
+`. A log error is logged and does not fail the request, because the event is stored already.
