@@ -37,6 +37,27 @@ class RememberItem(BaseModel):
     importance: int = Field(ge=1, le=5)
 
 
+# The reply shape for a service with structured JSON output. DialogResponse still checks the limits.
+REPLY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "npc_line": {"type": "string"},
+        "choices": {"type": "array", "items": {"type": "string"}},
+        "remember": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"fact": {"type": "string"}, "importance": {"type": "integer"}},
+                "required": ["fact", "importance"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "required": ["npc_line", "choices", "remember"],
+    "additionalProperties": False,
+}
+
+
 class DialogResponse(BaseModel):
     npc_line: str = Field(min_length=1, max_length=600)
     choices: list[str]

@@ -65,11 +65,29 @@ class OpenAICompatLLM:
         )
 
 
-def from_env() -> OpenAICompatLLM:
-    key_env = os.getenv("LLM_API_KEY_ENV", "ZAI_API_KEY")
+def from_env() -> LLMProvider:
+    provider = os.getenv("LLM_PROVIDER", "openai").strip().lower()
+    if provider not in ("openai", "anthropic"):
+        raise RuntimeError(f"LLM_PROVIDER must be openai or anthropic, not {provider!r}")
+    anthropic_ = provider == "anthropic"
+    key_env = os.getenv("LLM_API_KEY_ENV", "ANTHROPIC_API_KEY" if anthropic_ else "ZAI_API_KEY")
     key = os.getenv(key_env)
     if not key:
         raise RuntimeError(f"{key_env} is not set (see .env)")
+    if anthropic_:
+        from ..dialog import REPLY_SCHEMA  # the dialog reply shape; imported here because dialog imports this module
+        from .anthropic_llm import AnthropicLLM
+
+        effort = os.getenv("LLM_REASONING_EFFORT", "low").strip().lower() or None
+        if effort not in (None, "low", "medium", "high"):
+            # Else every call gets a 400 and every NPC says only the fallback line.
+            raise RuntimeError(f"LLM_REASONING_EFFORT must be low, medium or high with anthropic, not {effort!r}")
+        return AnthropicLLM(
+            model=os.getenv("LLM_MODEL", "claude-haiku-5-5"),
+            api_key=key,
+            schema=REPLY_SCHEMA,
+            effort=effort,
+        )
     return OpenAICompatLLM(
         base_url=os.getenv("LLM_BASE_URL", os.getenv("ZAI_BASE_URL", "https://api.z.ai/api/coding/paas/v4/")),
         model=os.getenv("LLM_MODEL", os.getenv("ZAI_MODEL", "glm-5.3-flash")),
