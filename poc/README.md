@@ -8,6 +8,7 @@ A Python engine plus a bare test page. NPCs know what they saw or heard, gossip 
   - `ELEVENLABS_API_KEY` (optional; without it there is no voice): needs the `voices_read` and text-to-speech permissions.
 - **Optional settings:**
   - `LLM_BASE_URL`, `LLM_MODEL` (default `glm-5.3-flash`) and `LLM_API_KEY_ENV`, to point at any OpenAI-compatible provider.
+  - `LLM_PROVIDER=anthropic` with `ANTHROPIC_API_KEY`, to use Claude instead of z.ai (default model `claude-haiku-5-5`; `LLM_REASONING_EFFORT` is `low`, `medium` or `high`).
   - `TTS_ENABLED=0`, to turn voice off.
   - `TALK_LOG`: the engine console shows each talk turn. `full` (the default) shows the prompt, the raw reply, the line and the choices; `short` shows only the line and the choices; `off` shows nothing.
 

@@ -13,7 +13,8 @@ This file covers `what/conversation.md` and the voice rules in `what/http-api.md
 | `poc/engine/dialog.py` | `FALLBACK`, `TurnResult` | The fallback reply; the turn that the API returns. |
 | `poc/engine/dialog.py` | `talk_log_text`, `talk_log_mode`, `event_log_text` | The talk log: one text block per turn for the engine console, and one per reported event. `TALK_LOG` is `full` (the default), `short` or `off`. |
 | `poc/engine/api.py` | `_talk_console`, `_ConsoleStream` | Sends the `dialog` logger at INFO to the console, because uvicorn shows only its own loggers. |
-| `poc/engine/providers/llm.py` | `OpenAICompatLLM.complete_json` | `response_format=json_object`, `max_tokens=500`, `timeout=20`, `max_retries=0`, optional `reasoning_effort`. |
+| `poc/engine/providers/llm.py` | `OpenAICompatLLM.complete_json`, `from_env` | `response_format=json_object`, `max_tokens=500`, `timeout=20`, `max_retries=0`, optional `reasoning_effort`. `from_env` picks the provider from `LLM_PROVIDER`. |
+| `poc/engine/providers/anthropic_llm.py` | `AnthropicLLM.complete_json` | Anthropic Messages API: `output_config.format` = `json_schema` with `dialog.REPLY_SCHEMA`, `output_config.effort`, `max_tokens=2000` (adaptive thinking also uses it), `timeout=20`, `max_retries=0`. It returns the first text block, or `""`. |
 | `poc/engine/providers/tts.py` | `ElevenLabsTTS.stream` | `POST /v1/text-to-speech/{voice_id}/stream`, `mp3_44100_128`, yields bytes. |
 
 ## Data Flow
@@ -65,6 +66,10 @@ This file covers `what/conversation.md` and the voice rules in `what/http-api.md
 - The env settings have fallbacks:
   - `LLM_BASE_URL`, then `ZAI_BASE_URL`, then the z.ai coding URL.
   - `LLM_MODEL`, then `ZAI_MODEL`, then `glm-5.3-flash`.
+- With `LLM_PROVIDER=anthropic`: the key is in `LLM_API_KEY_ENV`, else `ANTHROPIC_API_KEY`; the model is `LLM_MODEL`, else `claude-haiku-5-5`; `LLM_BASE_URL` is not used. `from_env` imports `dialog.REPLY_SCHEMA` inside the function, because `dialog` imports `providers.llm`.
+- `REPLY_SCHEMA` has no length or range limits. `DialogResponse` still checks them, so a reply with 2 choices or an `importance` of 7 still gets a retry.
+- `from_env` refuses an `LLM_REASONING_EFFORT` other than `low`, `medium`, `high` or empty with `anthropic`. `AnthropicLLM` logs a `stop_reason` other than `end_turn` (for example `refusal` or `max_tokens`) as a warning.
+- With no text block (a refusal, or `max_tokens`), `AnthropicLLM` returns `""`. `json.loads` fails, and the dialog engine tries again or uses `FALLBACK`.
 - `api.session_start` gives the model name from env if the LLM does not exist yet.
 - The engine does not cache TTS. Each `/api/audio/{turn_id}` call makes the audio again.
 - Slot files (`api.audio_slot`):
