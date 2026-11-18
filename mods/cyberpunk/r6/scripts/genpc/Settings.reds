@@ -27,6 +27,12 @@ public class GenpcSettings {
   @runtimeProperty("ModSettings.description", "Play the voice of the NPC.")
   public let voiceOn: Bool = true;
 
+  // events.md rule 24.
+  @runtimeProperty("ModSettings.mod", "genpc")
+  @runtimeProperty("ModSettings.displayName", "Send game events")
+  @runtimeProperty("ModSettings.description", "Tell the engine about fights, gigs and police chases, so NPCs can hear about them.")
+  public let eventsOn: Bool = true;
+
   public func Key() -> EInputKey {
     switch this.talkKey {
       case GenpcTalkKey.H: return EInputKey.IK_H;

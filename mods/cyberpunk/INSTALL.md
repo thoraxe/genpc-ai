@@ -84,6 +84,14 @@ The mod uses 4 slot files, so leave `AUDIO_SLOT_COUNT` out (the default is 4). S
 - Press **G** again, or walk away, to close the panel.
 - To change the key or turn the voice off: **Esc**, then **Mod Settings**, then **genpc**.
 
+## What NPCs hear about
+
+The mod tells the engine about your fights, your finished gigs and side jobs, and police chases with 2 stars or more. NPCs that saw it know at once. The rest of the district hears it 12 game hours later, and the next districts 24 game hours later if it is big news.
+
+- Game time goes about 8 times faster than real time, so 12 game hours is about 1.5 hours of play. To see gossip sooner, sleep or wait in the game.
+- Each event shows in the game log, with lines that start with `[genpc] event`.
+- To turn it off: **Mod Settings**, then **genpc**, then **Send game events**.
+
 ## 4. Check that everything loaded
 
 1. Start the engine (see [`INSTALL.md`](../../INSTALL.md)).
