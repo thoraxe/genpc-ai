@@ -39,11 +39,13 @@ You set these values in the `.env` file at the top of the repo. Secret keys go o
 
 | Setting | What it does | Default |
 |---|---|---|
-| `ZAI_API_KEY` | The secret key for the default AI model service (z.ai). | — (necessary) |
-| `LLM_API_KEY_ENV` | The name of the setting that holds the AI model key. Use it to change to a different service. | `ZAI_API_KEY` |
-| `LLM_BASE_URL` | The address of the AI model service. You can use any service that works like OpenAI. | `https://api.z.ai/api/coding/paas/v4/` (or `ZAI_BASE_URL`) |
-| `LLM_MODEL` | The name of the AI model. | `glm-5.3-flash` (or `ZAI_MODEL`) |
-| `LLM_REASONING_EFFORT` | How much the AI model thinks before it replies. Empty means "do not send". | `low` |
+| `LLM_PROVIDER` | The kind of AI model service: `openai` (any service that works like OpenAI, for example z.ai) or `anthropic` (Claude). [PLANNED: #50] | `openai` |
+| `ZAI_API_KEY` | The secret key for the default AI model service (z.ai). | — (necessary with `openai`, if `LLM_API_KEY_ENV` is not set) |
+| `ANTHROPIC_API_KEY` | The secret key for Anthropic. It is necessary with `LLM_PROVIDER=anthropic`. [PLANNED: #50] | — |
+| `LLM_API_KEY_ENV` | The name of the setting that holds the AI model key. Use it to change to a different service. | `ZAI_API_KEY`; with `anthropic`: `ANTHROPIC_API_KEY` [PLANNED: #50] |
+| `LLM_BASE_URL` | The address of the AI model service. You can use any service that works like OpenAI. With `anthropic`, the engine uses Anthropic's own address and does not use this setting. [PLANNED: #50] | `https://api.z.ai/api/coding/paas/v4/` (or `ZAI_BASE_URL`) |
+| `LLM_MODEL` | The name of the AI model. | `glm-5.3-flash` (or `ZAI_MODEL`); with `anthropic`: `claude-opus-5-5` [PLANNED: #50] |
+| `LLM_REASONING_EFFORT` | How much the AI model thinks before it replies. Empty means "do not send". With `anthropic`, it is `low`, `medium` or `high`. [PLANNED: #50] | `low` |
 | `ELEVENLABS_API_KEY` | The secret key for the voice service. Without it, NPCs have no voice. | — (optional) |
 | `ELEVENLABS_MODEL` | The voice model. | `eleven_flash_v2_5` |
 | `TTS_ENABLED` | Set to `0`, `false` or `no` to stop the voice. | `1` |
