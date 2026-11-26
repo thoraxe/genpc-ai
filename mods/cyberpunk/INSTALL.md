@@ -8,9 +8,11 @@ The mod needs three things:
 
 Tested on 2026-11-10 with Cyberpunk 2077 **patch 2.5** (Steam, game version 3.0.88.46235). The mod does not need Phantom Liberty or any other paid content.
 
+The steps below are for Windows. On Linux, also follow [Linux (Proton, Heroic, Steam)](#linux-proton-heroic-steam). That section is new and only partly tested: on 2026-11-24, one tester (CachyOS, Heroic launcher, GOG version, patch 2.5) got the game to start with the mod after the `TZ=UTC` fix, and found the `AUDIO_SLOT_DIR` problem. Nobody has followed the whole section yet, voices on Linux are not confirmed, and Steam on Linux is not tested.
+
 ## Before you start
 
-1. **Stop the game from updating by itself.** In Steam, right-click Cyberpunk 2077, choose **Properties**, then **Updates**, and set it to **"Only update this game when I launch it"**. A game patch can break the modding tools. When Steam offers an update, wait until every tool below says that it supports the new patch.
+1. **Stop the game from updating by itself.** In Steam, right-click Cyberpunk 2077, choose **Properties**, then **Updates**, and set it to **"Only update this game when I launch it"**. For GOG, turn off automatic updates for the game in GOG Galaxy (or in Heroic on Linux). A game patch can break the modding tools. When an update is offered, wait until every tool below says that it supports the new patch.
 2. **Install the Visual C++ Redistributable 2022 (x64)** from https://aka.ms/vs/17/release/vc_redist.x64.exe. If it is already installed, choose **Repair**.
 3. **Find the game folder.** For Steam it is usually `C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077`. In Steam, right-click the game, then **Manage**, then **Browse local files**.
 
@@ -75,6 +77,43 @@ Then tell the engine where the slot files are. Add this line to the engine's `.e
 AUDIO_SLOT_DIR=C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\r6\audioware\genpc
 ```
 The mod uses 4 slot files, so leave `AUDIO_SLOT_COUNT` out (the default is 4). Start the engine again after you change `.env`.
+
+On Linux, this must be a Linux path, not a Windows path. See [Linux (Proton, Heroic, Steam)](#linux-proton-heroic-steam).
+
+If the NPCs show text but do not speak, the engine does not tell you why. Two checks help:
+
+1. **The voice service.** Open http://localhost:8000 in a browser. The status line shows the voice service (for example `elevenlabs:eleven_flash_v2_5`), or `no voice`. Talk to an NPC on that page: if you hear the voice, the key works. This page plays the voice itself, so it does not check the slot folder.
+2. **The slot folder.** Run this in Command Prompt or a Linux terminal (in PowerShell, type `curl.exe`):
+   ```
+   curl -s -X POST http://127.0.0.1:8000/api/session/start
+   ```
+   Look at `tts` and `audio_slots` in the reply:
+   - `tts` is `null`: the engine has no voice service. Check `ELEVENLABS_API_KEY` in `.env`, and that `TTS_ENABLED` is not `0`. (`audio_slots` is then `0` too.)
+   - `tts` is not `null`, but `audio_slots` is `0`: the engine cannot find the folder in `AUDIO_SLOT_DIR`.
+   - `audio_slots` is `4`: the engine found a folder. It does not check which folder it is. Check that it is the `r6\audioware\genpc` folder in the game folder, and that the voice is on in **Mod Settings**.
+
+## Linux (Proton, Heroic, Steam)
+
+The game runs in Proton or Wine, and the modding tools are the same Windows files as above. The engine runs as a normal Linux program, outside Proton. Do these steps together with the Windows steps in this guide.
+
+1. **Find the game folder.** For Heroic it is usually `~/Games/Heroic/Cyberpunk 2077`. For Steam it is usually `~/.local/share/Steam/steamapps/common/Cyberpunk 2077` (for Steam from Flatpak: `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Cyberpunk 2077`). Extract the tools there in the same way.
+2. **Set the launch options and environment variables.** In Heroic, open the game's settings. Put the launch options from [section 2](#2-set-the-launch-options) (`--launcher-skip -skipStartScreen -no-tls`) in **Game Arguments**. In **Environment Variables**, add the variable `TZ` with the value `UTC`, and the variable `WINEDLLOVERRIDES` with the value `winmm,version=n,b`.
+
+   In Steam, put them all in **Launch Options**, in this form:
+   ```
+   TZ=UTC WINEDLLOVERRIDES="winmm,version=n,b" %command% --launcher-skip -skipStartScreen -no-tls
+   ```
+   - `TZ=UTC`: on some PCs, the game stops in its first seconds with error code `0xE06D7363`. This is a known problem in redscript under Proton, when Wine does not know your time zone ([redscript issue 200](https://github.com/jac3km4/redscript/issues/200)). `TZ=UTC` fixes it, and it is safe to always set it. The only change is that the game's clock and log times show UTC. A time zone near yours that works, for example `America/Los_Angeles`, keeps the clock local.
+   - `WINEDLLOVERRIDES` makes Proton load RED4ext (`winmm.dll`) and CET (`version.dll`). If the RED4ext log is missing, this is the usual cause.
+3. **Use a Linux path for `AUDIO_SLOT_DIR`.** The engine is not inside Proton, so it needs the Linux path of the slot folder, for example:
+   ```
+   AUDIO_SLOT_DIR=/home/<you>/Games/Heroic/Cyberpunk 2077/r6/audioware/genpc
+   ```
+   - Write the full path that starts with `/home/`. Do not use `~`: the engine does not change `~` into your home folder.
+   - Linux paths are case-sensitive. The game under Proton ignores case, but the engine does not: `R6` or `Audioware` is not the same folder as `r6` or `audioware`.
+4. **Install the Visual C++ Redistributable only if necessary.** Proton usually has it already. If a tool does not load, install `vcrun2022` into the game's Wine prefix: in Heroic, use the **Winetricks** button in the game's settings; for Steam, run `protontricks 1091500 vcrun2022`.
+
+The log files of [section 4](#4-check-that-everything-loaded) are in the same places inside the game folder. Open them with any text editor. To remove the mod on Linux, also remove `TZ` and `WINEDLLOVERRIDES`, and use Heroic's **Verify** instead of Steam's **Verify integrity of game files** for GOG.
 
 ## How to talk
 
